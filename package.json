@@ -8,13 +8,23 @@
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
-  "keywords": ["game", "roguelite", "survivor", "vampire-survivors", "react", "canvas"],
+  "keywords": [
+    "game",
+    "roguelite",
+    "survivor",
+    "vampire-survivors",
+    "react",
+    "canvas"
+  ],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "^8.3.4"
   },

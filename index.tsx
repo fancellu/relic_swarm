@@ -1,4 +1,5 @@
 import {createRoot} from 'react-dom/client';
+import './index.css';
 import App from './App';
 
 // Inject the playground preview flag BEFORE the application initializes
