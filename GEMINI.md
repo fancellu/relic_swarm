@@ -14,8 +14,9 @@
 ## 2. Tech Stack & Runtime
 
 - **Framework**: [React 19](https://react.dev/) (`react`, `react-dom`)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) (`@tailwindcss/vite`, `index.css`)
 - **Language**: [TypeScript](https://www.typescriptlang.org/) (strict module resolution, ES2022)
-- **Bundler & Dev Server**: [Vite 8](https://vitejs.dev/)
+- **Bundler & Dev Server**: [Vite 8](https://vitejs.dev/) (`vite.config.ts`)
 - **Icons**: [`lucide-react`](https://lucide.dev/)
 - **Rendering**: HTML5 Canvas 2D with fixed timestep simulation stepper (60 FPS sub-steps)
 - **Audio**: Web Audio API synth effects + HTMLAudioElement BGM (`assets/audio/bgm_survivor_theme.mp3`)
@@ -30,6 +31,9 @@ relicswarm/
 ├── GEMINI.md                    # This document (AI instructions & project reference)
 ├── package.json                 # Scripts: dev, build, preview
 ├── tsconfig.json                # TypeScript compiler configuration (React 19 / Vite)
+├── vite.config.ts               # Vite configuration with Tailwind CSS & asset bundling
+├── vite-env.d.ts                # Vite client ambient types
+├── index.css                    # Tailwind CSS v4 entry & full-viewport styles
 ├── .gitignore                   # Ignores node_modules, dist, .gemini, etc.
 ├── index.html                   # HTML entry point mounting #root
 ├── index.tsx                    # React root entry, sets __PLAYGROUND_PREVIEW__ flag
