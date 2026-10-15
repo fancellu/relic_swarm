@@ -915,6 +915,32 @@ export default function App() {
   const [isGameMenuOpen, setIsGameMenuOpen] = useState(false);
   const [pauseTab, setPauseTab] = useState<'STATS' | 'GRIMOIRE' | 'MENU'>('STATS');
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [inventoryFocusIndex, setInventoryFocusIndex] = useState(0);
+  const inventoryFocusIndexRef = useRef(0);
+  const inventoryItemsRef = useRef<(HTMLDivElement | HTMLButtonElement | null)[]>([]);
+
+  const [pauseMenuFocusIndex, setPauseMenuFocusIndex] = useState(0);
+  const pauseMenuFocusIndexRef = useRef(0);
+  const pauseMenuItemsRef = useRef<(HTMLButtonElement | null)[]>([]);
+
+  useEffect(() => {
+    if (isInventoryOpen) {
+      inventoryItemsRef.current[inventoryFocusIndex]?.scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth',
+      });
+    }
+  }, [inventoryFocusIndex, isInventoryOpen]);
+
+  useEffect(() => {
+    if (isGameMenuOpen && pauseTab === 'MENU') {
+      pauseMenuItemsRef.current[pauseMenuFocusIndex]?.scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth',
+      });
+    }
+  }, [pauseMenuFocusIndex, isGameMenuOpen, pauseTab]);
+
   const [isLevelUpOpen, setIsLevelUpOpen] = useState(false);
   const [levelUpChoices, setLevelUpChoices] = useState<ItemDef[]>([]);
   const [selectedChoiceIndex, setSelectedChoiceIndex] = useState(0);
@@ -1182,6 +1208,14 @@ export default function App() {
     setIsSanctumOpen(true);
     gameAudio.playCrispClick();
   }, [refreshPersistentGold]);
+
+  // Open Inventory / Arsenal Selling helper
+  const openInventory = useCallback(() => {
+    inventoryFocusIndexRef.current = 0;
+    setInventoryFocusIndex(0);
+    setIsInventoryOpen(true);
+    gameAudio.playCrispClick();
+  }, []);
 
   // --- Start / Reset Game ---
   const initGame = useCallback((heroIdx = selectedHeroIndex) => {
@@ -1757,6 +1791,44 @@ export default function App() {
     gameAudio.playConfirmSelect();
   };
 
+  // --- Pause Menu Action Execution ---
+  const triggerPauseMenuAction = useCallback(
+    (actionIdx: number) => {
+      switch (actionIdx) {
+        case 0: // Resume Battle
+          setIsGameMenuOpen(false);
+          gameAudio.playCrispClick();
+          break;
+        case 1: // Manage & Sell Arsenal
+          openInventory();
+          break;
+        case 2: // Music Toggle
+          setMusicMuted((prev) => !prev);
+          gameAudio.playCrispClick();
+          break;
+        case 3: // SFX Toggle
+          setSfxMuted(gameAudio.toggleMute());
+          break;
+        case 4: // Controls & Combat Guide
+          setIsHowToPlayOpen(true);
+          gameAudio.playCrispClick();
+          break;
+        case 5: // Restart Run
+          setIsGameMenuOpen(false);
+          initGame();
+          break;
+        case 6: // Quit to Main Menu (Bank Gold)
+          setIsGameMenuOpen(false);
+          bankRunGold(simRef.current.gold);
+          refreshPersistentGold();
+          setGameState((prev) => ({...prev, status: 'START'}));
+          gameAudio.playCrispClick();
+          break;
+      }
+    },
+    [openInventory, initGame, bankRunGold, refreshPersistentGold],
+  );
+
   // --- Particles & VFX Spawn Helpers ---
   const spawnDamageNumber = (x: number, y: number, text: string, color = '#facc15') => {
     const sim = simRef.current;
@@ -1962,21 +2034,97 @@ export default function App() {
       return;
     }
 
-    // Pause Menu gamepad tab navigation
+    // INVENTORY / WEAPON SELLING GAMEPAD NAVIGATION
+    if (isInventoryOpen) {
+      const totalSellItems = equippedWeapons.length + equippedPassives.length + 1;
+      if (gamepadNavCooldownRef.current <= 0) {
+        if (gpNavUp) {
+          const next = inventoryFocusIndexRef.current > 0 ? inventoryFocusIndexRef.current - 1 : totalSellItems - 1;
+          inventoryFocusIndexRef.current = next;
+          setInventoryFocusIndex(next);
+          gamepadNavCooldownRef.current = 0.22;
+          gameAudio.playCrispClick();
+        } else if (gpNavDown) {
+          const next = inventoryFocusIndexRef.current < totalSellItems - 1 ? inventoryFocusIndexRef.current + 1 : 0;
+          inventoryFocusIndexRef.current = next;
+          setInventoryFocusIndex(next);
+          gamepadNavCooldownRef.current = 0.22;
+          gameAudio.playCrispClick();
+        } else if (gpConfirm) {
+          const curIdx = inventoryFocusIndexRef.current;
+          if (curIdx < equippedWeapons.length) {
+            sellItem(equippedWeapons[curIdx].id);
+            const remaining = Math.max(1, equippedWeapons.length + equippedPassives.length);
+            const clamped = Math.max(0, Math.min(curIdx, remaining - 1));
+            inventoryFocusIndexRef.current = clamped;
+            setInventoryFocusIndex(clamped);
+          } else if (curIdx < equippedWeapons.length + equippedPassives.length) {
+            const pasIdx = curIdx - equippedWeapons.length;
+            sellItem(equippedPassives[pasIdx].id);
+            const remaining = Math.max(1, equippedWeapons.length + equippedPassives.length);
+            const clamped = Math.max(0, Math.min(curIdx, remaining - 1));
+            inventoryFocusIndexRef.current = clamped;
+            setInventoryFocusIndex(clamped);
+          } else {
+            setIsInventoryOpen(false);
+            gameAudio.playCrispClick();
+          }
+          gamepadNavCooldownRef.current = 0.3;
+        } else if (gpCancel || gp?.buttons[3]?.pressed) {
+          setIsInventoryOpen(false);
+          gamepadNavCooldownRef.current = 0.35;
+          gameAudio.playCrispClick();
+        }
+      }
+      return;
+    }
+
+    // Pause Menu gamepad tab & menu button navigation
     if (isGameMenuOpen) {
       if (gamepadNavCooldownRef.current <= 0) {
-        if (gpNavLeft) {
+        // Tab switching via Left / Right D-Pad or Bumpers (LB: button 4, RB: button 5)
+        if (gpNavLeft || gp?.buttons[4]?.pressed) {
           setPauseTab((prev) => (prev === 'MENU' ? 'GRIMOIRE' : prev === 'GRIMOIRE' ? 'STATS' : 'MENU'));
+          pauseMenuFocusIndexRef.current = 0;
+          setPauseMenuFocusIndex(0);
           gamepadNavCooldownRef.current = 0.25;
           gameAudio.playCrispClick();
-        } else if (gpNavRight) {
+        } else if (gpNavRight || gp?.buttons[5]?.pressed) {
           setPauseTab((prev) => (prev === 'STATS' ? 'GRIMOIRE' : prev === 'GRIMOIRE' ? 'MENU' : 'STATS'));
+          pauseMenuFocusIndexRef.current = 0;
+          setPauseMenuFocusIndex(0);
           gamepadNavCooldownRef.current = 0.25;
           gameAudio.playCrispClick();
-        } else if (gpCancel || (gpConfirm && pauseTab === 'MENU')) {
+        } else if (gp?.buttons[3]?.pressed) {
+          // Button Y opens sell screen directly from pause menu!
+          openInventory();
+          gamepadNavCooldownRef.current = 0.35;
+        } else if (gpCancel) {
           setIsGameMenuOpen(false);
           gamepadNavCooldownRef.current = 0.35;
           gameAudio.playCrispClick();
+        } else if (pauseTab === 'MENU') {
+          const totalMenuButtons = 7;
+          if (gpNavUp) {
+            const next = pauseMenuFocusIndexRef.current > 0 ? pauseMenuFocusIndexRef.current - 1 : totalMenuButtons - 1;
+            pauseMenuFocusIndexRef.current = next;
+            setPauseMenuFocusIndex(next);
+            gamepadNavCooldownRef.current = 0.22;
+            gameAudio.playCrispClick();
+          } else if (gpNavDown) {
+            const next = pauseMenuFocusIndexRef.current < totalMenuButtons - 1 ? pauseMenuFocusIndexRef.current + 1 : 0;
+            pauseMenuFocusIndexRef.current = next;
+            setPauseMenuFocusIndex(next);
+            gamepadNavCooldownRef.current = 0.22;
+            gameAudio.playCrispClick();
+          } else if (gpConfirm) {
+            triggerPauseMenuAction(pauseMenuFocusIndexRef.current);
+            gamepadNavCooldownRef.current = 0.35;
+          }
+        } else if (pauseTab === 'STATS' && gpConfirm) {
+          // If in Stats tab and player presses Confirm, open Manage & Sell Arsenal!
+          openInventory();
+          gamepadNavCooldownRef.current = 0.35;
         }
       }
       return;
@@ -2018,6 +2166,13 @@ export default function App() {
       isGameMenuOpen ||
       isHowToPlayOpen
     ) {
+      return;
+    }
+
+    // Button Y in Active Gameplay opens Inventory / Sell Screen
+    if (gp?.buttons[3]?.pressed && gamepadNavCooldownRef.current <= 0) {
+      openInventory();
+      gamepadNavCooldownRef.current = 0.35;
       return;
     }
 
@@ -3697,6 +3852,56 @@ export default function App() {
         keyboardSprintRef.current = true;
       }
 
+      // Inventory / Sell Modal Keyboard Navigation
+      if (isInventoryOpen) {
+        const totalSellItems = equippedWeapons.length + equippedPassives.length + 1;
+        if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+          e.preventDefault();
+          const next = inventoryFocusIndexRef.current > 0 ? inventoryFocusIndexRef.current - 1 : totalSellItems - 1;
+          inventoryFocusIndexRef.current = next;
+          setInventoryFocusIndex(next);
+          gameAudio.playCrispClick();
+          return;
+        }
+        if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+          e.preventDefault();
+          const next = inventoryFocusIndexRef.current < totalSellItems - 1 ? inventoryFocusIndexRef.current + 1 : 0;
+          inventoryFocusIndexRef.current = next;
+          setInventoryFocusIndex(next);
+          gameAudio.playCrispClick();
+          return;
+        }
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const curIdx = inventoryFocusIndexRef.current;
+          if (curIdx < equippedWeapons.length) {
+            sellItem(equippedWeapons[curIdx].id);
+            const remaining = Math.max(1, equippedWeapons.length + equippedPassives.length);
+            const clamped = Math.max(0, Math.min(curIdx, remaining - 1));
+            inventoryFocusIndexRef.current = clamped;
+            setInventoryFocusIndex(clamped);
+          } else if (curIdx < equippedWeapons.length + equippedPassives.length) {
+            const pasIdx = curIdx - equippedWeapons.length;
+            sellItem(equippedPassives[pasIdx].id);
+            const remaining = Math.max(1, equippedWeapons.length + equippedPassives.length);
+            const clamped = Math.max(0, Math.min(curIdx, remaining - 1));
+            inventoryFocusIndexRef.current = clamped;
+            setInventoryFocusIndex(clamped);
+          } else {
+            setIsInventoryOpen(false);
+            gameAudio.playCrispClick();
+          }
+          return;
+        }
+        if (e.key === 'Escape' || e.key === 'Backspace' || e.key === 'Tab' || e.key === 'i' || e.key === 'I') {
+          e.preventDefault();
+          setIsInventoryOpen(false);
+          gameAudio.playCrispClick();
+          return;
+        }
+        return;
+      }
+
       // Pause toggle (Escape or P)
       if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
         if (gameState.status === 'PLAYING') {
@@ -3707,23 +3912,81 @@ export default function App() {
         }
       }
 
-      // Pause Screen navigation shortcuts
+      // Pause Screen navigation shortcuts & button selection
       if (isGameMenuOpen) {
+        if (e.key === 'Tab' || e.key === 'i' || e.key === 'I') {
+          e.preventDefault();
+          openInventory();
+          return;
+        }
         if (e.key === '1') {
           setPauseTab('STATS');
+          pauseMenuFocusIndexRef.current = 0;
+          setPauseMenuFocusIndex(0);
           gameAudio.playCrispClick();
+          return;
         } else if (e.key === '2') {
           setPauseTab('GRIMOIRE');
+          pauseMenuFocusIndexRef.current = 0;
+          setPauseMenuFocusIndex(0);
           gameAudio.playCrispClick();
+          return;
         } else if (e.key === '3') {
           setPauseTab('MENU');
+          pauseMenuFocusIndexRef.current = 0;
+          setPauseMenuFocusIndex(0);
           gameAudio.playCrispClick();
+          return;
         } else if (e.key === 'q' || e.key === 'Q' || e.key === 'ArrowLeft') {
           setPauseTab((prev) => (prev === 'MENU' ? 'GRIMOIRE' : prev === 'GRIMOIRE' ? 'STATS' : 'MENU'));
+          pauseMenuFocusIndexRef.current = 0;
+          setPauseMenuFocusIndex(0);
           gameAudio.playCrispClick();
+          return;
         } else if (e.key === 'e' || e.key === 'E' || e.key === 'ArrowRight') {
           setPauseTab((prev) => (prev === 'STATS' ? 'GRIMOIRE' : prev === 'GRIMOIRE' ? 'MENU' : 'STATS'));
+          pauseMenuFocusIndexRef.current = 0;
+          setPauseMenuFocusIndex(0);
           gameAudio.playCrispClick();
+          return;
+        }
+
+        if (pauseTab === 'MENU') {
+          const totalMenuButtons = 7;
+          if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+            e.preventDefault();
+            const next = pauseMenuFocusIndexRef.current > 0 ? pauseMenuFocusIndexRef.current - 1 : totalMenuButtons - 1;
+            pauseMenuFocusIndexRef.current = next;
+            setPauseMenuFocusIndex(next);
+            gameAudio.playCrispClick();
+            return;
+          }
+          if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+            e.preventDefault();
+            const next = pauseMenuFocusIndexRef.current < totalMenuButtons - 1 ? pauseMenuFocusIndexRef.current + 1 : 0;
+            pauseMenuFocusIndexRef.current = next;
+            setPauseMenuFocusIndex(next);
+            gameAudio.playCrispClick();
+            return;
+          }
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            triggerPauseMenuAction(pauseMenuFocusIndexRef.current);
+            return;
+          }
+        }
+
+        if (pauseTab === 'STATS' && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          openInventory();
+          return;
+        }
+
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          setIsGameMenuOpen(false);
+          gameAudio.playCrispClick();
+          return;
         }
         return;
       }
@@ -3754,7 +4017,11 @@ export default function App() {
       // Inventory Shortcut (Tab / I)
       if (gameState.status === 'PLAYING' && (e.key === 'Tab' || e.key === 'i' || e.key === 'I')) {
         e.preventDefault();
-        setIsInventoryOpen((prev) => !prev);
+        if (isInventoryOpen) {
+          setIsInventoryOpen(false);
+        } else {
+          openInventory();
+        }
         gameAudio.playCrispClick();
       }
     };
@@ -4501,17 +4768,31 @@ export default function App() {
               {equippedWeapons.length === 0 ? (
                 <div className="text-xs text-slate-500 italic">No weapons equipped.</div>
               ) : (
-                equippedWeapons.map((wep) => {
+                equippedWeapons.map((wep, idx) => {
                   const def = ITEM_DEFS[wep.id];
                   const refund = Math.round((def?.cost || 50) * wep.level * 0.7);
+                  const isFocused = inventoryFocusIndex === idx;
+
                   return (
                     <div
                       key={wep.id}
-                      className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+                      ref={(el) => {
+                        inventoryItemsRef.current[idx] = el;
+                      }}
+                      onPointerEnter={() => {
+                        inventoryFocusIndexRef.current = idx;
+                        setInventoryFocusIndex(idx);
+                      }}
+                      className={`p-3 rounded-xl border flex items-center justify-between gap-2 transition-all ${
+                        isFocused
+                          ? 'bg-rose-950/40 border-rose-500 shadow-lg shadow-rose-950/60 ring-2 ring-rose-400/90 scale-[1.01]'
+                          : 'bg-slate-950/80 border-slate-800'
+                      }`}>
                       <div className="flex items-center gap-2.5">
                         <img src={def?.icon || ''} alt={def?.name || ''} className="w-8 h-8 object-contain" />
                         <div>
                           <div className="font-bold text-xs text-slate-100 flex items-center gap-1.5">
+                            {isFocused && <span className="text-rose-400 font-bold">▶</span>}
                             <span>{def?.name || wep.id}</span>
                             <span className="text-indigo-400 text-[10px]">
                               {def?.isEvolution ? 'EVO' : `L${wep.level}`}
@@ -4523,7 +4804,9 @@ export default function App() {
 
                       <button
                         onClick={() => sellItem(wep.id)}
-                        className="bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 shrink-0">
+                        className={`bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shrink-0 ${
+                          isFocused ? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-950 shadow-md scale-105' : ''
+                        }`}>
                         <DollarSign size={14} />
                         <span>Sell (+{refund}g)</span>
                       </button>
@@ -4541,17 +4824,32 @@ export default function App() {
               {equippedPassives.length === 0 ? (
                 <div className="text-xs text-slate-500 italic">No relics equipped.</div>
               ) : (
-                equippedPassives.map((pas) => {
+                equippedPassives.map((pas, pasIdx) => {
                   const def = ITEM_DEFS[pas.id];
                   const refund = Math.round((def?.cost || 40) * pas.level * 0.7);
+                  const focusIdx = equippedWeapons.length + pasIdx;
+                  const isFocused = inventoryFocusIndex === focusIdx;
+
                   return (
                     <div
                       key={pas.id}
-                      className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+                      ref={(el) => {
+                        inventoryItemsRef.current[focusIdx] = el;
+                      }}
+                      onPointerEnter={() => {
+                        inventoryFocusIndexRef.current = focusIdx;
+                        setInventoryFocusIndex(focusIdx);
+                      }}
+                      className={`p-3 rounded-xl border flex items-center justify-between gap-2 transition-all ${
+                        isFocused
+                          ? 'bg-rose-950/40 border-rose-500 shadow-lg shadow-rose-950/60 ring-2 ring-rose-400/90 scale-[1.01]'
+                          : 'bg-slate-950/80 border-slate-800'
+                      }`}>
                       <div className="flex items-center gap-2.5">
                         <img src={def?.icon || ''} alt={def?.name || ''} className="w-8 h-8 object-contain" />
                         <div>
                           <div className="font-bold text-xs text-slate-100 flex items-center gap-1.5">
+                            {isFocused && <span className="text-rose-400 font-bold">▶</span>}
                             <span>{def?.name || pas.id}</span>
                             <span className="text-emerald-400 text-[10px]">L{pas.level}</span>
                           </div>
@@ -4561,7 +4859,9 @@ export default function App() {
 
                       <button
                         onClick={() => sellItem(pas.id)}
-                        className="bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 shrink-0">
+                        className={`bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shrink-0 ${
+                          isFocused ? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-950 shadow-md scale-105' : ''
+                        }`}>
                         <DollarSign size={14} />
                         <span>Sell (+{refund}g)</span>
                       </button>
@@ -4571,11 +4871,35 @@ export default function App() {
               )}
             </div>
 
-            <button
-              onClick={() => setIsInventoryOpen(false)}
-              className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-xl text-xs transition-colors">
-              Done
-            </button>
+            {/* Done Button */}
+            {(() => {
+              const doneIdx = equippedWeapons.length + equippedPassives.length;
+              const isDoneFocused = inventoryFocusIndex === doneIdx;
+              return (
+                <button
+                  ref={(el) => {
+                    inventoryItemsRef.current[doneIdx] = el;
+                  }}
+                  onPointerEnter={() => {
+                    inventoryFocusIndexRef.current = doneIdx;
+                    setInventoryFocusIndex(doneIdx);
+                  }}
+                  onClick={() => setIsInventoryOpen(false)}
+                  className={`w-full font-bold py-2 rounded-xl text-xs transition-all border ${
+                    isDoneFocused
+                      ? 'bg-slate-700 text-rose-300 border-rose-400 ring-2 ring-rose-400 shadow-md scale-[1.01]'
+                      : 'bg-slate-800 hover:bg-slate-700 text-white border-transparent'
+                  }`}>
+                  Done [Esc / B / Tab]
+                </button>
+              );
+            })()}
+
+            <div className="text-[10px] text-slate-400 text-center flex items-center justify-center gap-3 pt-1 border-t border-slate-800/60">
+              <span>[W / S or D-Pad] Navigate</span>
+              <span>[Enter / A] Sell Item</span>
+              <span>[Esc / B / Tab] Close</span>
+            </div>
           </div>
         </MenuOverlay>
       )}
@@ -4791,14 +5115,18 @@ export default function App() {
 
                 {/* Equipped Weapons & Damage Dealt */}
                 <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800/80 flex flex-col gap-2">
-                  <div className="font-bold text-sky-400 uppercase tracking-wider flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
                       <Sword size={14} />
-                      <span>Equipped Weapons & Damage Dealt</span>
+                      <span>Equipped Weapons & Damage</span>
+                      <span className="text-[10px] text-slate-500 font-normal">({equippedWeapons.length}/4 Slots)</span>
                     </div>
-                    <span className="text-[10px] text-slate-500 font-normal">
-                      {equippedWeapons.length}/4 Slots
-                    </span>
+                    <button
+                      onClick={openInventory}
+                      className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95">
+                      <DollarSign size={14} />
+                      <span>Manage & Sell Arsenal [Tab / Y]</span>
+                    </button>
                   </div>
 
                   {equippedWeapons.length === 0 ? (
@@ -4998,85 +5326,123 @@ export default function App() {
             {/* --- TAB 3: GAME MENU & SETTINGS --- */}
             {pauseTab === 'MENU' && (
               <div className="flex flex-col gap-3">
-                {/* Resume Button */}
+                {/* 0: Resume Button */}
                 <button
-                  onClick={() => {
-                    setIsGameMenuOpen(false);
-                    gameAudio.playCrispClick();
+                  ref={(el) => {
+                    pauseMenuItemsRef.current[0] = el;
                   }}
+                  onPointerEnter={() => {
+                    pauseMenuFocusIndexRef.current = 0;
+                    setPauseMenuFocusIndex(0);
+                  }}
+                  onClick={() => triggerPauseMenuAction(0)}
                   autoFocus
-                  className="w-full bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-bold text-base py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-rose-950/50">
+                  className={`w-full bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-bold text-base py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-rose-950/50 ${
+                    pauseMenuFocusIndex === 0 ? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-950 scale-[1.02]' : ''
+                  }`}>
                   <Play size={18} className="fill-white" />
                   RESUME BATTLE (Escape / P / A)
                 </button>
 
-                {/* Music & SFX Audio Toggles */}
+                {/* 1: Manage / Sell Inventory */}
+                <button
+                  ref={(el) => {
+                    pauseMenuItemsRef.current[1] = el;
+                  }}
+                  onPointerEnter={() => {
+                    pauseMenuFocusIndexRef.current = 1;
+                    setPauseMenuFocusIndex(1);
+                  }}
+                  onClick={() => triggerPauseMenuAction(1)}
+                  className={`w-full bg-indigo-950 hover:bg-indigo-900 text-indigo-200 py-2.5 rounded-xl text-xs font-bold border border-indigo-700/60 transition-all flex items-center justify-center gap-2 ${
+                    pauseMenuFocusIndex === 1 ? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-950 scale-[1.02]' : ''
+                  }`}>
+                  <Sword size={16} />
+                  Manage & Sell Arsenal [Tab / Y]
+                </button>
+
+                {/* 2 & 3: Music & SFX Audio Toggles */}
                 <div className="w-full grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => {
-                      const newMuted = !musicMuted;
-                      setMusicMuted(newMuted);
-                      gameAudio.playCrispClick();
+                    ref={(el) => {
+                      pauseMenuItemsRef.current[2] = el;
                     }}
-                    className="bg-slate-900 hover:bg-slate-800 text-slate-200 py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-slate-700">
+                    onPointerEnter={() => {
+                      pauseMenuFocusIndexRef.current = 2;
+                      setPauseMenuFocusIndex(2);
+                    }}
+                    onClick={() => triggerPauseMenuAction(2)}
+                    className={`bg-slate-900 hover:bg-slate-800 text-slate-200 py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all border border-slate-700 ${
+                      pauseMenuFocusIndex === 2 ? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-950 scale-[1.02]' : ''
+                    }`}>
                     {musicMuted ? <VolumeX size={16} className="text-rose-400" /> : <Volume2 size={16} className="text-emerald-400" />}
                     <span>Music: {musicMuted ? 'Off' : 'On'}</span>
                   </button>
 
                   <button
-                    onClick={() => {
-                      const newMuted = gameAudio.toggleMute();
-                      setSfxMuted(newMuted);
+                    ref={(el) => {
+                      pauseMenuItemsRef.current[3] = el;
                     }}
-                    className="bg-slate-900 hover:bg-slate-800 text-slate-200 py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-slate-700">
+                    onPointerEnter={() => {
+                      pauseMenuFocusIndexRef.current = 3;
+                      setPauseMenuFocusIndex(3);
+                    }}
+                    onClick={() => triggerPauseMenuAction(3)}
+                    className={`bg-slate-900 hover:bg-slate-800 text-slate-200 py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all border border-slate-700 ${
+                      pauseMenuFocusIndex === 3 ? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-950 scale-[1.02]' : ''
+                    }`}>
                     {sfxMuted ? <VolumeX size={16} className="text-rose-400" /> : <Volume2 size={16} className="text-emerald-400" />}
                     <span>SFX: {sfxMuted ? 'Off' : 'On'}</span>
                   </button>
                 </div>
 
-                {/* Manage / Sell Inventory */}
+                {/* 4: How to Play Guide */}
                 <button
-                  onClick={() => {
-                    setIsInventoryOpen(true);
-                    gameAudio.playCrispClick();
+                  ref={(el) => {
+                    pauseMenuItemsRef.current[4] = el;
                   }}
-                  className="w-full bg-indigo-950 hover:bg-indigo-900 text-indigo-200 py-2.5 rounded-xl text-xs font-bold border border-indigo-700/60 transition-colors flex items-center justify-center gap-2">
-                  <Sword size={16} />
-                  Manage & Sell Arsenal
-                </button>
-
-                {/* How to Play Guide */}
-                <button
-                  onClick={() => {
-                    setIsHowToPlayOpen(true);
-                    gameAudio.playCrispClick();
+                  onPointerEnter={() => {
+                    pauseMenuFocusIndexRef.current = 4;
+                    setPauseMenuFocusIndex(4);
                   }}
-                  className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 py-2.5 rounded-xl text-xs font-bold border border-slate-700 transition-colors flex items-center justify-center gap-2">
+                  onClick={() => triggerPauseMenuAction(4)}
+                  className={`w-full bg-slate-900 hover:bg-slate-800 text-slate-200 py-2.5 rounded-xl text-xs font-bold border border-slate-700 transition-all flex items-center justify-center gap-2 ${
+                    pauseMenuFocusIndex === 4 ? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-950 scale-[1.02]' : ''
+                  }`}>
                   <HelpCircle size={16} />
                   Controls & Combat Guide
                 </button>
 
-                {/* Restart Level */}
+                {/* 5: Restart Level */}
                 <button
-                  onClick={() => {
-                    setIsGameMenuOpen(false);
-                    initGame();
+                  ref={(el) => {
+                    pauseMenuItemsRef.current[5] = el;
                   }}
-                  className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 py-2.5 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 border border-slate-700">
+                  onPointerEnter={() => {
+                    pauseMenuFocusIndexRef.current = 5;
+                    setPauseMenuFocusIndex(5);
+                  }}
+                  onClick={() => triggerPauseMenuAction(5)}
+                  className={`w-full bg-slate-900 hover:bg-slate-800 text-slate-200 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 border border-slate-700 ${
+                    pauseMenuFocusIndex === 5 ? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-950 scale-[1.02]' : ''
+                  }`}>
                   <RotateCcw size={16} />
                   Restart Run
                 </button>
 
-                {/* Quit to Main Menu */}
+                {/* 6: Quit to Main Menu */}
                 <button
-                  onClick={() => {
-                    setIsGameMenuOpen(false);
-                    bankRunGold(simRef.current.gold);
-                    refreshPersistentGold();
-                    setGameState((prev) => ({...prev, status: 'START'}));
-                    gameAudio.playCrispClick();
+                  ref={(el) => {
+                    pauseMenuItemsRef.current[6] = el;
                   }}
-                  className="w-full bg-rose-950 hover:bg-rose-900 text-rose-300 py-2.5 rounded-xl text-xs font-semibold transition-colors border border-rose-800">
+                  onPointerEnter={() => {
+                    pauseMenuFocusIndexRef.current = 6;
+                    setPauseMenuFocusIndex(6);
+                  }}
+                  onClick={() => triggerPauseMenuAction(6)}
+                  className={`w-full bg-rose-950 hover:bg-rose-900 text-rose-300 py-2.5 rounded-xl text-xs font-semibold transition-all border border-rose-800 ${
+                    pauseMenuFocusIndex === 6 ? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-950 scale-[1.02]' : ''
+                  }`}>
                   Quit to Main Menu (Bank Gold)
                 </button>
               </div>
@@ -5084,7 +5450,7 @@ export default function App() {
 
             {/* Modal Footer Controls info */}
             <div className="pt-2 border-t border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
-              <span>Keys [1]-[3], Q/E or Gamepad LB/RB to Switch Tabs</span>
+              <span>[1-3 / Q,E / LB,RB] Tabs • [W,S / D-Pad] Navigate • [Enter / A] Select • [Tab / Y] Sell Screen</span>
               <button
                 onClick={() => {
                   setIsGameMenuOpen(false);
