@@ -898,6 +898,19 @@ export default function App() {
   // Selected Hero & UI Overlays
   const [selectedHeroIndex, setSelectedHeroIndex] = useState(0);
   const [isSanctumOpen, setIsSanctumOpen] = useState(false);
+  const [sanctumFocusIndex, setSanctumFocusIndex] = useState(0);
+  const sanctumFocusIndexRef = useRef(0);
+  const sanctumItemsRef = useRef<(HTMLDivElement | HTMLButtonElement | null)[]>([]);
+
+  useEffect(() => {
+    if (isSanctumOpen) {
+      sanctumItemsRef.current[sanctumFocusIndex]?.scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth',
+      });
+    }
+  }, [sanctumFocusIndex, isSanctumOpen]);
+
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const [isGameMenuOpen, setIsGameMenuOpen] = useState(false);
   const [pauseTab, setPauseTab] = useState<'STATS' | 'GRIMOIRE' | 'MENU'>('STATS');
@@ -1164,6 +1177,8 @@ export default function App() {
   // Open Sanctum Shop helper
   const openSanctumShop = useCallback(() => {
     refreshPersistentGold();
+    sanctumFocusIndexRef.current = 0;
+    setSanctumFocusIndex(0);
     setIsSanctumOpen(true);
     gameAudio.playCrispClick();
   }, [refreshPersistentGold]);
@@ -1829,13 +1844,8 @@ export default function App() {
         false; // B, X, LT, RT, RB
       gpReroll = gp.buttons[3]?.pressed || false; // Y / Triangle
 
-      // Standard Gamepad Pause triggers: 9 (Start/Options/Menu), 8 (Select/Back), 16 (Guide), 10/11 (Stick clicks L3/R3)
-      gpPause =
-        Boolean(gp.buttons[9]?.pressed) ||
-        Boolean(gp.buttons[8]?.pressed) ||
-        Boolean(gp.buttons[16]?.pressed) ||
-        Boolean(gp.buttons[10]?.pressed) ||
-        Boolean(gp.buttons[11]?.pressed);
+      // Gamepad Pause trigger: ONLY Option / Start / Menu button (button 9)
+      gpPause = Boolean(gp.buttons[9]?.pressed);
 
       if (gpY < -0.45 || gp.buttons[12]?.pressed) gpNavUp = true;
       if (gpY > 0.45 || gp.buttons[13]?.pressed) gpNavDown = true;
@@ -1859,12 +1869,45 @@ export default function App() {
 
     // START MENU / CHARACTER SELECT GAMEPAD NAVIGATION
     if (gameStateRef.current.status === 'START') {
-      if (isSanctumOpen || isHowToPlayOpen) {
+      if (isHowToPlayOpen) {
         if (gamepadNavCooldownRef.current <= 0 && (gpCancel || gpConfirm)) {
-          setIsSanctumOpen(false);
           setIsHowToPlayOpen(false);
           gamepadNavCooldownRef.current = 0.3;
           gameAudio.playCrispClick();
+        }
+        return;
+      }
+
+      if (isSanctumOpen) {
+        const metaList = Object.values(META_UPGRADES);
+        const totalItems = metaList.length + 1; // Upgrades + Close button
+        if (gamepadNavCooldownRef.current <= 0) {
+          if (gpNavUp) {
+            const next = sanctumFocusIndexRef.current > 0 ? sanctumFocusIndexRef.current - 1 : totalItems - 1;
+            sanctumFocusIndexRef.current = next;
+            setSanctumFocusIndex(next);
+            gamepadNavCooldownRef.current = 0.22;
+            gameAudio.playCrispClick();
+          } else if (gpNavDown) {
+            const next = sanctumFocusIndexRef.current < totalItems - 1 ? sanctumFocusIndexRef.current + 1 : 0;
+            sanctumFocusIndexRef.current = next;
+            setSanctumFocusIndex(next);
+            gamepadNavCooldownRef.current = 0.22;
+            gameAudio.playCrispClick();
+          } else if (gpConfirm) {
+            const curIdx = sanctumFocusIndexRef.current;
+            if (curIdx < metaList.length) {
+              buyMetaUpgrade(metaList[curIdx].id);
+            } else {
+              setIsSanctumOpen(false);
+              gameAudio.playCrispClick();
+            }
+            gamepadNavCooldownRef.current = 0.3;
+          } else if (gpCancel || gp?.buttons[3]?.pressed) {
+            setIsSanctumOpen(false);
+            gamepadNavCooldownRef.current = 0.35;
+            gameAudio.playCrispClick();
+          }
         }
         return;
       }
@@ -3571,6 +3614,55 @@ export default function App() {
         }
       }
       if (gameState.status === 'START') {
+        if (isSanctumOpen) {
+          const metaList = Object.values(META_UPGRADES);
+          const totalItems = metaList.length + 1;
+
+          if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+            e.preventDefault();
+            const next = sanctumFocusIndexRef.current > 0 ? sanctumFocusIndexRef.current - 1 : totalItems - 1;
+            sanctumFocusIndexRef.current = next;
+            setSanctumFocusIndex(next);
+            gameAudio.playCrispClick();
+            return;
+          }
+          if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+            e.preventDefault();
+            const next = sanctumFocusIndexRef.current < totalItems - 1 ? sanctumFocusIndexRef.current + 1 : 0;
+            sanctumFocusIndexRef.current = next;
+            setSanctumFocusIndex(next);
+            gameAudio.playCrispClick();
+            return;
+          }
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const curIdx = sanctumFocusIndexRef.current;
+            if (curIdx < metaList.length) {
+              buyMetaUpgrade(metaList[curIdx].id);
+            } else {
+              setIsSanctumOpen(false);
+              gameAudio.playCrispClick();
+            }
+            return;
+          }
+          if (e.key === 'Escape' || e.key === 'Backspace') {
+            e.preventDefault();
+            setIsSanctumOpen(false);
+            gameAudio.playCrispClick();
+            return;
+          }
+          return;
+        }
+
+        if (isHowToPlayOpen) {
+          if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+            setIsHowToPlayOpen(false);
+            gameAudio.playCrispClick();
+            return;
+          }
+          return;
+        }
+
         if (!isSanctumOpen && !isHowToPlayOpen) {
           if (e.key === 's' || e.key === 'S') {
             e.preventDefault();
@@ -3595,13 +3687,6 @@ export default function App() {
           }
           if (e.key === 'Enter' || e.key === ' ') {
             initGame(selectedHeroIndex);
-            return;
-          }
-        } else {
-          if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
-            setIsSanctumOpen(false);
-            setIsHowToPlayOpen(false);
-            gameAudio.playCrispClick();
             return;
           }
         }
@@ -4116,18 +4201,31 @@ export default function App() {
             </div>
 
             <div className="flex flex-col gap-2">
-              {Object.values(META_UPGRADES).map((upg) => {
+              {Object.values(META_UPGRADES).map((upg, idx) => {
                 const currentLvl = metaLevels[upg.id] || 0;
                 const cost = upg.costBase + currentLvl * upg.costStep;
                 const isMax = currentLvl >= upg.maxLevel;
                 const canAfford = persistentGold >= cost;
+                const isFocused = sanctumFocusIndex === idx;
 
                 return (
                   <div
                     key={upg.id}
-                    className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+                    ref={(el) => {
+                      sanctumItemsRef.current[idx] = el;
+                    }}
+                    onPointerEnter={() => {
+                      sanctumFocusIndexRef.current = idx;
+                      setSanctumFocusIndex(idx);
+                    }}
+                    className={`p-3 rounded-xl border flex items-center justify-between gap-2 transition-all ${
+                      isFocused
+                        ? 'bg-amber-950/40 border-amber-500 shadow-lg shadow-amber-950/60 ring-2 ring-amber-400/90 scale-[1.01]'
+                        : 'bg-slate-950/80 border-slate-800'
+                    }`}>
                     <div>
                       <div className="font-bold text-xs text-slate-100 flex items-center gap-2">
+                        {isFocused && <span className="text-amber-400 font-bold">▶</span>}
                         <span>{upg.name}</span>
                         <span className="text-amber-400 text-[10px]">
                           Rank {currentLvl}/{upg.maxLevel}
@@ -4149,7 +4247,7 @@ export default function App() {
                           : canAfford
                           ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md'
                           : 'bg-slate-800 text-slate-400 cursor-not-allowed'
-                      }`}>
+                      } ${isFocused ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-950' : ''}`}>
                       {isMax ? 'MAXED' : `${cost} Gold`}
                     </button>
                   </div>
@@ -4157,11 +4255,35 @@ export default function App() {
               })}
             </div>
 
-            <button
-              onClick={() => setIsSanctumOpen(false)}
-              className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-xl text-xs transition-colors mt-2">
-              Close Shop
-            </button>
+            {/* Close Shop Button */}
+            {(() => {
+              const closeIdx = Object.values(META_UPGRADES).length;
+              const isCloseFocused = sanctumFocusIndex === closeIdx;
+              return (
+                <button
+                  ref={(el) => {
+                    sanctumItemsRef.current[closeIdx] = el;
+                  }}
+                  onPointerEnter={() => {
+                    sanctumFocusIndexRef.current = closeIdx;
+                    setSanctumFocusIndex(closeIdx);
+                  }}
+                  onClick={() => setIsSanctumOpen(false)}
+                  className={`w-full font-bold py-2 rounded-xl text-xs transition-all mt-2 border ${
+                    isCloseFocused
+                      ? 'bg-slate-700 text-amber-300 border-amber-400 ring-2 ring-amber-400 shadow-md scale-[1.01]'
+                      : 'bg-slate-800 hover:bg-slate-700 text-white border-transparent'
+                  }`}>
+                  Close Shop [B / Esc]
+                </button>
+              );
+            })()}
+
+            <div className="text-[10px] text-slate-400 text-center flex items-center justify-center gap-3 pt-1 border-t border-slate-800/60">
+              <span>[W / S or D-Pad] Navigate</span>
+              <span>[Enter / A] Buy</span>
+              <span>[Esc / B] Back</span>
+            </div>
           </div>
         </MenuOverlay>
       )}
