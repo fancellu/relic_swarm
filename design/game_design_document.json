@@ -1,0 +1,125 @@
+{
+  "title": "Relic Swarm",
+  "hook": "Survive hordes collect powerful relics",
+  "game_overview": "A relentless horde survival roguelite where players battle waves of monsters, auto-cast devastating spells, and sell weapons to refine their ultimate loadout.",
+  "artstyle": "pixelated",
+  "genre": "shooting",
+  "winning_condition": "Survive for 15 minutes and vanquish the final Abyssal Titan boss.",
+  "losing_condition": "Player character health reaches zero.",
+  "player_mode": "single_player",
+  "supported_orientations": [
+    "landscape",
+    "wide"
+  ],
+  "input_methods": [
+    "keyboard",
+    "touch",
+    "mouse",
+    "dpad"
+  ],
+  "score_options": {
+    "score_type": "points",
+    "score_order": "higher_is_better"
+  },
+  "low_end_device_support": true,
+  "mobile_playable": true,
+  "tv_playable": true,
+  "language": [
+    "en"
+  ],
+  "content_descriptors": [
+    "violence"
+  ],
+  "controls": [
+    {
+      "input": "W / A / S / D or Arrow Keys",
+      "action": "Move character in 8 directions across the arena."
+    },
+    {
+      "input": "Gamepad Left Stick / D-Pad",
+      "action": "Smooth directional movement with analog velocity."
+    },
+    {
+      "input": "Gamepad Button A / Enter / Space",
+      "action": "Confirm selection in menus and level-up screens."
+    },
+    {
+      "input": "Tab / I / Gamepad Y Button",
+      "action": "Toggle Inventory / Weapon Selling Sheet during gameplay."
+    },
+    {
+      "input": "Escape / Gamepad Start",
+      "action": "Pause game and access options or loadout summary."
+    },
+    {
+      "input": "Virtual Touch Joystick",
+      "action": "On-screen directional movement for mobile devices."
+    },
+    {
+      "input": "Virtual Inventory Button",
+      "action": "Tap to toggle weapon selling interface on mobile."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Design Pillars",
+      "content": "1. Fluid Horde Combat: Smooth 60 FPS swarm rendering with distinct hit feedback and satisfying crowd-clearing attacks.\n2. Dynamic Build Flexibility: Players can sell underperforming weapons or passives on the fly to reclaim slots and refund gold for dynamic build pivoting.\n3. Deep Meta-Progression: Extensive persistent skill tree upgrades, unlockable heroes, and selectable starting loadouts that reward repeated runs.\n4. Universal Accessibility: Intuitive auto-firing with full support for Keyboard, Gamepad, and responsive Virtual Touch controls.",
+      "summary": "Core guiding principles of Relic Swarm."
+    },
+    {
+      "title": "Core Loop",
+      "content": "1. Choose Starter Loadout: Select an unlocked hero archetype and starting weapon (starting at Level 1).\n2. Battle & Auto-Cast: Navigate an expansive arena, automatically firing weapons at approaching swarms.\n3. Gather & Level Up: Collect XP gems from defeated foes to trigger 3-choice level-up drafts featuring weapons and passive relics.\n4. Manage & Sell Arsenal: Open the inventory at will or during draft screens to sell equipped weapons/passives, refunding gold to free up slots for higher-synergy builds.\n5. Defeat Elites & Bosses: Crack open treasure chests dropped by elite enemies for multi-item surges.\n6. Meta-Progression: Spend extracted gold in the permanent Sanctum Shop on stat nodes (Max HP, Area %, Cooldown Reduction, Magnet, Greed) and unlock new heroes/weapons.",
+      "summary": "The moment-to-moment gameplay cycle."
+    },
+    {
+      "title": "Core Mechanics & Weapon Selling System",
+      "content": "1. Auto-Firing Arsenal: Weapons trigger automated targeting cycles based on nearest enemy, highest health enemy, or directional sweeps. Max 4 Weapon slots and 4 Passive Relic slots.\n2. Dynamic Weapon & Passive Selling: Players can open the inventory overlay (via Tab / I / Gamepad Y / Touch button) or click 'Sell' on equipped items during level-up screens. Selling refunds 70% of invested gold/XP value, instantly frees the slot, and adds sold items back into the draft pool for subsequent level-ups.\n3. Starting Loadout Selection: In the character select menu, players select their unlocked Hero (e.g., Pyromancer, Spellblade, Void Stalker) with distinct baseline stats and their chosen Level 1 starting weapon.\n4. Synergistic Evolutions: Max level weapons combine with specific passive relics when opening boss chests to create legendary Awakened Weapons (e.g., Spirit Blades + Might Talisman -> Phantom Storm).",
+      "summary": "Detailed breakdown of auto-combat, inventory management, and loadouts."
+    },
+    {
+      "title": "Movement & Scrolling Alignment",
+      "content": "Scrolling Axis: Multi-Directional (Omnidirectional free-roaming arena). Asset Orientation Baseline: All character and enemy sprites face right (3 o'clock) by default; the engine flips horizontal orientation (scaleX = -1) when moving leftward. Player Controls: 8-way directional velocity with acceleration and deceleration dampening. Camera Behavior: Smooth camera interpolation (lerp) tracking the player character with soft bounds.",
+      "summary": "Free XY top-down arena movement mechanics."
+    },
+    {
+      "title": "Visual Hierarchy & Layering",
+      "content": "Layer Separation: Arena floor tiles are rendered in desaturated, dark gothic tones with subtle grid markers. Playfield entities (player, projectiles, XP gems, enemy swarms) use high-contrast vibrant colors and luminous outlines to ensure instant readability amidst hundreds of mobs. Hazard Affordance: Elite enemies and boss telegraphs feature pulsing crimson warning auras. HUD Overlay: Sleek top-aligned XP bar, bottom-left HP/stats display, top-right survival timer and kill counter, and cleanly docked weapon slot indicators that do not obstruct the central action area.",
+      "summary": "Rules for playfield contrast, cues, and HUD."
+    },
+    {
+      "title": "Characters & Enemies",
+      "content": "Playable Heroes:\n- Spellblade Eric: Balanced hero starting with Magic Missile and +10% Move Speed.\n- Pyromancer Vanya: High damage caster starting with Flame Blast and +15% Area Size.\n- Void Stalker Nyx: Agile rogue starting with Orbiting Daggers and +10% Cooldown Reduction.\n\nEnemy Swarms:\n- Skeleton Grunts: Basic swarming melee infantry with moderate speed.\n- Abyssal Bats: Fast erratic flyers that dive in zig-zag formations.\n- Shadow Hounds: High-speed pack hunters that flank the player.\n- Void Sorcerers: Ranged casters that cast slow homing dark orbs.\n- Abyssal Titan (Boss): Monolithic boss with sweeping laser beams, ground slams, and minion summoning.",
+      "summary": "Playable heroes and diverse enemy archetypes."
+    },
+    {
+      "title": "Fairness Tools",
+      "content": "1. XP Magnet Pulse: Leveling up or collecting rare magnet runes vacuums all on-screen XP gems toward the player.\n2. Danger Proximity Indicators: Off-screen elite enemies and boss spawns display red directional chevron pointers.\n3. Reroll & Banish: Meta-upgrades allow players to reroll level-up draft choices or banish unwanted items for the remainder of the run.\n4. Invulnerability Frames: Brief 0.5s damage cooldown upon taking a hit with flashing white sprite feedback.",
+      "summary": "Player assistance and visual clarity systems."
+    },
+    {
+      "title": "Juice & Game Feel",
+      "content": "1. Anticipation Juice: Charging weapons display glowing particle gathering circles around the hero before release.\n2. State Change Juice: Floating gold and XP numbers, dynamic chromatic aberration flash when leveling up, and vibrant pickup trails.\n3. Impact Juice: Screen shake intensity calibrated to damage dealt, micro hit-stop freeze frames on boss critical hits, and satisfying multi-kill shatter particles.",
+      "summary": "Feedback across anticipation, state change, and impact."
+    },
+    {
+      "title": "Meta-Progression & Persistent Upgrades",
+      "content": "Players earn Gold throughout runs from enemy drops and chest bounties. In the Sanctum Meta-Shop:\n- Max Health (+10% per rank, max 5 ranks)\n- Might / Damage (+5% per rank, max 5 ranks)\n- Movement Speed (+5% per rank, max 5 ranks)\n- Cooldown Haste (+4% per rank, max 5 ranks)\n- Pickup Radius (+15% per rank, max 5 ranks)\n- Greed / Gold Gain (+10% per rank, max 5 ranks)\n- Extra Rerolls & Skips (+1 per rank, max 3 ranks)\n- Character & Weapon Unlocks achieved via in-game milestones (e.g., Survive 10 minutes, Defeat 1,000 enemies).",
+      "summary": "Sanctum shop and permanent unlocks."
+    },
+    {
+      "title": "Accessibility",
+      "content": "High-contrast visual mode for projectiles and health bars, adjustable screen shake intensity slider, auto-aim toggle option, and fully remappable keyboard and gamepad controls.",
+      "summary": "Inclusive gameplay options."
+    },
+    {
+      "title": "Structural Integrity",
+      "content": "Flow: Main Menu -> Character & Loadout Selection -> Sanctum Meta-Shop -> Active Run -> Level-Up Overlays -> Inventory Sell Modal -> Victory / Game Over Summary -> Meta Rewards.",
+      "summary": "UI screens and flow transitions."
+    },
+    {
+      "title": "Virtual Touch Controls Implementation",
+      "content": "Render an on-screen virtual analog joystick on the bottom-left of the screen and a floating Inventory / Sell button on the bottom-right. Buttons must use touch-none and pointer-events-auto on interactive elements only, and handle onPointerLeave, onPointerCancel, and onPointerUp events gracefully to eliminate stuck inputs.",
+      "summary": "Mandatory responsive mobile controls."
+    }
+  ]
+}
