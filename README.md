@@ -6,6 +6,11 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 
 ---
 
+## 🎮 Play
+
+https://relic-swarm.vercel.app/
+
+
 ## 🌟 Key Features
 
 - **Fluid Horde Combat**: High-density swarms rendered at a fixed 60 FPS with damage-scaled screen shake, micro hit-stop freeze frames, and responsive crowd-clearing feedback.
@@ -19,7 +24,6 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 - **Universal Controls**: Full support for Keyboard, Gamepad / Controllers, and Virtual Touch controls for mobile and handheld play.
 
 ---
-
 ## 🎮 Controls
 
 | Action | Keyboard | Gamepad | Mobile / Touch |
