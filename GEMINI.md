@@ -163,3 +163,7 @@ npm run dev
 # Preview bundled output
 npm run preview
 ```
+
+## 7. TODO
+
+Look at [EXTRA.md](EXTRA.md)
