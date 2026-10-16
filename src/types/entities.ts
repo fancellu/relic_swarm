@@ -19,10 +19,9 @@ export interface HeroData {
   regenBonus: number;
   color: string;
   idleSheet: string;
-  spriteKey: 'hero_spellblade' | 'hero_pyromancer' | 'hero_voidstalker';
+  spriteKey: string;
 }
 
-// --- In-Game Simulation Structures ---
 export interface EquippedItem {
   id: string;
   level: number;
@@ -57,7 +56,7 @@ export interface EnemyEntity {
 
 export interface ProjectileEntity {
   id: number;
-  type: 'missile' | 'flame' | 'dagger' | 'thunder' | 'sorcerer_orb' | 'spore' | 'ice' | 'vortex';
+  type: 'missile' | 'flame' | 'dagger' | 'thunder' | 'sorcerer_orb' | 'spore' | 'ice' | 'vortex' | 'chakram' | 'beetle';
   sourceWeapon?: string;
   x: number;
   y: number;
@@ -76,6 +75,7 @@ export interface ProjectileEntity {
   splashRadius?: number;
   inflictsPoison?: boolean;
   inflictsSlow?: boolean;
+  targetId?: number;
 }
 
 export interface DropEntity {
@@ -170,4 +170,6 @@ export interface SimulationState {
   bonusArmor: number;
   bonusStamina: number;
   aegisShieldTimer: number;
+  solarPulseCounter?: number;
+  conduitPylons?: {x: number; y: number; life: number}[];
 }

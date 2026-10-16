@@ -97,13 +97,14 @@ export function updateWeaponCasting(
       }
     }
 
-    // --- Thunder Strike ---
-    else if (wep.id === 'thunder_strike') {
+    // --- Thunder Strike & Mjolnir's Conduit ---
+    else if (wep.id === 'thunder_strike' || wep.id === 'mjolnir_conduit') {
       if (sim.weaponTimers[timerKey] >= actualCd && sim.enemies.length > 0) {
         sim.weaponTimers[timerKey] = 0;
         gameAudio.playArcadeLaser();
 
-        const strikes = 1 + Math.floor(wep.level / 2);
+        const isConduit = wep.id === 'mjolnir_conduit';
+        const strikes = isConduit ? 4 : 1 + Math.floor(wep.level / 2);
         const dmg = (def.baseDamage || 50) * stats.mightMult * (1 + (wep.level - 1) * 0.3);
 
         for (let i = 0; i < strikes; i++) {
@@ -119,7 +120,7 @@ export function updateWeaponCasting(
             vx: 0,
             vy: 0,
             damage: dmg,
-            radius: 40 * stats.areaMult,
+            radius: (isConduit ? 55 : 40) * stats.areaMult,
             duration: 0.35,
             maxDuration: 0.35,
             pierce: 999,
@@ -127,22 +128,30 @@ export function updateWeaponCasting(
             color: '#38bdf8',
           });
           spawnParticles(target.x, target.y, 10, '#38bdf8', 150);
+
+          // If Mjolnir's Conduit, plant a conduit pylon for laser arcing
+          if (isConduit) {
+            if (!sim.conduitPylons) sim.conduitPylons = [];
+            sim.conduitPylons.push({x: target.x, y: target.y, life: 5.0});
+            if (sim.conduitPylons.length > 6) sim.conduitPylons.shift();
+          }
         }
       }
     }
 
-    // --- Toxic Spores (Poison DoT) ---
-    else if (wep.id === 'venom_spores') {
+    // --- Toxic Spores & Necrotic Blight (Poison DoT) ---
+    else if (wep.id === 'venom_spores' || wep.id === 'necrotic_blight') {
       if (sim.weaponTimers[timerKey] >= actualCd && sim.enemies.length > 0) {
         sim.weaponTimers[timerKey] = 0;
         gameAudio.playPotionGulp();
 
-        const sporeCount = 2 + Math.floor(wep.level / 2);
+        const isBlight = wep.id === 'necrotic_blight';
+        const sporeCount = isBlight ? 5 : 2 + Math.floor(wep.level / 2);
         const dmg = (def.baseDamage || 16) * stats.mightMult * (1 + (wep.level - 1) * 0.2);
 
         for (let i = 0; i < sporeCount; i++) {
           const angle = Math.random() * Math.PI * 2;
-          const dist = 100 + Math.random() * 200;
+          const dist = 80 + Math.random() * 220;
           sim.projectiles.push({
             id: sim.nextProjId++,
             type: 'spore',
@@ -152,12 +161,12 @@ export function updateWeaponCasting(
             vx: 0,
             vy: 0,
             damage: dmg,
-            radius: (45 + wep.level * 10) * stats.areaMult,
-            duration: 3.0,
-            maxDuration: 3.0,
+            radius: (isBlight ? 75 : 45 + wep.level * 10) * stats.areaMult,
+            duration: isBlight ? 4.0 : 3.0,
+            maxDuration: isBlight ? 4.0 : 3.0,
             pierce: 999,
             hitList: [],
-            color: '#22c55e',
+            color: isBlight ? '#10b981' : '#22c55e',
             inflictsPoison: true,
           });
         }
@@ -196,25 +205,56 @@ export function updateWeaponCasting(
       }
     }
 
-    // --- Radiant Aura ---
-    else if (wep.id === 'radiant_aura') {
+    // --- Radiant Aura & Solar Eclipse ---
+    else if (wep.id === 'radiant_aura' || wep.id === 'solar_eclipse') {
       if (sim.weaponTimers[timerKey] >= actualCd) {
         sim.weaponTimers[timerKey] = 0;
-        const auraRadius = (70 + wep.level * 15) * stats.areaMult;
+        const isEclipse = wep.id === 'solar_eclipse';
+        const auraRadius = (isEclipse ? 130 : 70 + wep.level * 15) * stats.areaMult;
         const dmg = (def.baseDamage || 14) * stats.mightMult * (1 + (wep.level - 1) * 0.2);
+
+        if (isEclipse) {
+          sim.solarPulseCounter = (sim.solarPulseCounter || 0) + 1;
+        }
+
+        const isGravitationalPulse = isEclipse && sim.solarPulseCounter! % 5 === 0;
+        if (isGravitationalPulse) {
+          sim.screenShake = 6;
+          gameAudio.playPowerupChime();
+          spawnParticles(sim.x, sim.y, 25, '#fbbf24', 160);
+          spawnDamageNumber(sim.x, sim.y, 'SOLAR GRAVITATIONAL BURST!', '#fbbf24');
+        }
 
         sim.enemies.forEach((enemy) => {
           const dist = Math.hypot(enemy.x - sim.x, enemy.y - sim.y);
           if (dist <= auraRadius + enemy.size) {
-            enemy.hp -= dmg;
-            sim.weaponDamageDealt['radiant_aura'] = (sim.weaponDamageDealt['radiant_aura'] || 0) + dmg;
-            spawnDamageNumber(enemy.x, enemy.y, Math.round(dmg).toString(), '#fde047');
+            const hitDmg = isGravitationalPulse ? dmg * 2.2 : dmg;
+            enemy.hp -= hitDmg;
+            sim.weaponDamageDealt[wep.id] = (sim.weaponDamageDealt[wep.id] || 0) + hitDmg;
+            spawnDamageNumber(enemy.x, enemy.y, Math.round(hitDmg).toString(), isEclipse ? '#f59e0b' : '#fde047');
             if (Math.random() < 0.2) spawnParticles(enemy.x, enemy.y, 3, '#fde047', 80);
             if (stats.toxicLevel > 0 && Math.random() < 0.3) {
-              applyEnemyPoison(enemy, dmg * 0.6);
+              applyEnemyPoison(enemy, hitDmg * 0.6);
+            }
+
+            // Knockback on 5th pulse
+            if (isGravitationalPulse && dist > 1) {
+              const nx = (enemy.x - sim.x) / dist;
+              const ny = (enemy.y - sim.y) / dist;
+              enemy.x += nx * 60;
+              enemy.y += ny * 60;
             }
           }
         });
+
+        // Vacuum XP drops on gravitational pulse
+        if (isGravitationalPulse) {
+          sim.drops.forEach((d) => {
+            if (Math.hypot(d.x - sim.x, d.y - sim.y) <= 450) {
+              d.attracted = true;
+            }
+          });
+        }
       }
     }
 
@@ -365,6 +405,93 @@ export function updateWeaponCasting(
             if (Math.random() < 0.2) spawnParticles(enemy.x, enemy.y, 4, '#22c55e', 90);
           }
         });
+      }
+    }
+
+    // --- FUSION 4: Shatterstorm (Glacial Shards L5 + Thunder Strike L5) ---
+    else if (wep.id === 'shatterstorm') {
+      if (sim.weaponTimers[timerKey] >= actualCd && sim.enemies.length > 0) {
+        sim.weaponTimers[timerKey] = 0;
+        gameAudio.playArcadeLaser();
+
+        // 1. Launch 5 piercing glacial lances that freeze targets
+        for (let i = 0; i < 5; i++) {
+          const angle = (i * (Math.PI * 2)) / 5 + (Math.random() * 0.2 - 0.1);
+          sim.projectiles.push({
+            id: sim.nextProjId++,
+            type: 'ice',
+            sourceWeapon: 'shatterstorm',
+            x: sim.x,
+            y: sim.y,
+            vx: Math.cos(angle) * 520,
+            vy: Math.sin(angle) * 520,
+            damage: (def.baseDamage || 85) * stats.mightMult,
+            radius: 18 * stats.areaMult,
+            duration: 2.2,
+            maxDuration: 2.2,
+            pierce: 6,
+            hitList: [],
+            color: '#38bdf8',
+            inflictsSlow: true,
+          });
+        }
+
+        // 2. Chain lightning strikes down onto slowed/frozen enemies
+        const slowedEnemies = sim.enemies.filter((e) => e.slowTimer > 0);
+        const candidates = slowedEnemies.length > 0 ? slowedEnemies : sim.enemies;
+        const strikeCount = Math.min(3, candidates.length);
+        for (let k = 0; k < strikeCount; k++) {
+          const target = candidates[Math.floor(Math.random() * candidates.length)];
+          if (target) {
+            sim.projectiles.push({
+              id: sim.nextProjId++,
+              type: 'thunder',
+              sourceWeapon: 'shatterstorm',
+              x: target.x,
+              y: target.y,
+              vx: 0,
+              vy: 0,
+              damage: 95 * stats.mightMult,
+              radius: 50 * stats.areaMult,
+              duration: 0.35,
+              maxDuration: 0.35,
+              pierce: 999,
+              hitList: [],
+              color: '#67e8f9',
+            });
+            spawnDamageNumber(target.x, target.y, 'SHATTER CRIT!', '#38bdf8');
+            spawnParticles(target.x, target.y, 12, '#38bdf8', 160);
+          }
+        }
+      }
+    }
+
+    // --- FUSION 5: Frostbite Chakrams (Glacial Shards L5 + Orbiting Daggers L5) ---
+    else if (wep.id === 'frostbite_chakrams') {
+      const bladeCount = 8;
+      const existingChakrams = sim.projectiles.filter((p) => p.type === 'chakram');
+      if (existingChakrams.length < bladeCount) {
+        for (let i = existingChakrams.length; i < bladeCount; i++) {
+          sim.projectiles.push({
+            id: sim.nextProjId++,
+            type: 'chakram',
+            sourceWeapon: 'frostbite_chakrams',
+            x: sim.x,
+            y: sim.y,
+            vx: 0,
+            vy: 0,
+            damage: (def.baseDamage || 42) * stats.mightMult,
+            radius: 16 * stats.areaMult,
+            duration: 9999,
+            maxDuration: 9999,
+            orbitAngle: (i * (Math.PI * 2)) / bladeCount,
+            orbitDist: 75 * stats.areaMult,
+            pierce: 999,
+            hitList: [],
+            color: '#06b6d4',
+            inflictsSlow: true,
+          });
+        }
       }
     }
   });

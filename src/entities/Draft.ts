@@ -36,6 +36,24 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
     ) {
       pool.push(ITEM_DEFS.toxic_sanctuary);
     }
+
+    // 4. Shatterstorm (Glacial Shards + Thunder Strike)
+    if (
+      wepIds.includes('frost_shard') &&
+      wepIds.includes('thunder_strike') &&
+      !sim.weapons.some((w) => w.id === 'shatterstorm')
+    ) {
+      pool.push(ITEM_DEFS.shatterstorm);
+    }
+
+    // 5. Frostbite Chakrams (Glacial Shards + Orbiting Daggers)
+    if (
+      wepIds.includes('frost_shard') &&
+      wepIds.includes('spinning_dagger') &&
+      !sim.weapons.some((w) => w.id === 'frostbite_chakrams')
+    ) {
+      pool.push(ITEM_DEFS.frostbite_chakrams);
+    }
   }
 
   // Check Weapon + Passive Evolutions
@@ -63,6 +81,24 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
         const frost = sim.weapons.find((w) => w.id === 'frost_shard');
         const amulet = sim.passives.find((p) => p.id === 'frost_amulet');
         if (frost && frost.level >= 5 && amulet && !sim.weapons.some((w) => w.id === item.id)) {
+          pool.push(item);
+        }
+      } else if (item.id === 'mjolnir_conduit') {
+        const thunder = sim.weapons.find((w) => w.id === 'thunder_strike');
+        const boots = sim.passives.find((p) => p.id === 'swift_boots');
+        if (thunder && thunder.level >= 5 && boots && !sim.weapons.some((w) => w.id === item.id)) {
+          pool.push(item);
+        }
+      } else if (item.id === 'solar_eclipse') {
+        const aura = sim.weapons.find((w) => w.id === 'radiant_aura');
+        const charm = sim.passives.find((p) => p.id === 'vitality_charm');
+        if (aura && aura.level >= 5 && charm && !sim.weapons.some((w) => w.id === item.id)) {
+          pool.push(item);
+        }
+      } else if (item.id === 'necrotic_blight') {
+        const spores = sim.weapons.find((w) => w.id === 'venom_spores');
+        const vial = sim.passives.find((p) => p.id === 'toxic_vial');
+        if (spores && spores.level >= 5 && vial && !sim.weapons.some((w) => w.id === item.id)) {
           pool.push(item);
         }
       }
@@ -191,6 +227,15 @@ export function applyUpgradeSelection(
     } else if (item.id === 'absolute_zero') {
       sim.weapons = sim.weapons.filter((w) => w.id !== 'frost_shard');
       sim.weapons.push({id: item.id, level: 1});
+    } else if (item.id === 'mjolnir_conduit') {
+      sim.weapons = sim.weapons.filter((w) => w.id !== 'thunder_strike');
+      sim.weapons.push({id: item.id, level: 1});
+    } else if (item.id === 'solar_eclipse') {
+      sim.weapons = sim.weapons.filter((w) => w.id !== 'radiant_aura');
+      sim.weapons.push({id: item.id, level: 1});
+    } else if (item.id === 'necrotic_blight') {
+      sim.weapons = sim.weapons.filter((w) => w.id !== 'venom_spores');
+      sim.weapons.push({id: item.id, level: 1});
     }
     sim.screenShake = 10;
     spawnParticles(sim.x, sim.y, 30, '#38bdf8', 200);
@@ -257,9 +302,9 @@ export function sellEquippedItem(
   callbacks.onGoldChange(sim.gold);
   gameAudio.playCoinPickup();
 
-  const updated = calculateDerivedStats(sim, metaLevels);
-  sim.maxHp = updated.maxHp;
-  sim.maxStamina = updated.maxStamina;
-  sim.speed = updated.speed;
-  callbacks.onStatsUpdate(updated.maxHp, updated.maxStamina);
+  const updatedStats = calculateDerivedStats(sim, metaLevels);
+  sim.maxHp = updatedStats.maxHp;
+  sim.maxStamina = updatedStats.maxStamina;
+  sim.speed = updatedStats.speed;
+  callbacks.onStatsUpdate(updatedStats.maxHp, updatedStats.maxStamina);
 }

@@ -10,19 +10,69 @@ export function updateProjectiles(
   spawnParticles: (x: number, y: number, count: number, color: string, speed?: number) => void,
   onPlayerHit: (damage: number) => void,
 ): void {
+  // 1. Process Mjolnir's Conduit electrified laser arcing between pylons
+  if (sim.conduitPylons && sim.conduitPylons.length >= 2) {
+    for (let p = sim.conduitPylons.length - 1; p >= 0; p--) {
+      sim.conduitPylons[p].life -= dt;
+      if (sim.conduitPylons[p].life <= 0) {
+        sim.conduitPylons.splice(p, 1);
+      }
+    }
+
+    const pylons = sim.conduitPylons;
+    for (let a = 0; a < pylons.length; a++) {
+      for (let b = a + 1; b < pylons.length; b++) {
+        const p1 = pylons[a];
+        const p2 = pylons[b];
+        const segDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        if (segDist > 0 && segDist < 600) {
+          // Arc damage to any enemy near the laser segment
+          for (let e = 0; e < sim.enemies.length; e++) {
+            const enemy = sim.enemies[e];
+            const cross = (enemy.x - p1.x) * (p2.y - p1.y) - (enemy.y - p1.y) * (p2.x - p1.x);
+            const lineDist = Math.abs(cross) / segDist;
+            if (lineDist < 25) {
+              const dot = (enemy.x - p1.x) * (p2.x - p1.x) + (enemy.y - p1.y) * (p2.y - p1.y);
+              if (dot >= 0 && dot <= segDist * segDist) {
+                const arcDmg = 80 * dt;
+                enemy.hp -= arcDmg;
+                sim.weaponDamageDealt['mjolnir_conduit'] = (sim.weaponDamageDealt['mjolnir_conduit'] || 0) + arcDmg;
+                if (Math.random() < 0.15) {
+                  spawnParticles(enemy.x, enemy.y, 2, '#38bdf8', 70);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 2. Process all projectiles
   for (let i = sim.projectiles.length - 1; i >= 0; i--) {
     const proj = sim.projectiles[i];
     proj.duration -= dt;
 
     if (
-      (proj.type === 'dagger' || proj.type === 'vortex') &&
+      (proj.type === 'dagger' || proj.type === 'vortex' || proj.type === 'chakram') &&
       proj.orbitAngle !== undefined &&
       proj.orbitDist !== undefined
     ) {
-      const spinSpeed = proj.type === 'vortex' ? 5.0 : 3.5;
+      const spinSpeed = proj.type === 'vortex' ? 5.0 : proj.type === 'chakram' ? 6.0 : 3.5;
       proj.orbitAngle += spinSpeed * dt;
-      proj.x = sim.x + Math.cos(proj.orbitAngle) * proj.orbitDist;
-      proj.y = sim.y + Math.sin(proj.orbitAngle) * proj.orbitDist;
+
+      // Frostbite chakrams oscillate radially
+      const effectiveDist = proj.type === 'chakram'
+        ? proj.orbitDist + Math.sin(sim.runTimer * 4 + proj.orbitAngle) * 35
+        : proj.orbitDist;
+
+      proj.x = sim.x + Math.cos(proj.orbitAngle) * effectiveDist;
+      proj.y = sim.y + Math.sin(proj.orbitAngle) * effectiveDist;
+
+      // Leave freezing slipstream particles behind chakrams
+      if (proj.type === 'chakram' && Math.random() < 0.2) {
+        spawnParticles(proj.x, proj.y, 1, '#06b6d4', 30);
+      }
 
       // Collision with enemies
       sim.enemies.forEach((enemy) => {
@@ -40,6 +90,7 @@ export function updateProjectiles(
             spawnParticles(proj.x, proj.y, 4, proj.color, 90);
 
             if (proj.inflictsPoison) applyEnemyPoison(enemy, proj.damage * 0.5);
+            if (proj.inflictsSlow) applyEnemySlow(enemy, 0.45, 2.5);
 
             setTimeout(() => {
               proj.hitList = proj.hitList.filter((id) => id !== enemy.id);
@@ -77,6 +128,25 @@ export function updateProjectiles(
         });
       }
     } else {
+      // Homing for plague beetles
+      if (proj.type === 'beetle') {
+        let target = sim.enemies.find((e) => e.id === proj.targetId);
+        if (!target && sim.enemies.length > 0) {
+          target = sim.enemies[0];
+          proj.targetId = target.id;
+        }
+        if (target) {
+          const bAngle = Math.atan2(target.y - proj.y, target.x - proj.x);
+          proj.vx += Math.cos(bAngle) * 900 * dt;
+          proj.vy += Math.sin(bAngle) * 900 * dt;
+          const curSpeed = Math.hypot(proj.vx, proj.vy);
+          if (curSpeed > 450) {
+            proj.vx = (proj.vx / curSpeed) * 450;
+            proj.vy = (proj.vy / curSpeed) * 450;
+          }
+        }
+      }
+
       // Linear / Homing Projectiles
       proj.x += proj.vx * dt;
       proj.y += proj.vy * dt;

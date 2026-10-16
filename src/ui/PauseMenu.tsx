@@ -328,9 +328,25 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
 
                 <div className="bg-slate-900/80 p-2.5 rounded-xl border border-amber-900/40">
                   <div className="font-bold text-amber-300">Plague Sanctuary</div>
-                  <div className="text-slate-400 text-[10px]">Radiant Aura (Lv 5) + Toxic Spores (Lv 5)</div>
+                  <div className="text-slate-400 text-[10px]">Radiant Aura (Lv 5) + Venom Spores (Lv 5)</div>
                   <div className="text-slate-300 text-[10px] mt-1">
                     Sanctified toxic aura slowing enemies by 40% with massive poison AoE.
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/80 p-2.5 rounded-xl border border-amber-900/40">
+                  <div className="font-bold text-amber-300">Shatterstorm</div>
+                  <div className="text-slate-400 text-[10px]">Glacial Shards (Lv 5) + Thunder Strike (Lv 5)</div>
+                  <div className="text-slate-300 text-[10px] mt-1">
+                    Piercing ice lances that freeze targets; chain lightning shatters slowed/frozen foes.
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/80 p-2.5 rounded-xl border border-amber-900/40">
+                  <div className="font-bold text-amber-300">Frostbite Chakrams</div>
+                  <div className="text-slate-400 text-[10px]">Glacial Shards (Lv 5) + Orbiting Daggers (Lv 5)</div>
+                  <div className="text-slate-300 text-[10px] mt-1">
+                    Expanding & contracting ring of 8 cryogenic chakrams leaving freezing slipstream trails.
                   </div>
                 </div>
               </div>
@@ -357,6 +373,24 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                 </div>
 
                 <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
+                  <div className="font-bold text-purple-300">Mjolnir's Conduit</div>
+                  <div className="text-slate-400 text-[10px]">Thunder Strike (Lv 5) + Swift Boots</div>
+                  <div className="text-slate-300 text-[10px] mt-1">Electrified conduit pylons arcing continuous laser tripwires.</div>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
+                  <div className="font-bold text-purple-300">Solar Eclipse</div>
+                  <div className="text-slate-400 text-[10px]">Radiant Aura (Lv 5) + Vitality Charm</div>
+                  <div className="text-slate-300 text-[10px] mt-1">Breathing corona aura; 5th pulse repels foes and vacuums XP.</div>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
+                  <div className="font-bold text-purple-300">Necrotic Blight</div>
+                  <div className="text-slate-400 text-[10px]">Venom Spores (Lv 5) + Toxic Vial</div>
+                  <div className="text-slate-300 text-[10px] mt-1">Corrosive spore clouds; dying poisoned foes spawn homing plague beetles.</div>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
                   <div className="font-bold text-purple-300">Phantom Storm</div>
                   <div className="text-slate-400 text-[10px]">Orbiting Daggers (Lv 5) + Might Talisman</div>
                   <div className="text-slate-300 text-[10px] mt-1">8 hyper-speed ethereal scythes.</div>
@@ -364,7 +398,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
 
                 <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
                   <div className="font-bold text-purple-300">Absolute Zero</div>
-                  <div className="text-slate-400 text-[10px]">Glacial Shards (Lv 5) + Permafrost Sigil</div>
+                  <div className="text-slate-400 text-[10px]">Glacial Shards (Lv 5) + Frost Amulet</div>
                   <div className="text-slate-300 text-[10px] mt-1">6 cryogenic piercing frost spikes with freeze.</div>
                 </div>
               </div>

@@ -37,18 +37,64 @@ export function renderGame(
     ctx.restore();
   }
 
-  // 3. Render Radiant Aura / Toxic Sanctuary Weapon
-  const auraEquipped = sim.weapons.find((w) => w.id === 'radiant_aura' || w.id === 'toxic_sanctuary');
+  // 3. Render Radiant Aura / Toxic Sanctuary / Solar Eclipse Weapon
+  const auraEquipped = sim.weapons.find((w) => w.id === 'radiant_aura' || w.id === 'toxic_sanctuary' || w.id === 'solar_eclipse');
   if (auraEquipped && assets['effect_radiant_aura']) {
     const isSanctuary = auraEquipped.id === 'toxic_sanctuary';
-    const auraRad = isSanctuary ? 160 * stats.areaMult : (70 + auraEquipped.level * 15) * stats.areaMult;
+    const isEclipse = auraEquipped.id === 'solar_eclipse';
+    const breathingPulse = isEclipse ? 1 + Math.sin(sim.runTimer * 5) * 0.15 : 1.0;
+    const auraRad = isSanctuary
+      ? 160 * stats.areaMult
+      : isEclipse
+      ? 130 * stats.areaMult * breathingPulse
+      : (70 + auraEquipped.level * 15) * stats.areaMult;
     const auraImg = assets['effect_radiant_aura'];
     ctx.save();
     ctx.translate(sim.x, sim.y);
-    ctx.rotate(sim.auraVisualAngle * (isSanctuary ? 1.5 : 1));
-    ctx.globalAlpha = isSanctuary ? 0.8 : 0.65;
+    ctx.rotate(sim.auraVisualAngle * (isSanctuary ? 1.5 : isEclipse ? 2.0 : 1));
+    ctx.globalAlpha = isSanctuary ? 0.8 : isEclipse ? 0.85 : 0.65;
     if (auraImg && auraImg.complete && auraImg.naturalWidth > 0) {
+      if (isEclipse) {
+        try {
+          ctx.filter = 'hue-rotate(-45deg) saturate(200%) brightness(1.2)';
+        } catch (e) {}
+      }
       ctx.drawImage(auraImg, -auraRad, -auraRad, auraRad * 2, auraRad * 2);
+    }
+    ctx.restore();
+  }
+
+  // 3b. Render Mjolnir's Conduit Pylons and Laser Arcs
+  if (sim.conduitPylons && sim.conduitPylons.length > 0) {
+    const pylons = sim.conduitPylons;
+    ctx.save();
+    // Render laser beams between pylons
+    for (let a = 0; a < pylons.length; a++) {
+      for (let b = a + 1; b < pylons.length; b++) {
+        const p1 = pylons[a];
+        const p2 = pylons[b];
+        const segDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        if (segDist < 600) {
+          ctx.strokeStyle = '#38bdf8';
+          ctx.shadowColor = '#38bdf8';
+          ctx.shadowBlur = 8;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+        }
+      }
+    }
+    // Render pylon nodes
+    for (let i = 0; i < pylons.length; i++) {
+      const p = pylons[i];
+      ctx.fillStyle = '#67e8f9';
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+      ctx.fill();
     }
     ctx.restore();
   }
@@ -63,7 +109,7 @@ export function renderGame(
       size = 28;
     } else if (drop.type === 'gold') {
       imgKey = 'item_gold_coin';
-      size = 20;
+      size = 22;
     } else if (drop.type === 'potion') {
       imgKey = 'item_health_potion';
       size = 24;
@@ -72,21 +118,17 @@ export function renderGame(
       size = 26;
     } else if (drop.type === 'chest') {
       imgKey = 'item_treasure_chest';
-      size = 38;
+      size = 32;
 
-      // Chest opening progress visual
+      // Opening channel progress ring
       if (drop.isOpening && drop.openingTimer) {
-        const ratio = Math.min(1, drop.openingTimer / 0.45);
+        const progress = Math.min(1, drop.openingTimer / 0.45);
         ctx.save();
         ctx.strokeStyle = '#facc15';
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(drop.x, drop.y, 26, -Math.PI / 2, -Math.PI / 2 + ratio * Math.PI * 2);
+        ctx.arc(drop.x, drop.y, 24, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
         ctx.stroke();
-        ctx.fillStyle = 'rgba(250, 204, 21, 0.2)';
-        ctx.beginPath();
-        ctx.arc(drop.x, drop.y, 24, 0, Math.PI * 2);
-        ctx.fill();
         ctx.restore();
       } else {
         // Subtle idle golden glow around chest
@@ -244,11 +286,16 @@ export function renderGame(
           fCtx.fill();
         },
       );
-    } else if (proj.type === 'dagger' || proj.type === 'vortex') {
-      const spin = (proj.orbitAngle || 0) + sim.runTimer * 10;
+    } else if (proj.type === 'dagger' || proj.type === 'vortex' || proj.type === 'chakram') {
+      const spin = (proj.orbitAngle || 0) + sim.runTimer * (proj.type === 'chakram' ? 14 : 10);
       ctx.save();
       ctx.translate(proj.x, proj.y);
       ctx.rotate(spin);
+      if (proj.type === 'chakram') {
+        try {
+          ctx.filter = 'hue-rotate(160deg) brightness(1.2)';
+        } catch (e) {}
+      }
       drawAsset(
         ctx,
         assets['proj_spinning_dagger'],
@@ -290,6 +337,15 @@ export function renderGame(
       ctx.fillStyle = '#06b6d4';
       ctx.shadowColor = '#06b6d4';
       ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else if (proj.type === 'beetle') {
+      ctx.save();
+      ctx.fillStyle = '#10b981';
+      ctx.shadowColor = '#10b981';
+      ctx.shadowBlur = 6;
       ctx.beginPath();
       ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
       ctx.fill();
@@ -344,27 +400,34 @@ export function renderGame(
 
   ctx.restore();
 
-  // 9. Screen-Edge Danger Chevrons for Off-Screen Elites & Boss
+  // 9. Off-screen Danger Chevrons for Bosses & Elites
   sim.enemies.forEach((enemy) => {
     if (!enemy.isElite && !enemy.isBoss) return;
 
-    const screenX = enemy.x - sim.camera.x + canvasWidth / 2;
-    const screenY = enemy.y - sim.camera.y + canvasHeight / 2;
+    const screenX = canvasWidth / 2 + (enemy.x - sim.camera.x);
+    const screenY = canvasHeight / 2 + (enemy.y - sim.camera.y);
 
-    if (screenX < 40 || screenX > canvasWidth - 40 || screenY < 40 || screenY > canvasHeight - 40) {
-      const edgeX = clamp(screenX, 40, canvasWidth - 40);
-      const edgeY = clamp(screenY, 40, canvasHeight - 40);
+    const margin = 28;
+    const isOffScreen =
+      screenX < margin ||
+      screenX > canvasWidth - margin ||
+      screenY < margin ||
+      screenY > canvasHeight - margin;
+
+    if (isOffScreen) {
+      const clampX = clamp(screenX, margin, canvasWidth - margin);
+      const clampY = clamp(screenY, margin, canvasHeight - margin);
       const angle = Math.atan2(screenY - canvasHeight / 2, screenX - canvasWidth / 2);
 
       ctx.save();
-      ctx.translate(edgeX, edgeY);
+      ctx.translate(clampX, clampY);
       ctx.rotate(angle);
-      ctx.fillStyle = enemy.isBoss ? '#dc2626' : '#f59e0b';
+      ctx.fillStyle = enemy.isBoss ? '#ef4444' : '#f59e0b';
       ctx.beginPath();
-      ctx.moveTo(15, 0);
-      ctx.lineTo(-10, -10);
-      ctx.lineTo(-5, 0);
-      ctx.lineTo(-10, 10);
+      ctx.moveTo(12, 0);
+      ctx.lineTo(-8, -8);
+      ctx.lineTo(-4, 0);
+      ctx.lineTo(-8, 8);
       ctx.closePath();
       ctx.fill();
       ctx.restore();

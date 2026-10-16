@@ -188,6 +188,33 @@ export function updateEnemies(
       onScoreAdd(enemy.isBoss ? 5000 : enemy.isElite ? 250 : 25);
       spawnParticles(enemy.x, enemy.y, enemy.isBoss ? 30 : enemy.isElite ? 15 : 6, enemy.color, 140);
 
+      // Necrotic Blight death trigger:
+      // Afflicted enemies that die explode into homing plague beetles seeking out nearest enemies
+      if (enemy.poisonTimer > 0 && sim.weapons.some((w) => w.id === 'necrotic_blight')) {
+        const beetleCount = 2 + Math.floor(Math.random() * 2);
+        for (let b = 0; b < beetleCount; b++) {
+          const bAngle = Math.random() * Math.PI * 2;
+          sim.projectiles.push({
+            id: sim.nextProjId++,
+            type: 'beetle',
+            sourceWeapon: 'necrotic_blight',
+            x: enemy.x,
+            y: enemy.y,
+            vx: Math.cos(bAngle) * 260,
+            vy: Math.sin(bAngle) * 260,
+            damage: 38 * stats.mightMult,
+            radius: 8 * stats.areaMult,
+            duration: 3.5,
+            maxDuration: 3.5,
+            pierce: 1,
+            hitList: [],
+            color: '#10b981',
+            inflictsPoison: true,
+          });
+        }
+        spawnParticles(enemy.x, enemy.y, 6, '#10b981', 80);
+      }
+
       const currentWorldChests = sim.drops.filter((d) => d.type === 'chest').length;
 
       if (enemy.isBoss) {

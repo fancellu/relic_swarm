@@ -13,8 +13,8 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 - **4 Distinct Champions**: Choose from Arcanist Vael, Knight Commander Roland, Pyromancer Ignis, and Plague Alchemist Mortis — each featuring unique baseline stats, starting weapons, and passive affinities.
 - **Weapons, Evolutions & Fusions**:
   - **7 Base Weapons**: Magic Missiles, Orbiting Daggers, Flame Blast, Thunder Strike, Radiant Aura, Venom Spores, and Glacial Shards.
-  - **Level 5 + Level 5 Fusions**: Combine max-level weapons to form dual-aspect super-weapons (*Arcane Phantom Vortex*, *Cataclysmic Supernova*, *Plague Sanctuary*).
-  - **Awakened Evolutions**: Pair maxed weapons with matching passives in boss chests for legendary forms (*Chrono Missiles*, *Hellfire Nova*, *Phantom Storm*, *Absolute Zero*).
+  - **Level 5 + Level 5 Fusions**: Combine max-level weapons to form dual-aspect super-weapons (*Arcane Phantom Vortex*, *Cataclysmic Supernova*, *Plague Sanctuary*, *Shatterstorm*, *Frostbite Chakrams*).
+  - **Awakened Evolutions**: Pair maxed weapons with matching passives in boss chests for legendary forms (*Chrono Missiles*, *Hellfire Nova*, *Mjolnir's Conduit*, *Solar Eclipse*, *Necrotic Blight*, *Phantom Storm*, *Absolute Zero*).
 - **Persistent Sanctum Meta-Shop**: Bank earned gold across runs in your Sanctum Vault and permanently enhance your attributes (Health, Might, Movement Speed, Cooldown Haste, Magnet Radius, Greed, and Fate Rerolls).
 - **Universal Controls**: Full support for Keyboard, Gamepad / Controllers, and Virtual Touch controls for mobile and handheld play.
 
@@ -66,10 +66,15 @@ Players have **4 Weapon Slots** and **4 Passive Slots**.
 - **Arcane Phantom Vortex**: *Magic Missile L5* + *Orbiting Daggers L5* $\to$ 8 astral blades firing rapid homing energy beams.
 - **Cataclysmic Supernova**: *Flame Blast L5* + *Thunder Strike L5* $\to$ Screen-wide infernos combined with celestial lightning storms.
 - **Plague Sanctuary**: *Radiant Aura L5* + *Venom Spores L5* $\to$ Massive aura slowing enemies by 40% and dealing 24 poison DPS.
+- **Shatterstorm**: *Glacial Shards L5* + *Thunder Strike L5* $\to$ Piercing ice lances freezing targets, followed by lightning shattering slowed/frozen foes.
+- **Frostbite Chakrams**: *Glacial Shards L5* + *Orbiting Daggers L5* $\to$ Expanding and contracting ring of 8 cryogenic chakrams trailing freezing slipstreams.
 
 ### Awakened Evolutions (Max Weapon + Matched Passive via Boss Chest)
 - **Chrono Missiles**: *Magic Missile* + *Swift Boots* $\to$ Continuous stream of hyper-velocity laser bolts.
 - **Hellfire Nova**: *Flame Blast* + *Might Talisman* $\to$ Arena-wide cascading supernovae.
+- **Mjolnir's Conduit**: *Thunder Strike* + *Swift Boots* $\to$ Lightning strikes drop electrified conduit pylons arcing continuous high-voltage laser beams.
+- **Solar Eclipse**: *Radiant Aura* + *Vitality Charm* $\to$ Pulsing corona aura unleashing a gravitational shockwave repelling enemies and vacuuming XP.
+- **Necrotic Blight**: *Venom Spores* + *Toxic Vial* $\to$ Massive corrosive spores; afflicted enemies that die explode into homing plague beetles.
 - **Phantom Storm**: *Orbiting Daggers* + *Might Talisman* $\to$ 8 ethereal hyper-speed scythes.
 - **Absolute Zero**: *Glacial Shards* + *Frost Amulet* $\to$ Cryogenic storms freezing and shattering enemies.
 
@@ -135,7 +140,7 @@ npm run preview
 
 ---
 
-## 📂 Project Structure
+## 📁 Project Structure
 
 ```
 relicswarm/
