@@ -25,8 +25,8 @@ import {
   Zap,
 } from 'lucide-react';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {getConfig} from './constants';
-import {SpriteActionConfig, SpriteAnimationState, SpriteRenderer} from './SpriteRenderer';
+import {getConfig} from './src/constants';
+import {SpriteActionConfig, SpriteAnimationState, SpriteRenderer} from './src/SpriteRenderer';
 import BackgroundMusic from './utils/BackgroundMusic';
 import {
   clamp,

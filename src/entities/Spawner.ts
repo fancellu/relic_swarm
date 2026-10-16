@@ -1,5 +1,5 @@
-import {getConfig} from '../../constants';
-import {SpriteRenderer} from '../../SpriteRenderer';
+import {getConfig} from '../constants';
+import {SpriteRenderer} from '../SpriteRenderer';
 import {gameAudio} from '../../utils/helper';
 import {EnemyEntity, SimulationState} from '../types/entities';
 import {MAX_WORLD_CHESTS} from '../types/meta';

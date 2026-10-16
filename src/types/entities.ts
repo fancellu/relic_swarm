@@ -1,4 +1,4 @@
-import {SpriteAnimationState} from '../../SpriteRenderer';
+import {SpriteAnimationState} from '../SpriteRenderer';
 import {ItemDef} from './items';
 
 // --- Hero Definitions ---

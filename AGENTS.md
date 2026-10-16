@@ -2,7 +2,17 @@
 
 ## Project Structure & Module Organization
 
-Relic Swarm is a React 19 and TypeScript Vite game. Root files provide the application shell: `index.tsx` mounts React, `App.tsx` coordinates the game, `constants.ts` holds shared tuning, and `SpriteRenderer.ts` handles sprite animation. New domain code belongs under `src/`: `src/core/` for engine and rendering infrastructure, `src/entities/` for game systems, `src/types/` for contracts, and `src/ui/` for React overlays. Shared hooks and helpers live in `utils/`. Keep playable media in `assets/images/` or `assets/audio/`; update `design/asset_manifest.json` when asset metadata changes.
+Relic Swarm is a React 19 and TypeScript Vite game. Root files provide the application entry: `index.tsx` mounts React and `index.html` serves the host page. Core application code is organized under `src/`:
+- `src/App.tsx` coordinates high-level state, game loops, canvas mounting, and UI overlays.
+- `src/constants.ts` holds canvas resolution, framerate, and balance tuning.
+- `src/SpriteRenderer.ts` handles spritesheet action slicing, frame timing, and rendering.
+- `src/utils.ts` re-exports shared mathematical and game utilities.
+- `src/core/` houses engine loop, camera lerp, screen shake, and Canvas 2D rendering pipeline.
+- `src/entities/` contains combat, player movement, weapon casting, enemy spawning, and drops.
+- `src/types/` contains TypeScript contracts and data structures.
+- `src/ui/` contains modular React overlays (HUD, DraftModal, SanctumShop, InventorySheet, PauseMenu, etc.).
+
+Shared hooks and helpers live in `utils/`. Playable media lives in `assets/images/` or `assets/audio/`; update `design/asset_manifest.json` when asset metadata changes.
 
 Read `GEMINI.md` before changing input behavior, persistence, the fixed-step game loop, or asset loading. It records required compatibility and performance invariants.
 
@@ -23,8 +33,4 @@ Do not allocate unnecessary arrays, closures, or objects in per-frame `update()`
 
 ## Commit & Pull Request Guidelines
 
-Recent history uses short, imperative prefixes such as `feat:`, `fix:`, and `docs:`; use the same convention (for example, `fix: prevent duplicate chest rewards`). Keep commits focused. Pull requests should summarize gameplay and technical changes, link relevant issues when available, state validation performed (`npm run build` at minimum), and include screenshots or a short recording for visible UI or gameplay changes.
-
-## Configuration & Persistence
-
-Do not rename existing `localStorage` keys without a migration: `relic_swarm_sanctum_gold`, legacy `relic_swarm_gold`, and `relic_swarm_meta`. Asset paths must remain relative to `assets/` so Vite's copy plugin includes them in production builds.
+Follow conventional commit formats where applicable (`feat:`, `fix:`, `refactor:`, `docs:`, etc.).

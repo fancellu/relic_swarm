@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {getConfig} from '../constants';
+import {getConfig} from './constants';
 import BackgroundMusic from '../utils/BackgroundMusic';
 import {
   createFixedStepper,

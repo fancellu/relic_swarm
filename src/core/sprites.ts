@@ -1,4 +1,4 @@
-import {SpriteActionConfig, SpriteRenderer} from '../../SpriteRenderer';
+import {SpriteActionConfig, SpriteRenderer} from '../SpriteRenderer';
 
 export interface GameSpriteRenderers {
   hero_spellblade: SpriteRenderer;

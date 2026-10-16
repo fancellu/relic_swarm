@@ -1,4 +1,4 @@
-import {getConfig} from '../../constants';
+import {getConfig} from '../constants';
 import {EnemyEntity, HeroData, SimulationState} from '../types/entities';
 import {HEROES} from '../types/items';
 import {META_UPGRADES} from '../types/meta';

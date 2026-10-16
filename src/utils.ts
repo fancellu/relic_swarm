@@ -1,8 +1,8 @@
 /**
  * @fileoverview Shared 2D & common utility functions for Playground games.
  *
- * Re-exports all shared 2D/3D helpers from `./utils/helper`,
- * `./utils/BackgroundMusic`, and `./utils/usePlayground`, plus common math
+ * Re-exports all shared 2D/3D helpers from `../utils/helper`,
+ * `../utils/BackgroundMusic`, and `../utils/usePlayground`, plus common math
  * and random number helpers so generated 2D games importing from `./utils`
  * resolve without missing-export errors.
  */
@@ -14,7 +14,7 @@ export {
   type AudioBoundaries,
   type BackgroundMusicProps,
   type SeamlessLoopResult,
-} from './utils/BackgroundMusic';
+} from '../utils/BackgroundMusic';
 export {
   MenuOverlay,
   Overlay,
@@ -40,7 +40,7 @@ export {
   type PointerState,
   type Position,
   type SpriteConfig,
-} from './utils/helper';
+} from '../utils/helper';
 export {
   usePlayground,
   usePlaygroundGameLifecycle,
@@ -54,7 +54,7 @@ export {
   type NumberConfigEntry,
   type SelectConfigEntry,
   type Vector2ConfigEntry,
-} from './utils/usePlayground';
+} from '../utils/usePlayground';
 
 /** Degrees to radians. */
 export function degToRad(deg: number): number {
@@ -66,21 +66,38 @@ export function radToDeg(rad: number): number {
   return rad * (180 / Math.PI);
 }
 
-/** Random float in [min, max). */
+/** Distance between two 2D points. */
+export function distance(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+): number {
+  return Math.hypot(x2 - x1, y2 - y1);
+}
+
+/** Linear interpolation between two values. */
+export function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+/** Random float between min and max (inclusive of min, exclusive of max). */
 export function randomRange(min: number, max: number): number {
-  return min + Math.random() * (max - min);
+  return Math.random() * (max - min) + min;
 }
 
-/** Random integer in [min, max] (inclusive). */
+/** Random integer between min and max inclusive. */
 export function randomInt(min: number, max: number): number {
-  return Math.floor(randomRange(min, max + 1));
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-/**
- * Seeded PRNG (mulberry32) for deterministic procedural generation.
- * Returns a function that produces floats in [0, 1) on each call.
- */
-export function createSeededRandom(seed: number): () => number {
+/** Random item from an array. */
+export function randomChoice<T>(arr: readonly T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/** Simple pseudo-random number generator (Mulberry32) seeded by integer. */
+export function seededRandom(seed: number): () => number {
   let s = seed | 0;
   return () => {
     s = (s + 0x6d2b79f5) | 0;

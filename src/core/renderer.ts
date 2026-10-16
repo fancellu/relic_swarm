@@ -1,4 +1,4 @@
-import {SpriteRenderer} from '../../SpriteRenderer';
+import {SpriteRenderer} from '../SpriteRenderer';
 import {clamp, drawAsset, prepareCanvas} from '../../utils/helper';
 import {DerivedStats} from '../entities/Player';
 import {SimulationState} from '../types/entities';

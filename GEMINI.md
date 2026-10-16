@@ -14,16 +14,17 @@ The application runs on **React 19**, **Vite 8**, **Tailwind CSS v4**, and an **
 relicswarm/
 ├── README.md                    # Human-facing game guide, controls, and setup
 ├── GEMINI.md                    # This file (Agent architecture rules, invariants, and runbooks)
-├── App.tsx                      # Central monolithic engine (~5,200 lines)
-│   ├── State Machines           # Game status & modal overlay visibility
-│   ├── Fixed Stepper Loop       # 60 FPS sub-step simulation ticker
-│   ├── Combat & Spawning        # Collision, mob waves, projectile trajectory
-│   ├── Canvas 2D Pipeline       # Background parallax, entity culling, particle rendering
-│   └── React UI Overlays        # HUD, Level-Up Draft, Inventory/Sell Sheet, Sanctum Shop
-├── constants.ts                 # Canvas resolution (1280x720), colors, framerate, balance tuning
-├── SpriteRenderer.ts            # Spritesheet slicing, frame timer interpolation, horizontal flip
+├── index.tsx                    # React root entry, sets standalone preview flag
 ├── vite.config.ts               # Tailwind CSS v4 integration & asset copy build hook
-├── utils.ts                     # Utility barrel re-exporting helpers, math, seeded RNG
+├── src/
+│   ├── App.tsx                  # High-level coordinator mounting Canvas & UI Overlays
+│   ├── constants.ts             # Canvas resolution (1280x720), colors, framerate, balance tuning
+│   ├── SpriteRenderer.ts        # Spritesheet slicing, frame timer interpolation, horizontal flip
+│   ├── utils.ts                 # Utility barrel re-exporting helpers, math, seeded RNG
+│   ├── core/                    # Engine loop, camera lerp, screen shake, and renderer pipeline
+│   ├── entities/                # Player, weapons, projectiles, spawner, drops, draft, chests
+│   ├── types/                   # Type definitions (entities, items, meta)
+│   └── ui/                      # React UI overlays (HUD, Draft, Inventory, Sanctum, Pause, etc.)
 └── utils/
     ├── BackgroundMusic.tsx      # Web Audio loop buffers & HTMLAudioElement player
     ├── helper.tsx               # Stepper, asset preloader, input hooks, canvas helpers
@@ -78,7 +79,7 @@ LocalStorage keys must maintain backward compatibility:
    - **Do not instantiate new arrays, closures, or objects inside `update(dt)` or `draw()` routines**.
    - Reuse existing vectors, mutate pooled entities in place, and perform in-place array splices/filtering only when entities despawn.
 3. **Canvas Aspect Ratio & Resizing**:
-   - Logical canvas dimensions are fixed at `1280x720` (`constants.ts`).
+   - Logical canvas dimensions are fixed at `1280x720` (`src/constants.ts`).
    - The canvas element uses CSS `aspectRatio: "1280 / 720"` and `width: "min(100%, calc(100vh * 1280 / 720))"` inside a flex container to preserve pixel-perfect scaling across displays.
 
 ---
@@ -106,29 +107,44 @@ stateDiagram-v2
 
 ---
 
-## 5. Planned Architecture Refactoring
+## 5. Architecture Layout
 
-`App.tsx` currently houses ~5,200 lines. When undertaking major feature additions, decouple modules following this target layout:
+The codebase is organized into modular files under `src/`:
 
 ```
 src/
+├── App.tsx                # High-level coordinator mounting Canvas & UI Overlays
+├── constants.ts           # Game configuration and balance tuning
+├── SpriteRenderer.ts      # Spritesheet animator
+├── utils.ts               # Shared math and utility re-exports
 ├── types/
 │   ├── entities.ts        # Player, Enemy, Projectile, Drop, Particle interfaces
 │   ├── items.ts           # ItemDef, Weapon, Passive, Evolution definitions
 │   └── meta.ts            # MetaUpgrade, GameState interfaces
 ├── core/
+│   ├── assets.ts          # Manifest and URLs for media
 │   ├── engine.ts          # RAF stepper loop, camera lerp, screen shake
-│   └── spatial.ts         # Collision detection and spatial grid partitioning
+│   ├── renderer.ts        # Full Canvas 2D render pipeline
+│   ├── spatial.ts         # Collision detection and spatial grid partitioning
+│   └── sprites.ts         # Sprite renderer instances and configuration
 ├── entities/
-│   ├── Player.ts          # Movement, health, stamina, invulnerability frames
+│   ├── Chests.ts          # Chest reward calculation and claiming
+│   ├── Draft.ts           # Level-up choices, upgrade application, selling
+│   ├── Drops.ts           # XP gems, gold, potions, magnet pickups
+│   ├── Player.ts          # Movement, health, stamina, derived stats
+│   ├── Projectiles.ts     # Projectile movement, collision, lifetime
 │   ├── Spawner.ts         # Mob waves, boss timer triggers, elite spawns
 │   └── Weapons.ts         # Auto-targeting, firing cycles, fusion logic
-├── ui/
-│   ├── HUD.tsx            # XP bar, HP, survival clock, kill counter
-│   ├── DraftModal.tsx     # 3-choice level-up overlay & reroll handling
-│   ├── InventorySheet.tsx # Mid-run gear selling modal
-│   └── SanctumShop.tsx    # Persistent meta-progression shop
-└── App.tsx                # High-level coordinator mounting Canvas & UI Overlays
+└── ui/
+    ├── ChestModal.tsx     # Chest unlock overlay
+    ├── DraftModal.tsx     # 3-choice level-up overlay & reroll handling
+    ├── EndGameModal.tsx   # Victory & Game Over screens
+    ├── HowToPlayModal.tsx # Combat & controls guide
+    ├── HUD.tsx            # XP bar, HP, survival clock, kill counter
+    ├── InventorySheet.tsx # Mid-run gear selling modal
+    ├── PauseMenu.tsx      # Tabbed pause menu (Stats, Grimoire, Menu)
+    ├── SanctumShop.tsx    # Persistent meta-progression shop
+    └── StartScreen.tsx    # Character select & start screen
 ```
 
 ---
