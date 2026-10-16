@@ -372,7 +372,7 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     name: 'Necrotic Blight',
     type: 'WEAPON',
     icon: 'assets/images/item_xp_gem_purple.png',
-    desc: 'Awakened (Toxic Spores + Venom Infusion): Massive corrosive spore cauldrons; afflicted enemies explode on death into homing plague beetles.',
+    desc: 'Awakened (Toxic Spores + Toxic Vial): Massive corrosive spore cauldrons; afflicted enemies explode on death into homing plague beetles.',
     maxLevel: 1,
     baseDamage: 32,
     cooldown: 0.9,
@@ -420,7 +420,7 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
   },
   toxic_vial: {
     id: 'toxic_vial',
-    name: 'Venom Infusion',
+    name: 'Toxic Vial',
     type: 'PASSIVE',
     icon: 'assets/images/item_xp_gem_purple.png',
     desc: '+35% chance for all weapons to inflict deadly Poison DoT.',
