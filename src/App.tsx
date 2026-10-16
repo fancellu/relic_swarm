@@ -148,7 +148,9 @@ export default function App() {
   const [killCount, setKillCount] = useState(0);
   const [equippedWeapons, setEquippedWeapons] = useState<EquippedItem[]>([]);
   const [equippedPassives, setEquippedPassives] = useState<EquippedItem[]>([]);
-  const [currentHp, setCurrentHp] = useState(100);
+  const currentHpState = useState(100);
+  const currentHp = currentHpState[0];
+  const setCurrentHp = currentHpState[1];
   const [maxHpDisplay, setMaxHpDisplay] = useState(100);
   const [currentStamina, setCurrentStamina] = useState(100);
   const [maxStaminaDisplay, setMaxStaminaDisplay] = useState(100);
@@ -175,8 +177,12 @@ export default function App() {
   const touchJoystickRef = useRef({active: false, startX: 0, startY: 0, currentX: 0, currentY: 0, dx: 0, dy: 0, sprintTouch: false});
   const keyboardSprintRef = useRef(false);
   const navCooldownRef = useRef(0);
-  const lastPauseRef = useRef(false);
-  const lastCancelRef = useRef(false);
+  const lastGpConfirmRef = useRef(false);
+  const lastGpCancelRef = useRef(false);
+  const lastGpXRef = useRef(false);
+  const lastGpYRef = useRef(false);
+  const lastGpPauseRef = useRef(false);
+  const lastKeyboardCancelRef = useRef(false);
   const runBankedRef = useRef(false);
 
   useEffect(() => {
@@ -366,7 +372,8 @@ export default function App() {
     let gpY = 0;
     let confirm = false;
     let cancel = false;
-    let rerollPressed = false;
+    let xPressed = false;
+    let yPressed = false;
     let navUp = false;
     let navDown = false;
     let navLeft = false;
@@ -381,37 +388,71 @@ export default function App() {
       if (gamepad.buttons[13]?.pressed) gpY = 1;
       confirm = Boolean(gamepad.buttons[0]?.pressed);
       cancel = Boolean(gamepad.buttons[1]?.pressed);
-      rerollPressed = Boolean(gamepad.buttons[3]?.pressed);
+      xPressed = Boolean(gamepad.buttons[2]?.pressed);
+      yPressed = Boolean(gamepad.buttons[3]?.pressed);
       navUp = gpY < -0.45;
       navDown = gpY > 0.45;
       navLeft = gpX < -0.45 || Boolean(gamepad.buttons[4]?.pressed);
       navRight = gpX > 0.45 || Boolean(gamepad.buttons[5]?.pressed);
     }
+
+    const confirmJustPressed = confirm && !lastGpConfirmRef.current;
+    const cancelJustPressed = cancel && !lastGpCancelRef.current;
+    const xJustPressed = xPressed && !lastGpXRef.current;
+    const yJustPressed = yPressed && !lastGpYRef.current;
+    const pauseJustPressed = pausePressed && !lastGpPauseRef.current;
+
+    lastGpConfirmRef.current = confirm;
+    lastGpCancelRef.current = cancel;
+    lastGpXRef.current = xPressed;
+    lastGpYRef.current = yPressed;
+    lastGpPauseRef.current = pausePressed;
+
     navCooldownRef.current -= dt;
-    if (pausePressed && !lastPauseRef.current && navCooldownRef.current <= 0 && gameStateRef.current.status === 'PLAYING') {
+    if (pauseJustPressed && navCooldownRef.current <= 0 && gameStateRef.current.status === 'PLAYING') {
       setIsPauseOpen((value) => !value);
       navCooldownRef.current = 0.3;
       gameAudio.playCrispClick();
     }
-    lastPauseRef.current = pausePressed;
 
     if (gameStateRef.current.status === 'START') {
       if (isSanctumOpen) {
         const total = Object.keys(META_UPGRADES).length + 1;
-        if (navCooldownRef.current <= 0 && navUp) { sanctumFocusIndexRef.current = (sanctumFocusIndexRef.current + total - 1) % total; setSanctumFocusIndex(sanctumFocusIndexRef.current); navCooldownRef.current = 0.2; }
-        else if (navCooldownRef.current <= 0 && navDown) { sanctumFocusIndexRef.current = (sanctumFocusIndexRef.current + 1) % total; setSanctumFocusIndex(sanctumFocusIndexRef.current); navCooldownRef.current = 0.2; }
-        else if (confirm) { const values = Object.values(META_UPGRADES); sanctumFocusIndexRef.current < values.length ? buyMetaUpgrade(values[sanctumFocusIndexRef.current].id) : setIsSanctumOpen(false); navCooldownRef.current = 0.3; }
-        else if (cancel) setIsSanctumOpen(false);
+        if (navCooldownRef.current <= 0 && navUp) {
+          sanctumFocusIndexRef.current = (sanctumFocusIndexRef.current + total - 1) % total;
+          setSanctumFocusIndex(sanctumFocusIndexRef.current);
+          navCooldownRef.current = 0.2;
+        } else if (navCooldownRef.current <= 0 && navDown) {
+          sanctumFocusIndexRef.current = (sanctumFocusIndexRef.current + 1) % total;
+          setSanctumFocusIndex(sanctumFocusIndexRef.current);
+          navCooldownRef.current = 0.2;
+        } else if (confirmJustPressed) {
+          const values = Object.values(META_UPGRADES);
+          sanctumFocusIndexRef.current < values.length
+            ? buyMetaUpgrade(values[sanctumFocusIndexRef.current].id)
+            : setIsSanctumOpen(false);
+          navCooldownRef.current = 0.3;
+        } else if (cancelJustPressed) {
+          setIsSanctumOpen(false);
+        }
       } else if (isHowToPlayOpen) {
-        if (confirm || cancel) setIsHowToPlayOpen(false);
+        if (confirmJustPressed || cancelJustPressed) setIsHowToPlayOpen(false);
       } else if (navCooldownRef.current <= 0) {
-        if (navLeft) { setSelectedHeroIndex((index) => (index + HEROES.length - 1) % HEROES.length); navCooldownRef.current = 0.2; }
-        else if (navRight) { setSelectedHeroIndex((index) => (index + 1) % HEROES.length); navCooldownRef.current = 0.2; }
-        else if (confirm) initGame();
-        else if (gamepad?.buttons[2]?.pressed || rerollPressed) openSanctum();
+        if (navLeft) {
+          setSelectedHeroIndex((index) => (index + HEROES.length - 1) % HEROES.length);
+          navCooldownRef.current = 0.2;
+        } else if (navRight) {
+          setSelectedHeroIndex((index) => (index + 1) % HEROES.length);
+          navCooldownRef.current = 0.2;
+        } else if (confirmJustPressed) {
+          initGame();
+        } else if (xJustPressed || yJustPressed) {
+          openSanctum();
+        }
       }
       return;
     }
+
     if (gameStateRef.current.status === 'GAME_OVER' || gameStateRef.current.status === 'VICTORY') {
       if (navCooldownRef.current <= 0 && (navUp || navLeft)) {
         setEndScreenFocusIndex(0);
@@ -419,23 +460,38 @@ export default function App() {
       } else if (navCooldownRef.current <= 0 && (navDown || navRight)) {
         setEndScreenFocusIndex(1);
         navCooldownRef.current = 0.2;
-      } else if (confirm) {
+      } else if (confirmJustPressed) {
         if (endScreenFocusIndex === 0) initGame();
         else returnToStart();
         navCooldownRef.current = 0.35;
-      } else if (cancel) {
+      } else if (cancelJustPressed) {
         returnToStart();
       }
       return;
     }
-    if (chestReward) { if (confirm || cancel) claimChestReward(); return; }
-    if (isLevelUpOpen) {
-      if (navCooldownRef.current <= 0 && navUp) { setSelectedChoiceIndex((index) => (index + choicesRef.current.length - 1) % choicesRef.current.length); navCooldownRef.current = 0.2; }
-      else if (navCooldownRef.current <= 0 && navDown) { setSelectedChoiceIndex((index) => (index + 1) % choicesRef.current.length); navCooldownRef.current = 0.2; }
-      else if (confirm) selectUpgrade(choicesRef.current[selectedChoiceIndexRef.current]);
-      else if (rerollPressed) reroll();
+
+    if (chestReward) {
+      if (confirmJustPressed || cancelJustPressed) claimChestReward();
       return;
     }
+
+    if (isLevelUpOpen) {
+      if (navCooldownRef.current <= 0 && navUp) {
+        setSelectedChoiceIndex((index) => (index + choicesRef.current.length - 1) % choicesRef.current.length);
+        navCooldownRef.current = 0.2;
+      } else if (navCooldownRef.current <= 0 && navDown) {
+        setSelectedChoiceIndex((index) => (index + 1) % choicesRef.current.length);
+        navCooldownRef.current = 0.2;
+      } else if (confirmJustPressed) {
+        selectUpgrade(choicesRef.current[selectedChoiceIndexRef.current]);
+      } else if (yJustPressed) {
+        reroll();
+      } else if (xJustPressed) {
+        openInventory();
+      }
+      return;
+    }
+
     if (isInventoryOpen) {
       const totalItems = equippedWeaponsRef.current.length + equippedPassivesRef.current.length + 1;
       if (navCooldownRef.current <= 0 && navUp) {
@@ -446,7 +502,7 @@ export default function App() {
         inventoryFocusIndexRef.current = (inventoryFocusIndexRef.current + 1) % totalItems;
         setInventoryFocusIndex(inventoryFocusIndexRef.current);
         navCooldownRef.current = 0.2;
-      } else if (confirm) {
+      } else if (confirmJustPressed) {
         const weaponCount = equippedWeaponsRef.current.length;
         const passiveCount = equippedPassivesRef.current.length;
         const index = inventoryFocusIndexRef.current;
@@ -454,21 +510,23 @@ export default function App() {
         else if (index < weaponCount + passiveCount) sellItem(equippedPassivesRef.current[index - weaponCount].id);
         else setIsInventoryOpen(false);
         navCooldownRef.current = 0.3;
-      } else if (cancel || rerollPressed) {
+      } else if (cancelJustPressed || yJustPressed) {
         setIsInventoryOpen(false);
+        navCooldownRef.current = 0.3;
       }
       return;
     }
+
     if (isPauseOpen) {
-      if (cancel) {
+      if (cancelJustPressed) {
         setIsPauseOpen(false);
       } else if (navCooldownRef.current <= 0 && navLeft) {
-        setPauseTab((tab) => tab === 'STATS' ? 'MENU' : tab === 'GRIMOIRE' ? 'STATS' : 'GRIMOIRE');
+        setPauseTab((tab) => (tab === 'STATS' ? 'MENU' : tab === 'GRIMOIRE' ? 'STATS' : 'GRIMOIRE'));
         navCooldownRef.current = 0.2;
       } else if (navCooldownRef.current <= 0 && navRight) {
-        setPauseTab((tab) => tab === 'STATS' ? 'GRIMOIRE' : tab === 'GRIMOIRE' ? 'MENU' : 'STATS');
+        setPauseTab((tab) => (tab === 'STATS' ? 'GRIMOIRE' : tab === 'GRIMOIRE' ? 'MENU' : 'STATS'));
         navCooldownRef.current = 0.2;
-      } else if (rerollPressed) {
+      } else if (yJustPressed) {
         openInventory();
       } else if (pauseTab === 'MENU' && navCooldownRef.current <= 0 && navUp) {
         pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 6) % 7;
@@ -478,33 +536,118 @@ export default function App() {
         pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 1) % 7;
         setPauseMenuFocusIndex(pauseMenuFocusIndexRef.current);
         navCooldownRef.current = 0.2;
-      } else if (confirm) {
+      } else if (confirmJustPressed) {
         if (pauseTab === 'MENU') triggerPauseMenuAction(pauseMenuFocusIndexRef.current);
         else if (pauseTab === 'STATS') openInventory();
         navCooldownRef.current = 0.3;
       }
       return;
     }
-    if (rerollPressed && navCooldownRef.current <= 0) { openInventory(); navCooldownRef.current = 0.3; return; }
+
+    // Toggle Inventory with Button Y while playing
+    if (yJustPressed && navCooldownRef.current <= 0) {
+      openInventory();
+      navCooldownRef.current = 0.3;
+      return;
+    }
 
     const sim = simRef.current;
     const stats = calculateDerivedStats(sim, metaLevelsRef.current);
     sim.runTimer += dt;
     sim.auraVisualAngle += dt * 3;
-    updatePlayerMovement(sim, inputRef.current.actions, touchJoystickRef.current, keyboardSprintRef.current, gpX, gpY, Boolean(gamepad?.buttons[1]?.pressed || gamepad?.buttons[6]?.pressed || gamepad?.buttons[7]?.pressed), stats, dt, setCurrentStamina, setCurrentHp);
+    updatePlayerMovement(
+      sim,
+      inputRef.current.actions,
+      touchJoystickRef.current,
+      keyboardSprintRef.current,
+      gpX,
+      gpY,
+      Boolean(gamepad?.buttons[1]?.pressed || gamepad?.buttons[6]?.pressed || gamepad?.buttons[7]?.pressed),
+      stats,
+      dt,
+      setCurrentStamina,
+      setCurrentHp,
+    );
     sim.screenShake = Math.max(0, sim.screenShake - dt * 30);
     const heroRenderer = spriteRenderersRef.current[sim.hero.spriteKey];
     sim.heroAnim = heroRenderer.getNextState(sim.heroAnim, dt);
     updateWeaponCasting(sim, stats, dt, spawnDamageNumber, spawnParticles);
     updateProjectiles(sim, dt, spawnDamageNumber, spawnParticles, (damage) => setCurrentHp(Math.round(sim.hp)));
     updateEnemySpawner(sim, dt);
-    const died = updateEnemies(sim, stats, dt, spriteRenderersRef.current, spawnDamageNumber, spawnParticles, setKillCount, (score) => setGameState((state) => ({...state, score: state.score + score})), () => { bankRunGold(); setGameState((state) => ({...state, status: 'VICTORY'})); }, () => setCurrentHp(Math.round(sim.hp)));
-    if (died) { bankRunGold(); setEndScreenFocusIndex(0); setGameState((state) => ({...state, status: 'GAME_OVER'})); return; }
-    updateDrops(sim, stats, dt, spawnDamageNumber, spawnParticles, () => { setGameState((state) => ({...state, level: sim.level})); triggerLevelUp(); }, () => setChestReward(generateChestReward(sim)), setCurrentHp, setRunGold, (score) => setGameState((state) => ({...state, score: state.score + score})), (xp, nextXp) => { setXpDisplay(xp); setNextLevelXpDisplay(nextXp); });
-    for (let i = sim.particles.length - 1; i >= 0; i--) { const particle = sim.particles[i]; particle.life -= dt; particle.x += particle.vx * dt; particle.y += particle.vy * dt; particle.alpha = Math.max(0, particle.life / particle.maxLife); if (particle.life <= 0) sim.particles.splice(i, 1); }
-    for (let i = sim.damageNumbers.length - 1; i >= 0; i--) { const damage = sim.damageNumbers[i]; damage.life -= dt; damage.y -= 30 * dt; if (damage.life <= 0) sim.damageNumbers.splice(i, 1); }
+    const died = updateEnemies(
+      sim,
+      stats,
+      dt,
+      spriteRenderersRef.current,
+      spawnDamageNumber,
+      spawnParticles,
+      setKillCount,
+      (score) => setGameState((state) => ({...state, score: state.score + score})),
+      () => {
+        bankRunGold();
+        setGameState((state) => ({...state, status: 'VICTORY'}));
+      },
+      () => setCurrentHp(Math.round(sim.hp)),
+    );
+    if (died) {
+      bankRunGold();
+      setEndScreenFocusIndex(0);
+      setGameState((state) => ({...state, status: 'GAME_OVER'}));
+      return;
+    }
+    updateDrops(
+      sim,
+      stats,
+      dt,
+      spawnDamageNumber,
+      spawnParticles,
+      () => {
+        setGameState((state) => ({...state, level: sim.level}));
+        triggerLevelUp();
+      },
+      () => setChestReward(generateChestReward(sim)),
+      setCurrentHp,
+      setRunGold,
+      (score) => setGameState((state) => ({...state, score: state.score + score})),
+      (xp, nextXp) => {
+        setXpDisplay(xp);
+        setNextLevelXpDisplay(nextXp);
+      },
+    );
+    for (let i = sim.particles.length - 1; i >= 0; i--) {
+      const particle = sim.particles[i];
+      particle.life -= dt;
+      particle.x += particle.vx * dt;
+      particle.y += particle.vy * dt;
+      particle.alpha = Math.max(0, particle.life / particle.maxLife);
+      if (particle.life <= 0) sim.particles.splice(i, 1);
+    }
+    for (let i = sim.damageNumbers.length - 1; i >= 0; i--) {
+      const damage = sim.damageNumbers[i];
+      damage.life -= dt;
+      damage.y -= 30 * dt;
+      if (damage.life <= 0) sim.damageNumbers.splice(i, 1);
+    }
     setGameState((state) => ({...state, timer: Math.floor(sim.runTimer)}));
-  }, [bankRunGold, buyMetaUpgrade, chestReward, claimChestReward, initGame, isHowToPlayOpen, isInventoryOpen, isLevelUpOpen, isPauseOpen, isSanctumOpen, openInventory, openSanctum, reroll, selectUpgrade, spawnDamageNumber, spawnParticles, triggerLevelUp]);
+  }, [
+    bankRunGold,
+    buyMetaUpgrade,
+    chestReward,
+    claimChestReward,
+    initGame,
+    isHowToPlayOpen,
+    isInventoryOpen,
+    isLevelUpOpen,
+    isPauseOpen,
+    isSanctumOpen,
+    openInventory,
+    openSanctum,
+    reroll,
+    selectUpgrade,
+    spawnDamageNumber,
+    spawnParticles,
+    triggerLevelUp,
+  ]);
 
   const updateRef = useRef(update);
   updateRef.current = update;
@@ -512,14 +655,24 @@ export default function App() {
     let raf = 0;
     const frame = (time: number) => {
       const cancelPressed = inputRef.current.actions.cancel;
-      if (cancelPressed && !lastCancelRef.current) {
+      if (cancelPressed && !lastKeyboardCancelRef.current) {
         if (gameStateRef.current.status === 'PLAYING') setIsPauseOpen((value) => !value);
         else if (gameStateRef.current.status === 'START') void exitChat({});
       }
-      lastCancelRef.current = cancelPressed;
+      lastKeyboardCancelRef.current = cancelPressed;
       stepperRef.current?.(time, (dt) => updateRef.current(dt));
       const context = canvasRef.current?.getContext('2d');
-      if (context) renderGame(context, simRef.current, calculateDerivedStats(simRef.current, metaLevelsRef.current), assets as Record<string, HTMLImageElement>, spriteRenderersRef.current, canvasWidth, canvasHeight);
+      if (context) {
+        renderGame(
+          context,
+          simRef.current,
+          calculateDerivedStats(simRef.current, metaLevelsRef.current),
+          assets as Record<string, HTMLImageElement>,
+          spriteRenderersRef.current,
+          canvasWidth,
+          canvasHeight,
+        );
+      }
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
@@ -530,14 +683,37 @@ export default function App() {
     const keyDown = (event: KeyboardEvent) => {
       if (event.key === 'Shift' || event.key === 'Control') keyboardSprintRef.current = true;
       if (gameStateRef.current.status === 'START') {
-        if (isSanctumOpen && (event.key === 'Escape' || event.key === 'Backspace')) { setIsSanctumOpen(false); return; }
-        if (isHowToPlayOpen && (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ')) { setIsHowToPlayOpen(false); return; }
+        if (isSanctumOpen && (event.key === 'Escape' || event.key === 'Backspace')) {
+          setIsSanctumOpen(false);
+          return;
+        }
+        if (isHowToPlayOpen && (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ')) {
+          setIsHowToPlayOpen(false);
+          return;
+        }
         if (!isSanctumOpen && !isHowToPlayOpen) {
-          if (event.key === 's' || event.key === 'S') { event.preventDefault(); openSanctum(); return; }
-          if (event.key === 'h' || event.key === 'H' || event.key === '?') { setIsHowToPlayOpen(true); return; }
-          if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') { setSelectedHeroIndex((index) => (index + HEROES.length - 1) % HEROES.length); return; }
-          if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') { setSelectedHeroIndex((index) => (index + 1) % HEROES.length); return; }
-          if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); initGame(); return; }
+          if (event.key === 's' || event.key === 'S') {
+            event.preventDefault();
+            openSanctum();
+            return;
+          }
+          if (event.key === 'h' || event.key === 'H' || event.key === '?') {
+            setIsHowToPlayOpen(true);
+            return;
+          }
+          if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') {
+            setSelectedHeroIndex((index) => (index + HEROES.length - 1) % HEROES.length);
+            return;
+          }
+          if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') {
+            setSelectedHeroIndex((index) => (index + 1) % HEROES.length);
+            return;
+          }
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            initGame();
+            return;
+          }
         }
       }
       if (gameStateRef.current.status === 'GAME_OVER' || gameStateRef.current.status === 'VICTORY') {
@@ -545,16 +721,44 @@ export default function App() {
         else if (event.key === 'Escape' || event.key === 'Backspace') returnToStart();
         return;
       }
-      if (chestReward && (event.key === 'Enter' || event.key === ' ' || event.key === 'Escape')) { event.preventDefault(); claimChestReward(); return; }
+      if (chestReward && (event.key === 'Enter' || event.key === ' ' || event.key === 'Escape')) {
+        event.preventDefault();
+        claimChestReward();
+        return;
+      }
       if (isLevelUpOpen) {
-        if (/^[1-3]$/.test(event.key)) { selectUpgrade(choicesRef.current[Number(event.key) - 1]); return; }
-        if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') { setSelectedChoiceIndex((index) => (index + choicesRef.current.length - 1) % choicesRef.current.length); return; }
-        if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') { setSelectedChoiceIndex((index) => (index + 1) % choicesRef.current.length); return; }
-        if (event.key === 'Enter' || event.key === ' ') { selectUpgrade(choicesRef.current[selectedChoiceIndexRef.current]); return; }
-        if (event.key === 'r' || event.key === 'R') { reroll(); return; }
+        if (/^[1-3]$/.test(event.key)) {
+          selectUpgrade(choicesRef.current[Number(event.key) - 1]);
+          return;
+        }
+        if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
+          setSelectedChoiceIndex((index) => (index + choicesRef.current.length - 1) % choicesRef.current.length);
+          return;
+        }
+        if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') {
+          setSelectedChoiceIndex((index) => (index + 1) % choicesRef.current.length);
+          return;
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          selectUpgrade(choicesRef.current[selectedChoiceIndexRef.current]);
+          return;
+        }
+        if (event.key === 'r' || event.key === 'R') {
+          reroll();
+          return;
+        }
       }
       if (isInventoryOpen) {
-        if (event.key === 'Escape' || event.key === 'Backspace' || event.key === 'Tab' || event.key === 'i' || event.key === 'I') { event.preventDefault(); setIsInventoryOpen(false); }
+        if (
+          event.key === 'Escape' ||
+          event.key === 'Backspace' ||
+          event.key === 'Tab' ||
+          event.key === 'i' ||
+          event.key === 'I'
+        ) {
+          event.preventDefault();
+          setIsInventoryOpen(false);
+        }
         return;
       }
       if (isPauseOpen) {
@@ -566,15 +770,39 @@ export default function App() {
         return;
       }
       if (gameStateRef.current.status === 'PLAYING') {
-        if (event.key === 'Escape' || event.key === 'p' || event.key === 'P') { event.preventDefault(); setIsPauseOpen(true); }
-        else if (event.key === 'Tab' || event.key === 'i' || event.key === 'I') { event.preventDefault(); openInventory(); }
+        if (event.key === 'Escape' || event.key === 'p' || event.key === 'P') {
+          event.preventDefault();
+          setIsPauseOpen(true);
+        } else if (event.key === 'Tab' || event.key === 'i' || event.key === 'I') {
+          event.preventDefault();
+          openInventory();
+        }
       }
     };
-    const keyUp = (event: KeyboardEvent) => { if (event.key === 'Shift' || event.key === 'Control') keyboardSprintRef.current = false; };
+    const keyUp = (event: KeyboardEvent) => {
+      if (event.key === 'Shift' || event.key === 'Control') keyboardSprintRef.current = false;
+    };
     window.addEventListener('keydown', keyDown);
     window.addEventListener('keyup', keyUp);
-    return () => { window.removeEventListener('keydown', keyDown); window.removeEventListener('keyup', keyUp); };
-  }, [chestReward, claimChestReward, initGame, isHowToPlayOpen, isInventoryOpen, isLevelUpOpen, isPauseOpen, isSanctumOpen, openInventory, openSanctum, reroll, returnToStart, selectUpgrade]);
+    return () => {
+      window.removeEventListener('keydown', keyDown);
+      window.removeEventListener('keyup', keyUp);
+    };
+  }, [
+    chestReward,
+    claimChestReward,
+    initGame,
+    isHowToPlayOpen,
+    isInventoryOpen,
+    isLevelUpOpen,
+    isPauseOpen,
+    isSanctumOpen,
+    openInventory,
+    openSanctum,
+    reroll,
+    returnToStart,
+    selectUpgrade,
+  ]);
 
   const stats = calculateDerivedStats(simRef.current, metaLevels);
   // Pausing playback does not change the player's persistent music-muted preference.
@@ -582,17 +810,130 @@ export default function App() {
   const musicPlaying = gameState.status === 'PLAYING' && !isPauseOpen && !musicMuted;
   return (
     <div className="fixed inset-0 overflow-hidden touch-none flex flex-col items-center justify-center bg-[#07050e] text-white font-sans select-none">
-      {!assetsReady && <div className="absolute inset-0 z-[100] flex items-center justify-center bg-slate-950 text-xl font-bold tracking-wider text-rose-400 animate-pulse">Summoning Relics & Swarms...</div>}
+      {!assetsReady && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-slate-950 text-xl font-bold tracking-wider text-rose-400 animate-pulse">
+          Summoning Relics & Swarms...
+        </div>
+      )}
       <BackgroundMusic url={BACKGROUND_MUSIC_URL} isPlaying={musicPlaying} isMuted={musicMuted} />
-      <HUD currentHp={currentHp} maxHpDisplay={maxHpDisplay} currentStamina={currentStamina} maxStaminaDisplay={maxStaminaDisplay} level={gameState.level} timer={gameState.timer || 0} killCount={killCount} runGold={runGold} xpDisplay={xpDisplay} nextLevelXpDisplay={nextLevelXpDisplay} equippedWeapons={equippedWeapons} equippedPassives={equippedPassives} onOpenInventory={openInventory} onOpenMenu={() => setIsPauseOpen(true)} isMobile={isMobile} isPlaying={gameState.status === 'PLAYING'} touchJoystickRef={touchJoystickRef} />
-      {assetsReady && <div className="flex-1 w-full min-h-0 flex items-center justify-center bg-black relative"><canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} style={{aspectRatio: `${canvasWidth} / ${canvasHeight}`, width: `min(100%, calc(100vh * ${canvasWidth} / ${canvasHeight}))`}} className="h-auto max-w-full max-h-full" /></div>}
-      <StartScreen isOpen={gameState.status === 'START'} selectedHeroIndex={selectedHeroIndex} onSelectHeroIndex={setSelectedHeroIndex} persistentGold={persistentGold} onOpenSanctumShop={openSanctum} onStartGame={initGame} onOpenHowToPlay={() => setIsHowToPlayOpen(true)} />
-      <SanctumShop isOpen={isSanctumOpen} onClose={() => setIsSanctumOpen(false)} persistentGold={persistentGold} metaLevels={metaLevels} sanctumFocusIndex={sanctumFocusIndex} onSelectIndex={(index) => { sanctumFocusIndexRef.current = index; setSanctumFocusIndex(index); }} onBuyUpgrade={buyMetaUpgrade} sanctumItemsRef={sanctumItemsRef} />
-      <InventorySheet isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} equippedWeapons={equippedWeapons} equippedPassives={equippedPassives} inventoryFocusIndex={inventoryFocusIndex} onSelectIndex={(index) => { inventoryFocusIndexRef.current = index; setInventoryFocusIndex(index); }} onSellItem={sellItem} inventoryItemsRef={inventoryItemsRef} />
-      <DraftModal isOpen={isLevelUpOpen} level={gameState.level} choices={choices} selectedChoiceIndex={selectedChoiceIndex} onSelectIndex={setSelectedChoiceIndex} onSelectUpgrade={selectUpgrade} equippedWeapons={equippedWeapons} equippedPassives={equippedPassives} availableRerolls={availableRerolls} onReroll={reroll} onOpenInventory={openInventory} />
+      <HUD
+        currentHp={currentHp}
+        maxHpDisplay={maxHpDisplay}
+        currentStamina={currentStamina}
+        maxStaminaDisplay={maxStaminaDisplay}
+        level={gameState.level}
+        timer={gameState.timer || 0}
+        killCount={killCount}
+        runGold={runGold}
+        xpDisplay={xpDisplay}
+        nextLevelXpDisplay={nextLevelXpDisplay}
+        equippedWeapons={equippedWeapons}
+        equippedPassives={equippedPassives}
+        onOpenInventory={openInventory}
+        onOpenMenu={() => setIsPauseOpen(true)}
+        isMobile={isMobile}
+        isPlaying={gameState.status === 'PLAYING'}
+        touchJoystickRef={touchJoystickRef}
+      />
+      {assetsReady && (
+        <div className="flex-1 w-full min-h-0 flex items-center justify-center bg-black relative">
+          <canvas
+            ref={canvasRef}
+            width={canvasWidth}
+            height={canvasHeight}
+            style={{
+              aspectRatio: `${canvasWidth} / ${canvasHeight}`,
+              width: `min(100%, calc(100vh * ${canvasWidth} / ${canvasHeight}))`,
+            }}
+            className="h-auto max-w-full max-h-full"
+          />
+        </div>
+      )}
+      <StartScreen
+        isOpen={gameState.status === 'START'}
+        selectedHeroIndex={selectedHeroIndex}
+        onSelectHeroIndex={setSelectedHeroIndex}
+        persistentGold={persistentGold}
+        onOpenSanctumShop={openSanctum}
+        onStartGame={initGame}
+        onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
+      />
+      <SanctumShop
+        isOpen={isSanctumOpen}
+        onClose={() => setIsSanctumOpen(false)}
+        persistentGold={persistentGold}
+        metaLevels={metaLevels}
+        sanctumFocusIndex={sanctumFocusIndex}
+        onSelectIndex={(index) => {
+          sanctumFocusIndexRef.current = index;
+          setSanctumFocusIndex(index);
+        }}
+        onBuyUpgrade={buyMetaUpgrade}
+        sanctumItemsRef={sanctumItemsRef}
+      />
+      <InventorySheet
+        isOpen={isInventoryOpen}
+        onClose={() => setIsInventoryOpen(false)}
+        equippedWeapons={equippedWeapons}
+        equippedPassives={equippedPassives}
+        inventoryFocusIndex={inventoryFocusIndex}
+        onSelectIndex={(index) => {
+          inventoryFocusIndexRef.current = index;
+          setInventoryFocusIndex(index);
+        }}
+        onSellItem={sellItem}
+        inventoryItemsRef={inventoryItemsRef}
+      />
+      <DraftModal
+        isOpen={isLevelUpOpen}
+        level={gameState.level}
+        choices={choices}
+        selectedChoiceIndex={selectedChoiceIndex}
+        onSelectIndex={setSelectedChoiceIndex}
+        onSelectUpgrade={selectUpgrade}
+        equippedWeapons={equippedWeapons}
+        equippedPassives={equippedPassives}
+        availableRerolls={availableRerolls}
+        onReroll={reroll}
+        onOpenInventory={openInventory}
+      />
       <ChestModal chestReward={chestReward} onClaim={claimChestReward} />
-      <PauseMenu isOpen={isPauseOpen} onClose={() => setIsPauseOpen(false)} timer={gameState.timer || 0} pauseTab={pauseTab} setPauseTab={setPauseTab} stats={stats} currentHp={currentHp} maxHpDisplay={maxHpDisplay} equippedWeapons={equippedWeapons} equippedPassives={equippedPassives} weaponDamageDealt={simRef.current.weaponDamageDealt} pauseMenuFocusIndex={pauseMenuFocusIndex} onSelectMenuIndex={(index) => { pauseMenuFocusIndexRef.current = index; setPauseMenuFocusIndex(index); }} onTriggerMenuAction={triggerPauseMenuAction} musicMuted={musicMuted} sfxMuted={sfxMuted} pauseMenuItemsRef={pauseMenuItemsRef} onOpenInventory={openInventory} />
-      <EndGameModal status={gameState.status} timer={gameState.timer || 0} killCount={killCount} level={gameState.level} score={gameState.score} runGold={runGold} persistentGold={persistentGold} endScreenFocusIndex={endScreenFocusIndex} onSelectIndex={setEndScreenFocusIndex} onRestart={() => initGame()} onReturnToMenu={returnToStart} />
+      <PauseMenu
+        isOpen={isPauseOpen}
+        onClose={() => setIsPauseOpen(false)}
+        timer={gameState.timer || 0}
+        pauseTab={pauseTab}
+        setPauseTab={setPauseTab}
+        stats={stats}
+        currentHp={currentHp}
+        maxHpDisplay={maxHpDisplay}
+        equippedWeapons={equippedWeapons}
+        equippedPassives={equippedPassives}
+        weaponDamageDealt={simRef.current.weaponDamageDealt}
+        pauseMenuFocusIndex={pauseMenuFocusIndex}
+        onSelectMenuIndex={(index) => {
+          pauseMenuFocusIndexRef.current = index;
+          setPauseMenuFocusIndex(index);
+        }}
+        onTriggerMenuAction={triggerPauseMenuAction}
+        musicMuted={musicMuted}
+        sfxMuted={sfxMuted}
+        pauseMenuItemsRef={pauseMenuItemsRef}
+        onOpenInventory={openInventory}
+      />
+      <EndGameModal
+        status={gameState.status}
+        timer={gameState.timer || 0}
+        killCount={killCount}
+        level={gameState.level}
+        score={gameState.score}
+        runGold={runGold}
+        persistentGold={persistentGold}
+        endScreenFocusIndex={endScreenFocusIndex}
+        onSelectIndex={setEndScreenFocusIndex}
+        onRestart={() => initGame()}
+        onReturnToMenu={returnToStart}
+      />
       <HowToPlayModal isOpen={isHowToPlayOpen} onClose={() => setIsHowToPlayOpen(false)} />
     </div>
   );
