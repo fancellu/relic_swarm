@@ -37,7 +37,7 @@ export interface PauseMenuProps {
   onTriggerMenuAction: (actionIdx: number) => void;
   musicMuted: boolean;
   sfxMuted: boolean;
-  pauseMenuItemsRef: React.MutableRefObject<(HTMLButtonElement | null)[]>;
+  pauseMenuItemsRef: React.RefObject<(HTMLButtonElement | null)[]>;
   onOpenInventory: () => void;
 }
 
@@ -378,7 +378,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
             {/* 0: Resume Button */}
             <button
               ref={(el) => {
-                pauseMenuItemsRef.current[0] = el;
+                if (pauseMenuItemsRef.current) pauseMenuItemsRef.current[0] = el;
               }}
               onPointerEnter={() => onSelectMenuIndex(0)}
               onClick={() => onTriggerMenuAction(0)}
@@ -393,7 +393,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
             {/* 1: Manage / Sell Inventory */}
             <button
               ref={(el) => {
-                pauseMenuItemsRef.current[1] = el;
+                if (pauseMenuItemsRef.current) pauseMenuItemsRef.current[1] = el;
               }}
               onPointerEnter={() => onSelectMenuIndex(1)}
               onClick={() => onTriggerMenuAction(1)}
@@ -408,7 +408,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
             <div className="w-full grid grid-cols-2 gap-2">
               <button
                 ref={(el) => {
-                  pauseMenuItemsRef.current[2] = el;
+                  if (pauseMenuItemsRef.current) pauseMenuItemsRef.current[2] = el;
                 }}
                 onPointerEnter={() => onSelectMenuIndex(2)}
                 onClick={() => onTriggerMenuAction(2)}
@@ -421,7 +421,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
 
               <button
                 ref={(el) => {
-                  pauseMenuItemsRef.current[3] = el;
+                  if (pauseMenuItemsRef.current) pauseMenuItemsRef.current[3] = el;
                 }}
                 onPointerEnter={() => onSelectMenuIndex(3)}
                 onClick={() => onTriggerMenuAction(3)}
@@ -436,7 +436,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
             {/* 4: How to Play Guide */}
             <button
               ref={(el) => {
-                pauseMenuItemsRef.current[4] = el;
+                if (pauseMenuItemsRef.current) pauseMenuItemsRef.current[4] = el;
               }}
               onPointerEnter={() => onSelectMenuIndex(4)}
               onClick={() => onTriggerMenuAction(4)}
@@ -450,7 +450,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
             {/* 5: Restart Level */}
             <button
               ref={(el) => {
-                pauseMenuItemsRef.current[5] = el;
+                if (pauseMenuItemsRef.current) pauseMenuItemsRef.current[5] = el;
               }}
               onPointerEnter={() => onSelectMenuIndex(5)}
               onClick={() => onTriggerMenuAction(5)}
@@ -464,7 +464,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
             {/* 6: Quit to Main Menu */}
             <button
               ref={(el) => {
-                pauseMenuItemsRef.current[6] = el;
+                if (pauseMenuItemsRef.current) pauseMenuItemsRef.current[6] = el;
               }}
               onPointerEnter={() => onSelectMenuIndex(6)}
               onClick={() => onTriggerMenuAction(6)}

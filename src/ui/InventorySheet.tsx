@@ -12,7 +12,7 @@ export interface InventorySheetProps {
   inventoryFocusIndex: number;
   onSelectIndex: (idx: number) => void;
   onSellItem: (itemId: string) => void;
-  inventoryItemsRef: React.MutableRefObject<(HTMLDivElement | HTMLButtonElement | null)[]>;
+  inventoryItemsRef: React.RefObject<(HTMLDivElement | HTMLButtonElement | null)[]>;
 }
 
 export const InventorySheet: React.FC<InventorySheetProps> = ({
@@ -63,7 +63,7 @@ export const InventorySheet: React.FC<InventorySheetProps> = ({
                 <div
                   key={wep.id}
                   ref={(el) => {
-                    inventoryItemsRef.current[idx] = el;
+                    if (inventoryItemsRef.current) inventoryItemsRef.current[idx] = el;
                   }}
                   onPointerEnter={() => onSelectIndex(idx)}
                   className={`p-3 rounded-xl border flex items-center justify-between gap-2 transition-all ${
@@ -117,7 +117,7 @@ export const InventorySheet: React.FC<InventorySheetProps> = ({
                 <div
                   key={pas.id}
                   ref={(el) => {
-                    inventoryItemsRef.current[focusIdx] = el;
+                    if (inventoryItemsRef.current) inventoryItemsRef.current[focusIdx] = el;
                   }}
                   onPointerEnter={() => onSelectIndex(focusIdx)}
                   className={`p-3 rounded-xl border flex items-center justify-between gap-2 transition-all ${
@@ -158,7 +158,7 @@ export const InventorySheet: React.FC<InventorySheetProps> = ({
           return (
             <button
               ref={(el) => {
-                inventoryItemsRef.current[doneIdx] = el;
+                if (inventoryItemsRef.current) inventoryItemsRef.current[doneIdx] = el;
               }}
               onPointerEnter={() => onSelectIndex(doneIdx)}
               onClick={onClose}

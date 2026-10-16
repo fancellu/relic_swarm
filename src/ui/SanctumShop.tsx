@@ -11,7 +11,7 @@ export interface SanctumShopProps {
   sanctumFocusIndex: number;
   onSelectIndex: (idx: number) => void;
   onBuyUpgrade: (upgId: string) => void;
-  sanctumItemsRef: React.MutableRefObject<(HTMLDivElement | HTMLButtonElement | null)[]>;
+  sanctumItemsRef: React.RefObject<(HTMLDivElement | HTMLButtonElement | null)[]>;
 }
 
 export const SanctumShop: React.FC<SanctumShopProps> = ({
@@ -63,7 +63,7 @@ export const SanctumShop: React.FC<SanctumShopProps> = ({
               <div
                 key={upg.id}
                 ref={(el) => {
-                  sanctumItemsRef.current[idx] = el;
+                  if (sanctumItemsRef.current) sanctumItemsRef.current[idx] = el;
                 }}
                 onPointerEnter={() => onSelectIndex(idx)}
                 className={`p-3 rounded-xl border flex items-center justify-between gap-2 transition-all ${
@@ -110,7 +110,7 @@ export const SanctumShop: React.FC<SanctumShopProps> = ({
           return (
             <button
               ref={(el) => {
-                sanctumItemsRef.current[closeIdx] = el;
+                if (sanctumItemsRef.current) sanctumItemsRef.current[closeIdx] = el;
               }}
               onPointerEnter={() => onSelectIndex(closeIdx)}
               onClick={onClose}

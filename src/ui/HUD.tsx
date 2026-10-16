@@ -20,6 +20,7 @@ export interface HUDProps {
   onOpenInventory: () => void;
   onOpenMenu: () => void;
   isMobile: boolean;
+  isPlaying?: boolean;
   touchJoystickRef: React.RefObject<{
     active: boolean;
     startX: number;
@@ -48,6 +49,7 @@ export const HUD: React.FC<HUDProps> = ({
   onOpenInventory,
   onOpenMenu,
   isMobile,
+  isPlaying = true,
   touchJoystickRef,
 }) => {
   return (
@@ -169,7 +171,7 @@ export const HUD: React.FC<HUDProps> = ({
       </div>
 
       {/* --- MOBILE VIRTUAL CONTROLS --- */}
-      {isMobile && (
+      {isMobile && isPlaying && (
         <div className="absolute inset-0 pointer-events-none z-30 flex justify-between items-end p-6">
           {/* Virtual Touch Joystick (Bottom Left) */}
           <div

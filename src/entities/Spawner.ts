@@ -1,6 +1,9 @@
 import {getConfig} from '../../constants';
+import {SpriteRenderer} from '../../SpriteRenderer';
 import {gameAudio} from '../../utils/helper';
 import {EnemyEntity, SimulationState} from '../types/entities';
+import {MAX_WORLD_CHESTS} from '../types/meta';
+import {DerivedStats} from './Player';
 
 export function createEnemy(
   id: number,
@@ -139,4 +142,270 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
       );
     }
   }
+}
+
+export function updateEnemies(
+  sim: SimulationState,
+  stats: DerivedStats,
+  dt: number,
+  spriteRenderers: Record<string, SpriteRenderer> | null,
+  spawnDamageNumber: (x: number, y: number, text: string, color: string) => void,
+  spawnParticles: (x: number, y: number, count: number, color: string, speed?: number) => void,
+  onKillsChange: (kills: number) => void,
+  onScoreAdd: (score: number) => void,
+  onBossVictory: () => void,
+  onPlayerHit: (damage: number) => void,
+): boolean {
+  let playerDied = false;
+
+  for (let i = sim.enemies.length - 1; i >= 0; i--) {
+    const enemy = sim.enemies[i];
+
+    // Update Poison DoT
+    if (enemy.poisonTimer > 0) {
+      enemy.poisonTimer -= dt;
+      enemy.poisonTickTimer += dt;
+      if (enemy.poisonTickTimer >= 0.4) {
+        enemy.poisonTickTimer = 0;
+        const tickDmg = Math.max(1, Math.round(enemy.poisonDps * 0.4));
+        enemy.hp -= tickDmg;
+        spawnDamageNumber(enemy.x, enemy.y, tickDmg.toString(), '#22c55e');
+        spawnParticles(enemy.x, enemy.y, 2, '#22c55e', 40);
+      }
+    }
+
+    // Update Slow Effect
+    let effectiveSpeed = enemy.speed;
+    if (enemy.slowTimer > 0) {
+      enemy.slowTimer -= dt;
+      effectiveSpeed *= Math.max(0.2, 1 - enemy.slowFactor);
+    }
+
+    // Death Check
+    if (enemy.hp <= 0) {
+      sim.kills += 1;
+      onKillsChange(sim.kills);
+      onScoreAdd(enemy.isBoss ? 5000 : enemy.isElite ? 250 : 25);
+      spawnParticles(enemy.x, enemy.y, enemy.isBoss ? 30 : enemy.isElite ? 15 : 6, enemy.color, 140);
+
+      const currentWorldChests = sim.drops.filter((d) => d.type === 'chest').length;
+
+      if (enemy.isBoss) {
+        sim.bossDefeated = true;
+        gameAudio.playVictoryFanfare();
+        const victoryBonus = 350;
+        sim.gold += victoryBonus;
+        spawnDamageNumber(sim.x, sim.y, `VICTORY BONUS +${victoryBonus}g!`, '#facc15');
+
+        if (currentWorldChests < MAX_WORLD_CHESTS) {
+          sim.drops.push({
+            id: sim.nextDropId++,
+            type: 'chest',
+            x: enemy.x,
+            y: enemy.y,
+            value: 100,
+            attracted: false,
+          });
+        } else {
+          sim.drops.push({
+            id: sim.nextDropId++,
+            type: 'xp_purple',
+            x: enemy.x,
+            y: enemy.y,
+            value: 150,
+            attracted: false,
+          });
+          sim.drops.push({
+            id: sim.nextDropId++,
+            type: 'potion',
+            x: enemy.x + 20,
+            y: enemy.y,
+            value: Math.round(sim.maxHp * 0.5),
+            attracted: false,
+          });
+        }
+
+        onBossVictory();
+      } else if (enemy.isElite) {
+        gameAudio.playConfirmSelect();
+        if (currentWorldChests < MAX_WORLD_CHESTS) {
+          sim.drops.push({
+            id: sim.nextDropId++,
+            type: 'chest',
+            x: enemy.x,
+            y: enemy.y,
+            value: 80,
+            attracted: false,
+          });
+        } else {
+          sim.drops.push({
+            id: sim.nextDropId++,
+            type: 'xp_purple',
+            x: enemy.x - 15,
+            y: enemy.y,
+            value: 60,
+            attracted: false,
+          });
+          sim.drops.push({
+            id: sim.nextDropId++,
+            type: 'gold',
+            x: enemy.x,
+            y: enemy.y,
+            value: Math.round((20 + Math.floor(Math.random() * 10)) * stats.greedMult),
+            attracted: false,
+          });
+          sim.drops.push({
+            id: sim.nextDropId++,
+            type: 'potion',
+            x: enemy.x + 15,
+            y: enemy.y,
+            value: Math.round(sim.maxHp * 0.35),
+            attracted: false,
+          });
+        }
+      } else {
+        // Standard enemy drops: 1-3 gold
+        const dropRoll = Math.random();
+        if (dropRoll < 0.7) {
+          sim.drops.push({
+            id: sim.nextDropId++,
+            type: 'xp_blue',
+            x: enemy.x,
+            y: enemy.y,
+            value: 10,
+            attracted: false,
+          });
+        } else if (dropRoll < 0.85) {
+          const coinVal = 1 + Math.floor(Math.random() * 3);
+          sim.drops.push({
+            id: sim.nextDropId++,
+            type: 'gold',
+            x: enemy.x,
+            y: enemy.y,
+            value: Math.round(coinVal * stats.greedMult),
+            attracted: false,
+          });
+        } else if (dropRoll < 0.9) {
+          sim.drops.push({
+            id: sim.nextDropId++,
+            type: 'potion',
+            x: enemy.x,
+            y: enemy.y,
+            value: Math.round(sim.maxHp * 0.3),
+            attracted: false,
+          });
+        } else if (dropRoll < 0.93) {
+          sim.drops.push({
+            id: sim.nextDropId++,
+            type: 'magnet',
+            x: enemy.x,
+            y: enemy.y,
+            value: 1,
+            attracted: false,
+          });
+        }
+      }
+
+      sim.enemies.splice(i, 1);
+      continue;
+    }
+
+    // Move toward player with effective speed
+    const dx = sim.x - enemy.x;
+    const dy = sim.y - enemy.y;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist > 1) {
+      const nx = dx / dist;
+      const ny = dy / dist;
+      enemy.vx = nx * effectiveSpeed;
+      enemy.vy = ny * effectiveSpeed;
+      enemy.facingLeft = nx < 0;
+    }
+
+    enemy.x += enemy.vx * dt;
+    enemy.y += enemy.vy * dt;
+
+    // Enemy Ranged Attacks
+    if (enemy.type === 'sorcerer') {
+      enemy.shootTimer = (enemy.shootTimer || 0) + dt;
+      if (enemy.shootTimer >= 3.0 && dist < 450) {
+        enemy.shootTimer = 0;
+        const orbAngle = Math.atan2(dy, dx);
+        sim.projectiles.push({
+          id: sim.nextProjId++,
+          type: 'sorcerer_orb',
+          x: enemy.x,
+          y: enemy.y,
+          vx: Math.cos(orbAngle) * 180,
+          vy: Math.sin(orbAngle) * 180,
+          damage: 15,
+          radius: 12,
+          duration: 3.5,
+          maxDuration: 3.5,
+          isEnemy: true,
+          pierce: 1,
+          hitList: [],
+          color: '#a855f7',
+        });
+      }
+    } else if (enemy.type === 'titan') {
+      enemy.shootTimer = (enemy.shootTimer || 0) + dt;
+      if (enemy.shootTimer >= 4.0) {
+        enemy.shootTimer = 0;
+        gameAudio.playChiptuneExplosion();
+        for (let b = 0; b < 8; b++) {
+          const bAngle = (b * Math.PI * 2) / 8;
+          sim.projectiles.push({
+            id: sim.nextProjId++,
+            type: 'sorcerer_orb',
+            x: enemy.x,
+            y: enemy.y,
+            vx: Math.cos(bAngle) * 220,
+            vy: Math.sin(bAngle) * 220,
+            damage: 25,
+            radius: 16,
+            duration: 4.0,
+            maxDuration: 4.0,
+            isEnemy: true,
+            pierce: 1,
+            hitList: [],
+            color: '#ef4444',
+          });
+        }
+      }
+    }
+
+    // Player Collision (Damage with 0.5s I-frames, Aegis Shield, and armor reduction)
+    if (dist < enemy.size + 18 && sim.invulnTimer <= 0 && sim.aegisShieldTimer <= 0) {
+      const incomingDmg = Math.max(1, enemy.damage - stats.armor);
+      sim.hp -= incomingDmg;
+      sim.invulnTimer = 0.5;
+      sim.screenShake = 10;
+      gameAudio.playMeleePunch();
+      spawnDamageNumber(sim.x, sim.y, `-${Math.round(incomingDmg)}`, '#ef4444');
+      onPlayerHit(incomingDmg);
+
+      if (sim.hp <= 0) {
+        playerDied = true;
+        return playerDied;
+      }
+    }
+
+    // Enemy Sprite Animation update
+    const rendererKey =
+      enemy.type === 'hound'
+        ? 'hound'
+        : enemy.type === 'bat'
+        ? 'bat'
+        : enemy.type === 'titan'
+        ? 'titan'
+        : 'skeleton';
+    const enemyRenderer = spriteRenderers?.[rendererKey];
+    if (enemyRenderer) {
+      enemy.animState = enemyRenderer.getNextState(enemy.animState, dt);
+    }
+  }
+
+  return playerDied;
 }
