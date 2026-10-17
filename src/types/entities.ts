@@ -52,11 +52,25 @@ export interface EnemyEntity {
   poisonTickTimer: number;
   slowTimer: number;
   slowFactor: number;
+  burnTimer: number;
+  burnDps: number;
+  burnTickTimer: number;
 }
 
 export interface ProjectileEntity {
   id: number;
-  type: 'missile' | 'flame' | 'dagger' | 'thunder' | 'sorcerer_orb' | 'spore' | 'ice' | 'vortex' | 'chakram' | 'beetle';
+  type:
+    | 'missile'
+    | 'flame'
+    | 'flame_pool'
+    | 'dagger'
+    | 'thunder'
+    | 'sorcerer_orb'
+    | 'spore'
+    | 'ice'
+    | 'vortex'
+    | 'chakram'
+    | 'beetle';
   sourceWeapon?: string;
   x: number;
   y: number;
@@ -80,7 +94,7 @@ export interface ProjectileEntity {
 
 export interface DropEntity {
   id: number;
-  type: 'xp_blue' | 'xp_purple' | 'gold' | 'potion' | 'magnet' | 'chest';
+  type: 'xp_blue' | 'xp_purple' | 'gold' | 'potion' | 'magnet' | 'chest' | 'blood_chalice';
   x: number;
   y: number;
   value: number;
@@ -119,6 +133,25 @@ export interface ChestRewardData {
   statName?: string;
   item?: ItemDef;
   isEvo?: boolean;
+}
+
+export interface ObeliskEntity {
+  id: number;
+  x: number;
+  y: number;
+  radius: number;
+  charge: number;
+  maxCharge: number;
+}
+
+export interface CursedArena {
+  active: boolean;
+  x: number;
+  y: number;
+  size: number;
+  duration: number;
+  maxDuration: number;
+  miniBossId?: number;
 }
 
 export interface SimulationState {
@@ -172,4 +205,9 @@ export interface SimulationState {
   aegisShieldTimer: number;
   solarPulseCounter?: number;
   conduitPylons?: {x: number; y: number; life: number}[];
+  // Arena Objectives & Spatial Mechanics
+  obelisk: ObeliskEntity | null;
+  obeliskSpawnTimer: number;
+  inObeliskZone: boolean;
+  cursedArena: CursedArena | null;
 }

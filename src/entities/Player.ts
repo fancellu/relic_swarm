@@ -173,6 +173,30 @@ export function updatePlayerMovement(
   sim.x += sim.vx * dt;
   sim.y += sim.vy * dt;
 
+  // Cursed Arena Trap Clamping (600x600 barrier walls)
+  if (sim.cursedArena && sim.cursedArena.active) {
+    const half = sim.cursedArena.size / 2 - 20;
+    const minX = sim.cursedArena.x - half;
+    const maxX = sim.cursedArena.x + half;
+    const minY = sim.cursedArena.y - half;
+    const maxY = sim.cursedArena.y + half;
+
+    if (sim.x < minX) {
+      sim.x = minX;
+      sim.vx = 0;
+    } else if (sim.x > maxX) {
+      sim.x = maxX;
+      sim.vx = 0;
+    }
+    if (sim.y < minY) {
+      sim.y = minY;
+      sim.vy = 0;
+    } else if (sim.y > maxY) {
+      sim.y = maxY;
+      sim.vy = 0;
+    }
+  }
+
   // Arena Soft Clamping (-2500 to 2500)
   sim.x = Math.max(-2500, Math.min(2500, sim.x));
   sim.y = Math.max(-2500, Math.min(2500, sim.y));

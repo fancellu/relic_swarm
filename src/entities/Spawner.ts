@@ -42,6 +42,9 @@ export function createEnemy(
     poisonTickTimer: 0,
     slowTimer: 0,
     slowFactor: 0,
+    burnTimer: 0,
+    burnDps: 0,
+    burnTickTimer: 0,
   };
 }
 
@@ -50,7 +53,28 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
   const maxEnemiesLimit = (getConfig('maxEnemies') as number) || 250;
   const bossSpawnTime = (getConfig('bossSpawnTimeSeconds') as number) || 300;
 
-  sim.spawnTimer += dt * baseSpawnRate * (1 + sim.runTimer / 180);
+  // Standing inside Corrupted Obelisk zone increases spawn rate by 30%
+  const obeliskSpawnMult = sim.inObeliskZone ? 1.3 : 1.0;
+  sim.spawnTimer += dt * baseSpawnRate * (1 + sim.runTimer / 180) * obeliskSpawnMult;
+
+  // Corrupted Obelisk periodic spawning (starts around 35s, recurs every 80s)
+  if (!sim.obelisk && sim.runTimer >= 35) {
+    sim.obeliskSpawnTimer += dt;
+    if (sim.obeliskSpawnTimer >= 80 || sim.runTimer < 36) {
+      sim.obeliskSpawnTimer = 0;
+      const angle = Math.random() * Math.PI * 2;
+      const spawnDist = 520 + Math.random() * 120;
+      sim.obelisk = {
+        id: sim.nextEnemyId++,
+        x: sim.x + Math.cos(angle) * spawnDist,
+        y: sim.y + Math.sin(angle) * spawnDist,
+        radius: 150,
+        charge: 0,
+        maxCharge: 100,
+      };
+      gameAudio.playPowerupChime();
+    }
+  }
 
   // Boss Titan Spawn Trigger
   if (sim.runTimer >= bossSpawnTime && !sim.bossSpawned) {
@@ -77,7 +101,7 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
   // Wave Spawning
   if (sim.spawnTimer >= 1.0 && sim.enemies.length < maxEnemiesLimit) {
     sim.spawnTimer = 0;
-    const spawnCount = 2 + Math.floor(sim.runTimer / 30);
+    const spawnCount = (2 + Math.floor(sim.runTimer / 30)) * (sim.inObeliskZone ? 1.3 : 1);
 
     for (let s = 0; s < spawnCount; s++) {
       const angle = Math.random() * Math.PI * 2;
@@ -174,11 +198,28 @@ export function updateEnemies(
       }
     }
 
-    // Update Slow Effect
+    // Update Burn DoT
+    if (enemy.burnTimer > 0) {
+      enemy.burnTimer -= dt;
+      enemy.burnTickTimer += dt;
+      if (enemy.burnTickTimer >= 0.35) {
+        enemy.burnTickTimer = 0;
+        const tickDmg = Math.max(1, Math.round(enemy.burnDps * 0.35));
+        enemy.hp -= tickDmg;
+        spawnDamageNumber(enemy.x, enemy.y, tickDmg.toString(), '#f97316');
+        spawnParticles(enemy.x, enemy.y, 2, '#f97316', 50);
+      }
+    }
+
+    // Update Slow Effect & Obelisk Speed Increase
     let effectiveSpeed = enemy.speed;
     if (enemy.slowTimer > 0) {
       enemy.slowTimer -= dt;
       effectiveSpeed *= Math.max(0.2, 1 - enemy.slowFactor);
+    }
+    // Standing inside Corrupted Obelisk zone increases enemy speeds by 30%
+    if (sim.inObeliskZone) {
+      effectiveSpeed *= 1.3;
     }
 
     // Death Check
@@ -255,6 +296,19 @@ export function updateEnemies(
         onBossVictory();
       } else if (enemy.isElite) {
         gameAudio.playConfirmSelect();
+
+        // 35% chance for Elites to drop a Cursed Blood Chalice if not currently in a Cursed Trial
+        if (!sim.cursedArena && Math.random() < 0.35) {
+          sim.drops.push({
+            id: sim.nextDropId++,
+            type: 'blood_chalice',
+            x: enemy.x,
+            y: enemy.y,
+            value: 1,
+            attracted: false,
+          });
+        }
+
         if (currentWorldChests < MAX_WORLD_CHESTS) {
           sim.drops.push({
             id: sim.nextDropId++,

@@ -1,6 +1,7 @@
 import {gameAudio} from '../../utils/helper';
 import {SimulationState} from '../types/entities';
 import {DerivedStats} from './Player';
+import {createEnemy} from './Spawner';
 
 export function updateDrops(
   sim: SimulationState,
@@ -47,7 +48,12 @@ export function updateDrops(
       continue;
     }
 
-    if (dist <= stats.magnetRadius || drop.attracted) {
+    if (drop.type === 'blood_chalice') {
+      // Periodic blood vapor particles around stationary chalice
+      if (Math.random() < 0.25) {
+        spawnParticles(drop.x, drop.y, 1, '#dc2626', 30);
+      }
+    } else if (dist <= stats.magnetRadius || drop.attracted) {
       drop.attracted = true;
       const flySpeed = 550;
       drop.x += (dx / dist) * flySpeed * dt;
@@ -82,6 +88,37 @@ export function updateDrops(
         gameAudio.playPowerupChime();
         sim.drops.forEach((d) => (d.attracted = true));
         spawnDamageNumber(sim.x, sim.y, 'MAGNET PULSE!', '#38bdf8');
+      } else if (drop.type === 'blood_chalice') {
+        gameAudio.playChiptuneExplosion();
+        sim.screenShake = 16;
+        spawnDamageNumber(sim.x, sim.y, 'BLOOD TRIAL: SURVIVE 20s!', '#ef4444');
+        spawnParticles(sim.x, sim.y, 35, '#dc2626', 220);
+        const mbId = sim.nextEnemyId++;
+        sim.cursedArena = {
+          active: true,
+          x: sim.x,
+          y: sim.y,
+          size: 600,
+          duration: 20,
+          maxDuration: 20,
+          miniBossId: mbId,
+        };
+        const mbAngle = Math.random() * Math.PI * 2;
+        sim.enemies.push(
+          createEnemy(
+            mbId,
+            'hound',
+            sim.x + Math.cos(mbAngle) * 160,
+            sim.y + Math.sin(mbAngle) * 160,
+            1200 + (sim.runTimer / 10) * 150,
+            180,
+            24,
+            38,
+            '#ef4444',
+            true,
+            false,
+          ),
+        );
       }
 
       sim.drops.splice(i, 1);

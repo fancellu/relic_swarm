@@ -21,6 +21,7 @@ export interface HUDProps {
   onOpenMenu: () => void;
   isMobile: boolean;
   isPlaying?: boolean;
+  activeObjective?: {type: 'OBELISK' | 'BLOOD_TRIAL'; progress: number} | null;
   touchJoystickRef: React.RefObject<{
     active: boolean;
     startX: number;
@@ -50,6 +51,7 @@ export const HUD: React.FC<HUDProps> = ({
   onOpenMenu,
   isMobile,
   isPlaying = true,
+  activeObjective,
   touchJoystickRef,
 }) => {
   return (
@@ -86,7 +88,7 @@ export const HUD: React.FC<HUDProps> = ({
           </div>
         </div>
 
-        {/* Center: Top-aligned XP Bar & Survival Timer */}
+        {/* Center: Top-aligned XP Bar, Survival Timer & Active Objective */}
         <div className="flex-1 max-w-xs md:max-w-md mx-3 flex flex-col items-center gap-0.5">
           <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-700/50">
             <div
@@ -101,6 +103,20 @@ export const HUD: React.FC<HUDProps> = ({
             <span>•</span>
             <span className="text-rose-400">Kills: {killCount}</span>
           </div>
+          {activeObjective && (
+            <div
+              className={`mt-0.5 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide border shadow-sm animate-pulse ${
+                activeObjective.type === 'OBELISK'
+                  ? 'bg-purple-950/90 border-purple-400/80 text-purple-200'
+                  : 'bg-rose-950/90 border-rose-400/80 text-rose-200'
+              }`}>
+              <span>
+                {activeObjective.type === 'OBELISK'
+                  ? `⚡ PURIFY OBELISK: ${activeObjective.progress}%`
+                  : `💀 BLOOD TRIAL: ${activeObjective.progress}s REMAINING`}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Right: Gold, Inventory Button & Menu Button */}
@@ -112,7 +128,7 @@ export const HUD: React.FC<HUDProps> = ({
 
           <button
             onClick={onOpenInventory}
-            title="Open Weapon Selling Sheet (Tab / I)"
+            title="Open Weapon Selling Sheet (Tab / I / Gamepad Y)"
             className="min-w-[40px] min-h-[36px] bg-indigo-900/60 hover:bg-indigo-800 text-indigo-200 px-2.5 py-1 rounded-md border border-indigo-700/60 flex items-center gap-1 text-xs font-bold transition-colors">
             <Sword size={14} />
             <span className="hidden sm:inline">Sell</span>

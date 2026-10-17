@@ -48,7 +48,47 @@ export function updateProjectiles(
     }
   }
 
-  // 2. Process all projectiles
+  // 2. Elemental Ground Synergy: Spore Cloud + Flame Pool Overlap Detonation
+  for (let s = 0; s < sim.projectiles.length; s++) {
+    const spore = sim.projectiles[s];
+    if (spore.type !== 'spore' || spore.duration <= 0) continue;
+
+    for (let f = 0; f < sim.projectiles.length; f++) {
+      const flame = sim.projectiles[f];
+      if ((flame.type !== 'flame_pool' && flame.type !== 'flame') || flame.duration <= 0) continue;
+
+      const overlapDist = Math.hypot(spore.x - flame.x, spore.y - flame.y);
+      if (overlapDist <= spore.radius + flame.radius) {
+        // Vapor ignition! Chemical blast
+        gameAudio.playChiptuneExplosion();
+        sim.screenShake = 11;
+        const midX = (spore.x + flame.x) / 2;
+        const midY = (spore.y + flame.y) / 2;
+        const blastRad = (spore.radius + flame.radius) * 1.25;
+        const blastDmg = spore.damage * 2.8 + flame.damage * 2.2;
+
+        spawnDamageNumber(midX, midY, `VAPOR IGNITION ${Math.round(blastDmg)}!`, '#22c55e');
+        spawnParticles(midX, midY, 16, '#22c55e', 180);
+        spawnParticles(midX, midY, 16, '#ea580c', 180);
+
+        sim.enemies.forEach((enemy) => {
+          const eDist = Math.hypot(enemy.x - midX, enemy.y - midY);
+          if (eDist <= blastRad + enemy.size) {
+            enemy.hp -= blastDmg;
+            enemy.burnTimer = 3.5;
+            enemy.burnDps = Math.max(enemy.burnDps, blastDmg * 0.35);
+            applyEnemyPoison(enemy, blastDmg * 0.45, 4.0);
+            spawnDamageNumber(enemy.x, enemy.y, Math.round(blastDmg).toString(), '#f97316');
+          }
+        });
+
+        spore.duration = 0; // Consume the spore cloud
+        break;
+      }
+    }
+  }
+
+  // 3. Process all projectiles
   for (let i = sim.projectiles.length - 1; i >= 0; i--) {
     const proj = sim.projectiles[i];
     proj.duration -= dt;
@@ -92,6 +132,17 @@ export function updateProjectiles(
             if (proj.inflictsPoison) applyEnemyPoison(enemy, proj.damage * 0.5);
             if (proj.inflictsSlow) applyEnemySlow(enemy, 0.45, 2.5);
 
+            // Thermal Shock reaction with burning enemies
+            if (proj.inflictsSlow && enemy.burnTimer > 0) {
+              const shockBonus = proj.damage * 1.5 + enemy.burnDps * 2;
+              enemy.hp -= shockBonus;
+              sim.screenShake = 5;
+              spawnDamageNumber(enemy.x, enemy.y, `THERMAL SHOCK ${Math.round(shockBonus)}!`, '#38bdf8');
+              spawnParticles(enemy.x, enemy.y, 10, '#38bdf8', 130);
+              spawnParticles(enemy.x, enemy.y, 8, '#f97316', 100);
+              enemy.burnTimer = 0;
+            }
+
             setTimeout(() => {
               proj.hitList = proj.hitList.filter((id) => id !== enemy.id);
             }, 350);
@@ -113,6 +164,25 @@ export function updateProjectiles(
           }
         }
       });
+    } else if (proj.type === 'flame_pool') {
+      // Lingering flame pool on the ground
+      sim.enemies.forEach((enemy) => {
+        const dist = Math.hypot(enemy.x - proj.x, enemy.y - proj.y);
+        if (dist <= proj.radius + enemy.size) {
+          enemy.burnTimer = 3.0;
+          enemy.burnDps = Math.max(enemy.burnDps, proj.damage * 0.85);
+          if (Math.random() < 0.12) {
+            enemy.hp -= proj.damage * dt * 1.5;
+            if (proj.sourceWeapon) {
+              sim.weaponDamageDealt[proj.sourceWeapon] =
+                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + proj.damage * dt * 1.5;
+            }
+          }
+        }
+      });
+      if (Math.random() < 0.2) {
+        spawnParticles(proj.x + (Math.random() * 20 - 10), proj.y + (Math.random() * 20 - 10), 1, '#ea580c', 35);
+      }
     } else if (proj.type === 'thunder') {
       if (proj.duration >= proj.maxDuration - dt * 1.5) {
         sim.enemies.forEach((enemy) => {
@@ -181,23 +251,61 @@ export function updateProjectiles(
             if (proj.inflictsPoison) applyEnemyPoison(enemy, proj.damage * 0.5);
             if (proj.inflictsSlow) applyEnemySlow(enemy, 0.5, 3.0);
 
-            if (proj.type === 'flame' && proj.splashRadius) {
-              gameAudio.playChiptuneExplosion();
+            // Thermal Shock: Glacial / Ice hits a burning enemy
+            if ((proj.type === 'ice' || proj.inflictsSlow) && enemy.burnTimer > 0) {
+              const shockBonus = proj.damage * 1.8 + enemy.burnDps * 2.2;
+              enemy.hp -= shockBonus;
               sim.screenShake = 6;
-              sim.enemies.forEach((other) => {
-                if (other.id !== enemy.id) {
-                  const splashDist = Math.hypot(other.x - proj.x, other.y - proj.y);
-                  if (splashDist <= proj.splashRadius! + other.size) {
-                    other.hp -= proj.damage * 0.7;
-                    if (proj.sourceWeapon) {
-                      sim.weaponDamageDealt[proj.sourceWeapon] =
-                        (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + proj.damage * 0.7;
-                    }
-                    spawnDamageNumber(other.x, other.y, Math.round(proj.damage * 0.7).toString(), '#ea580c');
-                    if (proj.inflictsPoison) applyEnemyPoison(other, proj.damage * 0.4);
-                  }
-                }
+              gameAudio.playSwordClash();
+              spawnDamageNumber(enemy.x, enemy.y, `THERMAL SHOCK ${Math.round(shockBonus)}!`, '#38bdf8');
+              spawnParticles(enemy.x, enemy.y, 12, '#38bdf8', 140);
+              spawnParticles(enemy.x, enemy.y, 8, '#f97316', 110);
+              enemy.burnTimer = 0;
+            }
+
+            if (proj.type === 'flame') {
+              // Apply burn to primary target
+              enemy.burnTimer = 3.0;
+              enemy.burnDps = Math.max(enemy.burnDps, proj.damage * 0.5);
+
+              // Spawn lingering flame pool at impact location
+              sim.projectiles.push({
+                id: sim.nextProjId++,
+                type: 'flame_pool',
+                sourceWeapon: proj.sourceWeapon || 'flame_blast',
+                x: enemy.x,
+                y: enemy.y,
+                vx: 0,
+                vy: 0,
+                damage: proj.damage * 0.45,
+                radius: Math.max(35, (proj.splashRadius || 60) * 0.65),
+                duration: 2.5,
+                maxDuration: 2.5,
+                pierce: 999,
+                hitList: [],
+                color: '#ea580c',
               });
+
+              if (proj.splashRadius) {
+                gameAudio.playChiptuneExplosion();
+                sim.screenShake = 6;
+                sim.enemies.forEach((other) => {
+                  if (other.id !== enemy.id) {
+                    const splashDist = Math.hypot(other.x - proj.x, other.y - proj.y);
+                    if (splashDist <= proj.splashRadius! + other.size) {
+                      other.hp -= proj.damage * 0.7;
+                      other.burnTimer = 3.0;
+                      other.burnDps = Math.max(other.burnDps, proj.damage * 0.4);
+                      if (proj.sourceWeapon) {
+                        sim.weaponDamageDealt[proj.sourceWeapon] =
+                          (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + proj.damage * 0.7;
+                      }
+                      spawnDamageNumber(other.x, other.y, Math.round(proj.damage * 0.7).toString(), '#ea580c');
+                      if (proj.inflictsPoison) applyEnemyPoison(other, proj.damage * 0.4);
+                    }
+                  }
+                });
+              }
               proj.duration = 0;
               break;
             }

@@ -23,6 +23,115 @@ export function renderGame(
   // 1. Gothic Arena Grid Floor
   drawArenaFloor(ctx, sim.camera, canvasWidth, canvasHeight);
 
+  // 1b. Render Corrupted Obelisk (Zone & Monolith)
+  if (sim.obelisk) {
+    const ob = sim.obelisk;
+    ctx.save();
+    const inZone = sim.inObeliskZone;
+
+    // Outer corruption zone radius (150px)
+    ctx.strokeStyle = inZone ? '#ec4899' : '#a855f7';
+    ctx.fillStyle = inZone ? 'rgba(236, 72, 153, 0.14)' : 'rgba(168, 85, 247, 0.06)';
+    ctx.lineWidth = inZone ? 3 : 2;
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath();
+    ctx.arc(ob.x, ob.y, ob.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Concentric pulsing inner rune ring
+    const pulseRad = ob.radius * (0.55 + Math.sin(sim.runTimer * 4) * 0.05);
+    ctx.strokeStyle = inZone ? 'rgba(236, 72, 153, 0.45)' : 'rgba(168, 85, 247, 0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(ob.x, ob.y, pulseRad, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Center Obelisk Monolith Spire
+    ctx.fillStyle = '#1e1b4b';
+    ctx.strokeStyle = inZone ? '#f43f5e' : '#6366f1';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(ob.x, ob.y - 36);
+    ctx.lineTo(ob.x + 14, ob.y + 16);
+    ctx.lineTo(ob.x - 14, ob.y + 16);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Floating pulsating crystal above spire
+    const crystalY = ob.y - 42 + Math.sin(sim.runTimer * 3.5) * 5;
+    ctx.fillStyle = inZone ? '#f43f5e' : '#c084fc';
+    ctx.shadowColor = inZone ? '#f43f5e' : '#a855f7';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.moveTo(ob.x, crystalY - 10);
+    ctx.lineTo(ob.x + 7, crystalY);
+    ctx.lineTo(ob.x, crystalY + 10);
+    ctx.lineTo(ob.x - 7, crystalY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Charge Progress Ring around spire
+    const progress = Math.min(1, ob.charge / ob.maxCharge);
+    ctx.strokeStyle = inZone ? '#f43f5e' : '#a855f7';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(ob.x, ob.y, 26, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+    ctx.stroke();
+
+    // Percent text
+    ctx.font = 'bold 12px monospace';
+    ctx.fillStyle = '#fce7f3';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${Math.round(ob.charge)}%`, ob.x, ob.y + 32);
+
+    ctx.restore();
+  }
+
+  // 1c. Render Cursed Arena (Bone & Fire Walls)
+  if (sim.cursedArena && sim.cursedArena.active) {
+    const ca = sim.cursedArena;
+    const half = ca.size / 2;
+    ctx.save();
+
+    // Demonic floor glow wash
+    ctx.fillStyle = 'rgba(220, 38, 38, 0.08)';
+    ctx.fillRect(ca.x - half, ca.y - half, ca.size, ca.size);
+
+    // Flaming demonic perimeter walls
+    ctx.strokeStyle = '#ef4444';
+    ctx.shadowColor = '#dc2626';
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 4;
+    ctx.strokeRect(ca.x - half, ca.y - half, ca.size, ca.size);
+
+    // Bone pillars at 4 corners
+    const corners = [
+      {x: ca.x - half, y: ca.y - half},
+      {x: ca.x + half, y: ca.y - half},
+      {x: ca.x - half, y: ca.y + half},
+      {x: ca.x + half, y: ca.y + half},
+    ];
+    corners.forEach((c) => {
+      ctx.fillStyle = '#fca5a5';
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, 10, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Floating Blood Trial Timer sign
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 14px monospace';
+    ctx.fillStyle = '#f87171';
+    ctx.textAlign = 'center';
+    ctx.fillText(`BLOOD TRIAL: ${Math.ceil(ca.duration)}s`, ca.x, ca.y - half - 12);
+
+    ctx.restore();
+  }
+
   // 2. Render Frost Sigil Aura (if passive equipped)
   if (stats.frostAmuletLevel > 0) {
     const frostRadius = 180 + stats.frostAmuletLevel * 25;
@@ -101,6 +210,25 @@ export function renderGame(
 
   // 4. Render Drops & Pickups
   sim.drops.forEach((drop) => {
+    if (drop.type === 'blood_chalice') {
+      const pulse = 1 + Math.sin(sim.runTimer * 6) * 0.15;
+      ctx.save();
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.35)';
+      ctx.beginPath();
+      ctx.arc(drop.x, drop.y, 16 * pulse, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Goblet
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(drop.x - 7, drop.y - 2, 14, 10);
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.arc(drop.x, drop.y - 3, 7, 0, Math.PI);
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
+
     let imgKey = 'item_xp_gem_blue';
     let size = 22;
 
@@ -172,7 +300,7 @@ export function renderGame(
       ctx.restore();
     }
 
-    // Status Visuals: Slow (Cyan ring) & Poison (Green toxic bubbles & glowing aura)
+    // Status Visuals: Slow (Cyan ring) & Poison (Green bubbles) & Burn (Orange fire)
     if (enemy.slowTimer > 0) {
       ctx.save();
       ctx.strokeStyle = '#06b6d4';
@@ -201,6 +329,28 @@ export function renderGame(
         ctx.fillStyle = '#4ade80';
         ctx.beginPath();
         ctx.arc(bx, by, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    if (enemy.burnTimer > 0) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(249, 115, 22, 0.28)';
+      ctx.strokeStyle = '#ea580c';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(enemy.x, enemy.y, enemy.size * 1.25, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Fiery embers flickering
+      for (let f = 0; f < 2; f++) {
+        const fx = enemy.x + Math.sin(sim.runTimer * 8 + f * 2) * enemy.size * 0.5;
+        const fy = enemy.y - enemy.size * 0.5 - Math.sin(sim.runTimer * 6 + f) * 8;
+        ctx.fillStyle = '#f97316';
+        ctx.beginPath();
+        ctx.arc(fx, fy, 2.5, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.restore();
@@ -246,7 +396,7 @@ export function renderGame(
 
       ctx.fillStyle = '#1e1b4b';
       ctx.fillRect(enemy.x - barW / 2, enemy.y - drawSize / 2 - 10, barW, barH);
-      ctx.fillStyle = enemy.isBoss ? '#ef4444' : enemy.poisonTimer > 0 ? '#22c55e' : '#eab308';
+      ctx.fillStyle = enemy.isBoss ? '#ef4444' : enemy.poisonTimer > 0 ? '#22c55e' : enemy.burnTimer > 0 ? '#f97316' : '#eab308';
       ctx.fillRect(enemy.x - barW / 2, enemy.y - drawSize / 2 - 10, barW * hpRatio, barH);
     }
   });
@@ -286,6 +436,19 @@ export function renderGame(
           fCtx.fill();
         },
       );
+    } else if (proj.type === 'flame_pool') {
+      ctx.save();
+      const flicker = 1 + Math.sin(sim.runTimer * 10 + proj.id) * 0.08;
+      ctx.fillStyle = 'rgba(234, 88, 12, 0.35)';
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, proj.radius * flicker, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(249, 115, 22, 0.55)';
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, proj.radius * 0.6 * flicker, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     } else if (proj.type === 'dagger' || proj.type === 'vortex' || proj.type === 'chakram') {
       const spin = (proj.orbitAngle || 0) + sim.runTimer * (proj.type === 'chakram' ? 14 : 10);
       ctx.save();
@@ -433,4 +596,52 @@ export function renderGame(
       ctx.restore();
     }
   });
+
+  // 10. Off-screen Beacon / Directional Arrow for Corrupted Obelisk
+  if (sim.obelisk) {
+    const screenX = canvasWidth / 2 + (sim.obelisk.x - sim.camera.x);
+    const screenY = canvasHeight / 2 + (sim.obelisk.y - sim.camera.y);
+    const margin = 32;
+    const isOffScreen =
+      screenX < margin ||
+      screenX > canvasWidth - margin ||
+      screenY < margin ||
+      screenY > canvasHeight - margin;
+
+    if (isOffScreen) {
+      const clampX = clamp(screenX, margin, canvasWidth - margin);
+      const clampY = clamp(screenY, margin, canvasHeight - margin);
+      const angle = Math.atan2(screenY - canvasHeight / 2, screenX - canvasWidth / 2);
+      const distMeters = Math.round(Math.hypot(sim.obelisk.x - sim.x, sim.obelisk.y - sim.y));
+
+      ctx.save();
+      ctx.translate(clampX, clampY);
+      ctx.rotate(angle);
+      ctx.fillStyle = '#c084fc';
+      ctx.shadowColor = '#a855f7';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(14, 0);
+      ctx.lineTo(-8, -9);
+      ctx.lineTo(-3, 0);
+      ctx.lineTo(-8, 9);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.restore();
+
+      // Distance / Label tag beside the pointer
+      ctx.save();
+      ctx.font = 'bold 11px monospace';
+      ctx.fillStyle = '#e9d5ff';
+      ctx.textAlign = 'center';
+      const labelOffset = 22;
+      ctx.fillText(
+        `${distMeters}m [${Math.round(sim.obelisk.charge)}%]`,
+        clampX,
+        clampY + (screenY > canvasHeight - margin ? -12 : labelOffset),
+      );
+      ctx.restore();
+    }
+  }
 }
