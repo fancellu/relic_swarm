@@ -8,8 +8,10 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 
 ## 🎮 Play
 
-https://relic-swarm.vercel.app/ &nbsp;
+<https://relic-swarm.vercel.app/> &nbsp;
 ![](https://vercelbadge.vercel.app/api/fancellu/relic_swarm)
+
+![alt text](image-1.png)
 
 
 ## 🌟 Key Features
