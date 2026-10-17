@@ -15,12 +15,13 @@ https://relic-swarm.vercel.app/ &nbsp;
 ## 🌟 Key Features
 
 - **Fluid Horde Combat**: High-density swarms rendered at a fixed 60 FPS with damage-scaled screen shake, micro hit-stop freeze frames, and responsive crowd-clearing feedback.
-- **Dynamic Arsenal Selling (Mid-Run Pivoting)**: Don't get trapped in a dead-end build. Open your inventory or draft modal at any time to sell weapons or passives for an instant **70% gold refund**, immediately freeing slots for fresh synergies.
+- **Dynamic Arsenal Selling & Relic Forging (Mid-Run Pivoting)**: Don't get trapped in a dead-end build. Open your inventory or draft modal at any time to sell gear for an instant **70% gold refund**, or permanently **Extract Essence** from maxed Level 5 items to keep 20% of their power while freeing build slots.
+- **Wandering Black Market**: Every 3 minutes, a smuggler merchant cart arrives offering combat Overdrives, weapon temperings, and instant fusion catalysts for unbanked gold.
 - **4 Distinct Champions**: Choose from Arcanist Vael, Knight Commander Roland, Pyromancer Ignis, and Plague Alchemist Mortis — each featuring unique baseline stats, starting weapons, and passive affinities.
 - **Weapons, Evolutions & Fusions**:
-  - **7 Base Weapons**: Magic Missiles, Orbiting Daggers, Flame Blast, Thunder Strike, Radiant Aura, Venom Spores, and Glacial Shards.
+  - **8 Base Weapons**: Magic Missiles, Orbiting Daggers, Flame Blast, Thunder Strike, Radiant Aura, Venom Spores, Glacial Shards, and the gold-scaling Gilded Chakram.
   - **Level 5 + Level 5 Fusions**: Combine max-level weapons to form dual-aspect super-weapons (*Arcane Phantom Vortex*, *Cataclysmic Supernova*, *Plague Sanctuary*, *Shatterstorm*, *Frostbite Chakrams*).
-  - **Awakened Evolutions**: Pair maxed weapons with matching passives in boss chests for legendary forms (*Chrono Missiles*, *Hellfire Nova*, *Mjolnir's Conduit*, *Solar Eclipse*, *Necrotic Blight*, *Phantom Storm*, *Absolute Zero*).
+  - **Awakened Evolutions**: Pair maxed weapons with matching passives in boss chests for legendary forms (*Chrono Missiles*, *Hellfire Nova*, *Mjolnir's Conduit*, *Solar Eclipse*, *Necrotic Blight*, *Phantom Storm*, *Absolute Zero*, *Midas' Wrath*).
 - **Persistent Sanctum Meta-Shop**: Bank earned gold across runs in your Sanctum Vault and permanently enhance your attributes (Health, Might, Movement Speed, Cooldown Haste, Magnet Radius, Greed, and Fate Rerolls).
 - **Arena Objectives & Spatial Hazards**: Dynamic world events break up passive kiting — capture glowing **Corrupted Obelisks** under intense enemy swarms for massive screen shockwaves, risk your life in sealed **Blood Trials** for elite chests, and trigger explosive **Elemental Ground Synergies**.
 - **Universal Controls**: Full support for Keyboard, Gamepad / Controllers, and Virtual Touch controls for mobile and handheld play.
@@ -67,6 +68,7 @@ Players have **4 Weapon Slots** and **4 Passive Slots**.
 - **Radiant Aura**: Sacred glowing ring dealing continuous ticking AOE damage.
 - **Venom Spores**: Toxic cloud eruptions inflicting stacking Poison DoT.
 - **Glacial Shards**: Piercing frost spikes inflicting movement slow.
+- **Gilded Chakram**: Heavy golden disc ricocheting between enemies. Base damage scales with unbanked run gold (+1% damage per 50 run gold held).
 
 ### Legendary Weapon Fusions (Level 5 + Level 5)
 - **Arcane Phantom Vortex**: *Magic Missile L5* + *Orbiting Daggers L5* $\to$ 8 astral blades firing rapid homing energy beams.
@@ -83,8 +85,25 @@ Players have **4 Weapon Slots** and **4 Passive Slots**.
 - **Necrotic Blight**: *Venom Spores* + *Toxic Vial* $\to$ Massive corrosive spores; afflicted enemies that die explode into homing plague beetles.
 - **Phantom Storm**: *Orbiting Daggers* + *Might Talisman* $\to$ 8 ethereal hyper-speed scythes.
 - **Absolute Zero**: *Glacial Shards* + *Frost Amulet* $\to$ Cryogenic storms freezing and shattering enemies.
+- **Midas' Wrath**: *Gilded Chakram* + *Greed Coin* $\to$ Twin golden sawblades shedding radiant gold coins on impact, doubling greed scaling (+2% damage per 50 unbanked run gold).
 
 ---
+
+## 💰 Economy, Relic Forging & Wandering Black Market
+
+Relic Swarm introduces a fluid, flexible run economy designed to let players pivot strategies or sacrifice maxed power for permanent essence buffs:
+
+### 🔄 Dynamic Selling (70% Gold Refund)
+Open your Inventory anytime via `Tab` / `I` / `Gamepad Y` to sell any weapon or passive for an instant 70% gold refund, allowing rapid adaptation against shifting wave archetypes or boss phases.
+
+### ⚗️ Relic Forging (Essence Extraction)
+When a weapon or passive achieves its maximum rank (Level 5 or Awakened form), you can choose to **Extract Essence** (0g refund) instead of selling it. Sacrificing the item frees its slot while permanently imprinting 20% of its core attribute or elemental affinity directly onto your champion for the remainder of the run.
+
+### 🎪 Wandering Black Market Bazaar
+A Smuggler Merchant Cart arrives every 3 minutes (180s, 360s, 540s...) near the player. Step into the cart's proximity circle to open the bazaar:
+- **Overdrive Infusion (100g)**: 60-second combat surge granting +40% Might, +25% Cooldown Reduction, and +20% Movement Speed with golden ember trail effects.
+- **Blacksmith's Tempering (175g)**: Upgrades an un-maxed weapon by +1 Level, or grants +50 Max HP and a complete restore if all current weapons are fully maxed.
+- **Arcane Fusion Catalyst (250g)**: Instantly fuses any currently compatible weapon pair in your loadout, or primes a wildcard catalyst token that guarantees an immediate fusion on your next level-up draft.
 
 ## 🏛️ Arena Objectives & Spatial Mechanics
 

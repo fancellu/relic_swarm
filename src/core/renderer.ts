@@ -132,6 +132,88 @@ export function renderGame(
     ctx.restore();
   }
 
+  // 1d. Render Wandering Black Market Merchant Cart
+  if (sim.merchant) {
+    const mc = sim.merchant;
+    ctx.save();
+
+    // Golden ground activation aura
+    ctx.strokeStyle = '#f59e0b';
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.12)';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([6, 5]);
+    ctx.beginPath();
+    ctx.arc(mc.x, mc.y, mc.radius + 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Wagon Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+    ctx.beginPath();
+    ctx.ellipse(mc.x, mc.y + 16, 28, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Wooden cart body
+    ctx.fillStyle = '#78350f';
+    ctx.strokeStyle = '#451a03';
+    ctx.lineWidth = 2;
+    ctx.fillRect(mc.x - 22, mc.y - 12, 44, 24);
+    ctx.strokeRect(mc.x - 22, mc.y - 12, 44, 24);
+
+    // Cart wheels (left and right)
+    ctx.fillStyle = '#451a03';
+    ctx.strokeStyle = '#b45309';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(mc.x - 16, mc.y + 12, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(mc.x + 16, mc.y + 12, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Striped canopy (Burgundy & Gold)
+    const roofY = mc.y - 24;
+    ctx.fillStyle = '#991b1b';
+    ctx.fillRect(mc.x - 24, roofY, 48, 14);
+    // Gold stripes
+    ctx.fillStyle = '#f59e0b';
+    for (let s = -20; s <= 20; s += 10) {
+      ctx.fillRect(mc.x + s - 3, roofY, 6, 14);
+    }
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(mc.x - 24, roofY, 48, 14);
+
+    // Lantern on front post
+    const lanternY = mc.y - 18 + Math.sin(sim.runTimer * 3) * 2;
+    ctx.fillStyle = '#fbbf24';
+    ctx.shadowColor = '#f59e0b';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(mc.x - 26, lanternY, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Golden Anvil / Cache on wagon
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(mc.x - 8, mc.y - 6, 16, 10);
+
+    // Floating sign above cart
+    const signY = roofY - 14 + Math.sin(sim.runTimer * 4) * 3;
+    ctx.font = 'bold 12px monospace';
+    ctx.fillStyle = '#fef08a';
+    ctx.shadowColor = '#d97706';
+    ctx.shadowBlur = 8;
+    ctx.textAlign = 'center';
+    ctx.fillText('🎪 BLACK MARKET [TOUCH]', mc.x, signY);
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+  }
+
   // 2. Render Frost Sigil Aura (if passive equipped)
   if (stats.frostAmuletLevel > 0) {
     const frostRadius = 180 + stats.frostAmuletLevel * 25;
@@ -513,6 +595,24 @@ export function renderGame(
       ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
+    } else if (proj.type === 'gilded_disc') {
+      const spin = sim.runTimer * 16 + proj.id;
+      ctx.save();
+      ctx.translate(proj.x, proj.y);
+      ctx.rotate(spin);
+      ctx.fillStyle = '#facc15';
+      ctx.shadowColor = '#eab308';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(0, 0, Math.max(0, proj.radius), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ca8a04';
+      ctx.beginPath();
+      ctx.arc(0, 0, Math.max(0, proj.radius * 0.65), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(-proj.radius * 0.25, -proj.radius * 0.8, proj.radius * 0.5, proj.radius * 1.6);
+      ctx.restore();
     } else if (proj.isEnemy) {
       ctx.fillStyle = proj.color;
       ctx.shadowColor = proj.color;
@@ -638,6 +738,53 @@ export function renderGame(
       const labelOffset = 22;
       ctx.fillText(
         `${distMeters}m [${Math.round(sim.obelisk.charge)}%]`,
+        clampX,
+        clampY + (screenY > canvasHeight - margin ? -12 : labelOffset),
+      );
+      ctx.restore();
+    }
+  }
+
+  // 11. Off-screen Beacon / Directional Arrow for Black Market Merchant Cart
+  if (sim.merchant) {
+    const screenX = canvasWidth / 2 + (sim.merchant.x - sim.camera.x);
+    const screenY = canvasHeight / 2 + (sim.merchant.y - sim.camera.y);
+    const margin = 32;
+    const isOffScreen =
+      screenX < margin ||
+      screenX > canvasWidth - margin ||
+      screenY < margin ||
+      screenY > canvasHeight - margin;
+
+    if (isOffScreen) {
+      const clampX = clamp(screenX, margin, canvasWidth - margin);
+      const clampY = clamp(screenY, margin, canvasHeight - margin);
+      const angle = Math.atan2(screenY - canvasHeight / 2, screenX - canvasWidth / 2);
+      const distMeters = Math.round(Math.hypot(sim.merchant.x - sim.x, sim.merchant.y - sim.y));
+
+      ctx.save();
+      ctx.translate(clampX, clampY);
+      ctx.rotate(angle);
+      ctx.fillStyle = '#f59e0b';
+      ctx.shadowColor = '#d97706';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(14, 0);
+      ctx.lineTo(-8, -9);
+      ctx.lineTo(-3, 0);
+      ctx.lineTo(-8, 9);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.restore();
+
+      ctx.save();
+      ctx.font = 'bold 11px monospace';
+      ctx.fillStyle = '#fef08a';
+      ctx.textAlign = 'center';
+      const labelOffset = 22;
+      ctx.fillText(
+        `🎪 ${distMeters}m`,
         clampX,
         clampY + (screenY > canvasHeight - margin ? -12 : labelOffset),
       );

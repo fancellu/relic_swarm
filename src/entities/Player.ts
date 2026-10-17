@@ -51,28 +51,34 @@ export function calculateDerivedStats(
   // Magnet Radius
   const metaMagnet = (meta.magnet || 0) * (META_UPGRADES.magnet.bonusPerLevel / 100);
   const magnetLevel = sim.passives.find((p) => p.id === 'magnet_rune')?.level || 0;
-  const magnetRadius = 110 * (1 + metaMagnet + magnetLevel * 0.35);
+  const magnetRadius = 110 * (1 + metaMagnet + magnetLevel * 0.35 + (sim.bonusMagnet || 0));
 
   // Greed (Gold Multiplier)
   const metaGreed = 1 + (meta.greed || 0) * (META_UPGRADES.greed.bonusPerLevel / 100);
   const greedLevel = sim.passives.find((p) => p.id === 'greed_coin')?.level || 0;
-  const greedMult = metaGreed * (1 + greedLevel * 0.25);
+  const greedMult = metaGreed * (1 + greedLevel * 0.25 + (sim.bonusGreed || 0));
 
   // Status Traits & Regen
-  const toxicLevel = sim.passives.find((p) => p.id === 'toxic_vial')?.level || 0;
+  const toxicLevel = (sim.passives.find((p) => p.id === 'toxic_vial')?.level || 0) + (sim.bonusPoisonChance ? 1 : 0);
   const frostAmuletLevel = sim.passives.find((p) => p.id === 'frost_amulet')?.level || 0;
-  const baseRegen = (hero.regenBonus || 0) + vitalityLevel * 0.5;
+  const baseRegen = (hero.regenBonus || 0) + vitalityLevel * 0.5 + (sim.bonusRegen || 0);
   const armor = (hero.armorBonus || 0) + (sim.bonusArmor || 0);
 
   // Area Size
-  const areaMult = hero.areaBonus || 1.0;
+  const areaMult = (hero.areaBonus || 1.0) * (1 + (sim.bonusArea || 0));
+
+  // Black Market 60s Overdrive Buff (+40% Might, +20% Speed, +25% CDR)
+  const isOverdrive = sim.overdriveTimer > 0;
+  const finalMightMult = isOverdrive ? mightMult * 1.4 : mightMult;
+  const finalSpeed = isOverdrive ? speed * 1.2 : speed;
+  const finalCdr = isOverdrive ? Math.min(0.75, cdr + 0.25) : cdr;
 
   return {
     maxHp,
     maxStamina,
-    mightMult,
-    speed,
-    cdr,
+    mightMult: finalMightMult,
+    speed: finalSpeed,
+    cdr: finalCdr,
     magnetRadius,
     greedMult,
     areaMult,
@@ -220,6 +226,24 @@ export function updatePlayerMovement(
         size: 4,
         color: '#06b6d4',
         alpha: 0.8,
+      });
+    }
+  }
+
+  // Black Market Overdrive Timer decay
+  if (sim.overdriveTimer > 0) {
+    sim.overdriveTimer -= dt;
+    if (Math.random() < 0.25) {
+      sim.particles.push({
+        x: sim.x + (Math.random() * 24 - 12),
+        y: sim.y + (Math.random() * 24 - 12),
+        vx: (Math.random() * 2 - 1) * 35,
+        vy: -55,
+        life: 0.35,
+        maxLife: 0.35,
+        size: 4,
+        color: '#f59e0b',
+        alpha: 0.85,
       });
     }
   }

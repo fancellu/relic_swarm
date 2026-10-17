@@ -6,9 +6,11 @@ import {calculateDerivedStats, DerivedStats} from './Player';
 export function generateDraftChoices(sim: SimulationState): ItemDef[] {
   const pool: ItemDef[] = [];
 
-  // Check Level 5 + Level 5 Weapon Fusions first
+  // Check Level 5 + Level 5 Weapon Fusions first (or Level 1+ if Fusion Catalyst is active!)
   if (sim.weapons.length >= 2) {
-    const wepIds = sim.weapons.filter((w) => w.level >= 5).map((w) => w.id);
+    const wepIds = sim.weapons
+      .filter((w) => w.level >= 5 || sim.fusionCatalystAvailable)
+      .map((w) => w.id);
 
     // 1. Arcane Phantom Vortex (Missile + Daggers)
     if (
@@ -99,6 +101,12 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
         const spores = sim.weapons.find((w) => w.id === 'venom_spores');
         const vial = sim.passives.find((p) => p.id === 'toxic_vial');
         if (spores && spores.level >= 5 && vial && !sim.weapons.some((w) => w.id === item.id)) {
+          pool.push(item);
+        }
+      } else if (item.id === 'midas_wrath') {
+        const chakram = sim.weapons.find((w) => w.id === 'gilded_chakram');
+        const coin = sim.passives.find((p) => p.id === 'greed_coin');
+        if (chakram && chakram.level >= 5 && coin && !sim.weapons.some((w) => w.id === item.id)) {
           pool.push(item);
         }
       }
@@ -236,6 +244,12 @@ export function applyUpgradeSelection(
     } else if (item.id === 'necrotic_blight') {
       sim.weapons = sim.weapons.filter((w) => w.id !== 'venom_spores');
       sim.weapons.push({id: item.id, level: 1});
+    } else if (item.id === 'midas_wrath') {
+      sim.weapons = sim.weapons.filter((w) => w.id !== 'gilded_chakram');
+      sim.weapons.push({id: item.id, level: 1});
+    }
+    if (sim.fusionCatalystAvailable && item.isFusion) {
+      sim.fusionCatalystAvailable = false;
     }
     sim.screenShake = 10;
     spawnParticles(sim.x, sim.y, 30, '#38bdf8', 200);
@@ -301,6 +315,127 @@ export function sellEquippedItem(
   sim.gold += refundGold;
   callbacks.onGoldChange(sim.gold);
   gameAudio.playCoinPickup();
+
+  const updatedStats = calculateDerivedStats(sim, metaLevels);
+  sim.maxHp = updatedStats.maxHp;
+  sim.maxStamina = updatedStats.maxStamina;
+  sim.speed = updatedStats.speed;
+  callbacks.onStatsUpdate(updatedStats.maxHp, updatedStats.maxStamina);
+}
+
+export function extractItemEssence(
+  sim: SimulationState,
+  itemId: string,
+  metaLevels: Record<string, number>,
+  callbacks: {
+    onGoldChange: (gold: number) => void;
+    onStatsUpdate: (maxHp: number, maxStamina: number) => void;
+    onWeaponsChange: (weps: EquippedItem[]) => void;
+    onPassivesChange: (passives: EquippedItem[]) => void;
+  },
+  spawnDamageNumber: (x: number, y: number, text: string, color: string) => void,
+  spawnParticles: (x: number, y: number, count: number, color: string, speed?: number) => void,
+): void {
+  const def = ITEM_DEFS[itemId];
+  if (!def) return;
+
+  const isWep = sim.weapons.some((w) => w.id === itemId);
+  const isPas = sim.passives.some((p) => p.id === itemId);
+  if (!isWep && !isPas) return;
+
+  const currentItem = isWep
+    ? sim.weapons.find((w) => w.id === itemId)!
+    : sim.passives.find((p) => p.id === itemId)!;
+
+  // Only max level items (level >= 5 or evolved) can be sacrificed for essence
+  if (currentItem.level < (def.maxLevel || 5) && !def.isEvolution) return;
+
+  let bonusDesc = '';
+  if (itemId === 'magic_missile') {
+    sim.bonusCdr = (sim.bonusCdr || 0) + 0.10;
+    sim.bonusArea = (sim.bonusArea || 0) + 0.15;
+    bonusDesc = '+10% CDR & +15% Area';
+  } else if (itemId === 'flame_blast') {
+    sim.bonusMight = (sim.bonusMight || 0) + 0.18;
+    sim.bonusStamina = (sim.bonusStamina || 0) + 20;
+    bonusDesc = '+18% Might & +20 Stamina';
+  } else if (itemId === 'spinning_dagger') {
+    sim.bonusSpeed = (sim.bonusSpeed || 0) + 0.15;
+    sim.bonusMight = (sim.bonusMight || 0) + 0.10;
+    bonusDesc = '+15% Speed & +10% Might';
+  } else if (itemId === 'thunder_strike') {
+    sim.bonusCdr = (sim.bonusCdr || 0) + 0.12;
+    sim.bonusStamina = (sim.bonusStamina || 0) + 25;
+    bonusDesc = '+12% CDR & +25 Stamina';
+  } else if (itemId === 'radiant_aura') {
+    sim.bonusMaxHp = (sim.bonusMaxHp || 0) + 35;
+    sim.bonusRegen = (sim.bonusRegen || 0) + 1.0;
+    bonusDesc = '+35 Max HP & +1 HP/s Regen';
+  } else if (itemId === 'venom_spores') {
+    sim.bonusSpeed = (sim.bonusSpeed || 0) + 0.15;
+    sim.bonusRegen = (sim.bonusRegen || 0) + 1.0;
+    bonusDesc = '+15% Speed & +1 HP/s Regen';
+  } else if (itemId === 'frost_shard') {
+    sim.bonusMight = (sim.bonusMight || 0) + 0.15;
+    sim.bonusArmor = (sim.bonusArmor || 0) + 2;
+    bonusDesc = '+15% Might & +2 Armor';
+  } else if (itemId === 'gilded_chakram') {
+    sim.bonusGreed = (sim.bonusGreed || 0) + 0.25;
+    sim.bonusMight = (sim.bonusMight || 0) + 0.15;
+    bonusDesc = '+25% Gold Drops & +15% Might';
+  } else if (itemId === 'might_talisman') {
+    sim.bonusMight = (sim.bonusMight || 0) + 0.18;
+    bonusDesc = '+18% Global Attack Damage';
+  } else if (itemId === 'swift_boots') {
+    sim.bonusSpeed = (sim.bonusSpeed || 0) + 0.15;
+    sim.bonusStamina = (sim.bonusStamina || 0) + 20;
+    bonusDesc = '+15% Move Speed & +20 Stamina';
+  } else if (itemId === 'vitality_charm') {
+    sim.bonusMaxHp = (sim.bonusMaxHp || 0) + 35;
+    sim.bonusRegen = (sim.bonusRegen || 0) + 0.8;
+    bonusDesc = '+35 Max HP & +0.8 HP/s Regen';
+  } else if (itemId === 'magnet_rune') {
+    sim.bonusMagnet = (sim.bonusMagnet || 0) + 0.45;
+    bonusDesc = '+45% Pickup Vacuum Radius';
+  } else if (itemId === 'toxic_vial') {
+    sim.bonusPoisonChance = (sim.bonusPoisonChance || 0) + 0.25;
+    bonusDesc = '+25% Poison Strike Chance';
+  } else if (itemId === 'frost_amulet') {
+    sim.bonusArmor = (sim.bonusArmor || 0) + 2;
+    sim.bonusMight = (sim.bonusMight || 0) + 0.10;
+    bonusDesc = '+2 Armor & +10% Might';
+  } else if (itemId === 'greed_coin') {
+    sim.bonusGreed = (sim.bonusGreed || 0) + 0.35;
+    bonusDesc = '+35% Gold Coin Value Drops';
+  } else {
+    sim.bonusMight = (sim.bonusMight || 0) + 0.22;
+    sim.bonusMaxHp = (sim.bonusMaxHp || 0) + 30;
+    sim.bonusSpeed = (sim.bonusSpeed || 0) + 0.10;
+    bonusDesc = '+22% Might, +30 HP, +10% Speed';
+  }
+
+  if (isWep) {
+    sim.weapons = sim.weapons.filter((w) => w.id !== itemId);
+    callbacks.onWeaponsChange([...sim.weapons]);
+  } else {
+    sim.passives = sim.passives.filter((p) => p.id !== itemId);
+    callbacks.onPassivesChange([...sim.passives]);
+  }
+
+  if (!sim.extractedEssences) sim.extractedEssences = [];
+  sim.extractedEssences.push({
+    id: itemId,
+    name: def.name,
+    desc: bonusDesc,
+    icon: def.icon,
+    bonusType: bonusDesc,
+  });
+
+  gameAudio.playPowerupChime();
+  sim.screenShake = 12;
+  spawnParticles(sim.x, sim.y, 40, '#a855f7', 220);
+  spawnParticles(sim.x, sim.y, 30, '#facc15', 200);
+  spawnDamageNumber(sim.x, sim.y, `ESSENCE EXTRACTED: ${bonusDesc}!`, '#c084fc');
 
   const updatedStats = calculateDerivedStats(sim, metaLevels);
   sim.maxHp = updatedStats.maxHp;

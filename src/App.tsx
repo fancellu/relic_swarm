@@ -14,14 +14,14 @@ import {BACKGROUND_MUSIC_URL, ASSETS_MANIFEST} from './core/assets';
 import {renderGame} from './core/renderer';
 import {initSpriteRenderers} from './core/sprites';
 import {applyChestReward, generateChestReward} from './entities/Chests';
-import {applyUpgradeSelection, generateDraftChoices, sellEquippedItem} from './entities/Draft';
+import {applyUpgradeSelection, extractItemEssence, generateDraftChoices, sellEquippedItem} from './entities/Draft';
 import {updateDrops} from './entities/Drops';
 import {calculateDerivedStats, updatePlayerMovement} from './entities/Player';
 import {updateProjectiles} from './entities/Projectiles';
 import {updateEnemies, updateEnemySpawner} from './entities/Spawner';
 import {updateWeaponCasting} from './entities/Weapons';
-import {addDrop, ChestRewardData, EquippedItem, SimulationState} from './types/entities';
-import {HEROES, ItemDef} from './types/items';
+import {addDrop, ChestRewardData, EquippedItem, ExtractedEssence, SimulationState} from './types/entities';
+import {HEROES, ITEM_DEFS, ItemDef} from './types/items';
 import {
   getStoredGold,
   getStoredMeta,
@@ -35,7 +35,8 @@ import {DraftModal} from './ui/DraftModal';
 import {EndGameModal} from './ui/EndGameModal';
 import {HowToPlayModal} from './ui/HowToPlayModal';
 import {HUD} from './ui/HUD';
-import {InventorySheet} from './ui/InventorySheet';
+import {buildInventoryActionList, InventorySheet} from './ui/InventorySheet';
+import {MerchantModal} from './ui/MerchantModal';
 import {PauseMenu} from './ui/PauseMenu';
 import {SanctumShop} from './ui/SanctumShop';
 import {StartScreen} from './ui/StartScreen';
@@ -95,11 +96,21 @@ function createSimulation(heroIndex = 0): SimulationState {
     bonusCdr: 0,
     bonusArmor: 0,
     bonusStamina: 0,
+    bonusRegen: 0,
+    bonusArea: 0,
+    bonusMagnet: 0,
+    bonusGreed: 0,
+    bonusPoisonChance: 0,
     aegisShieldTimer: 0,
     obelisk: null,
     obeliskSpawnTimer: 0,
     inObeliskZone: false,
     cursedArena: null,
+    merchant: null,
+    nextMerchantSpawnTime: 180,
+    overdriveTimer: 0,
+    fusionCatalystAvailable: false,
+    extractedEssences: [],
   };
 }
 
@@ -136,6 +147,7 @@ export default function App() {
   const [isSanctumOpen, setIsSanctumOpen] = useState(false);
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [isMerchantOpen, setIsMerchantOpen] = useState(false);
   const [isPauseOpen, setIsPauseOpen] = useState(false);
   const [pauseTab, setPauseTab] = useState<PauseTab>('STATS');
   const [isLevelUpOpen, setIsLevelUpOpen] = useState(false);
@@ -145,11 +157,14 @@ export default function App() {
   const [availableRerolls, setAvailableRerolls] = useState(0);
   const [sanctumFocusIndex, setSanctumFocusIndex] = useState(0);
   const [inventoryFocusIndex, setInventoryFocusIndex] = useState(0);
+  const [merchantFocusIndex, setMerchantFocusIndex] = useState(0);
   const [pauseMenuFocusIndex, setPauseMenuFocusIndex] = useState(0);
   const [endScreenFocusIndex, setEndScreenFocusIndex] = useState(0);
-  const [activeObjective, setActiveObjective] = useState<{type: 'OBELISK' | 'BLOOD_TRIAL'; progress: number} | null>(null);
+  const [activeObjective, setActiveObjective] = useState<{type: 'OBELISK' | 'BLOOD_TRIAL' | 'MERCHANT'; progress: number} | null>(null);
 
   const [runGold, setRunGold] = useState(0);
+  const [overdriveDisplay, setOverdriveDisplay] = useState(0);
+  const [extractedEssences, setExtractedEssences] = useState<ExtractedEssence[]>([]);
   const [killCount, setKillCount] = useState(0);
   const [equippedWeapons, setEquippedWeapons] = useState<EquippedItem[]>([]);
   const [equippedPassives, setEquippedPassives] = useState<EquippedItem[]>([]);
@@ -175,14 +190,17 @@ export default function App() {
 
   const sanctumItemsRef = useRef<(HTMLDivElement | HTMLButtonElement | null)[]>([]);
   const inventoryItemsRef = useRef<(HTMLDivElement | HTMLButtonElement | null)[]>([]);
+  const merchantItemsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const pauseMenuItemsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const sanctumFocusIndexRef = useRef(0);
   const inventoryFocusIndexRef = useRef(0);
+  const merchantFocusIndexRef = useRef(0);
   const pauseMenuFocusIndexRef = useRef(0);
   const endScreenFocusIndexRef = useRef(0);
   endScreenFocusIndexRef.current = endScreenFocusIndex;
   const pauseScrollRef = useRef<HTMLDivElement>(null);
   const howToPlayScrollRef = useRef<HTMLDivElement>(null);
+  const merchantCooldownRef = useRef(false);
   const pauseTabRef = useRef(pauseTab);
   pauseTabRef.current = pauseTab;
   const touchJoystickRef = useRef({active: false, startX: 0, startY: 0, currentX: 0, currentY: 0, dx: 0, dy: 0, sprintTouch: false});
@@ -202,6 +220,9 @@ export default function App() {
   useEffect(() => {
     inventoryItemsRef.current[inventoryFocusIndex]?.scrollIntoView({block: 'nearest', behavior: 'smooth'});
   }, [inventoryFocusIndex, isInventoryOpen]);
+  useEffect(() => {
+    merchantItemsRef.current[merchantFocusIndex]?.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+  }, [merchantFocusIndex, isMerchantOpen]);
   useEffect(() => {
     if (pauseTab === 'MENU') pauseMenuItemsRef.current[pauseMenuFocusIndex]?.scrollIntoView({block: 'nearest', behavior: 'smooth'});
     if (pauseScrollRef.current) pauseScrollRef.current.scrollTop = 0;
@@ -270,8 +291,12 @@ export default function App() {
     setActiveObjective(null);
     setIsPauseOpen(false);
     setIsInventoryOpen(false);
+    setIsMerchantOpen(false);
     setIsLevelUpOpen(false);
     setChestReward(null);
+    setOverdriveDisplay(0);
+    setExtractedEssences([]);
+    merchantCooldownRef.current = false;
     endScreenFocusIndexRef.current = 0;
     setEndScreenFocusIndex(0);
     navCooldownRef.current = 0.4;
@@ -295,6 +320,9 @@ export default function App() {
     setSelectedHeroIndex(heroIndex);
     setActiveObjective(null);
     setRunGold(0);
+    setOverdriveDisplay(0);
+    setExtractedEssences([]);
+    merchantCooldownRef.current = false;
     setKillCount(0);
     setEquippedWeapons([...sim.weapons]);
     setEquippedPassives([...sim.passives]);
@@ -310,6 +338,7 @@ export default function App() {
     setIsSanctumOpen(false);
     setIsHowToPlayOpen(false);
     setIsInventoryOpen(false);
+    setIsMerchantOpen(false);
     setIsPauseOpen(false);
     setIsLevelUpOpen(false);
     setEndScreenFocusIndex(0);
@@ -353,6 +382,121 @@ export default function App() {
     syncEquipment();
     if (isLevelUpOpen) setChoices(generateDraftChoices(simRef.current));
   }, [entityCallbacks, isLevelUpOpen, syncEquipment]);
+  const extractEssence = useCallback(
+    (itemId: string) => {
+      extractItemEssence(
+        simRef.current,
+        itemId,
+        metaLevelsRef.current,
+        entityCallbacks(),
+        spawnDamageNumber,
+        spawnParticles,
+      );
+      syncEquipment();
+      setExtractedEssences([...simRef.current.extractedEssences]);
+      if (isLevelUpOpen) setChoices(generateDraftChoices(simRef.current));
+    },
+    [entityCallbacks, isLevelUpOpen, spawnDamageNumber, spawnParticles, syncEquipment],
+  );
+  const buyOverdrive = useCallback(() => {
+    const sim = simRef.current;
+    if (sim.gold < 100) {
+      gameAudio.playErrorBuzz();
+      return;
+    }
+    sim.gold -= 100;
+    sim.overdriveTimer = 60.0;
+    setRunGold(sim.gold);
+    setOverdriveDisplay(60);
+    gameAudio.playPowerupChime();
+    sim.screenShake = 12;
+    spawnParticles(sim.x, sim.y, 40, '#f59e0b', 220);
+    spawnDamageNumber(sim.x, sim.y, '60s OVERDRIVE ACTIVATED!', '#f59e0b');
+
+    const updatedStats = calculateDerivedStats(sim, metaLevelsRef.current);
+    sim.maxHp = updatedStats.maxHp;
+    sim.maxStamina = updatedStats.maxStamina;
+    sim.speed = updatedStats.speed;
+    syncStats(updatedStats.maxHp, updatedStats.maxStamina);
+  }, [spawnDamageNumber, spawnParticles, syncStats]);
+  const buyForceUpgrade = useCallback(() => {
+    const sim = simRef.current;
+    if (sim.gold < 175) {
+      gameAudio.playErrorBuzz();
+      return;
+    }
+    const upgradeable = sim.weapons.find((w) => {
+      const def = ITEM_DEFS[w.id];
+      return def && !def.isEvolution && w.level < def.maxLevel;
+    });
+
+    sim.gold -= 175;
+    setRunGold(sim.gold);
+
+    if (upgradeable) {
+      upgradeable.level += 1;
+      const def = ITEM_DEFS[upgradeable.id];
+      spawnDamageNumber(sim.x, sim.y, `${def?.name || upgradeable.id} UPGRADED TO L${upgradeable.level}!`, '#38bdf8');
+    } else {
+      sim.bonusMaxHp = (sim.bonusMaxHp || 0) + 50;
+      sim.hp = Math.min(sim.maxHp + 50, sim.hp + 50);
+      setCurrentHp(Math.round(sim.hp));
+      spawnDamageNumber(sim.x, sim.y, '+50 MAX HP & FULL RESTORE!', '#22c55e');
+    }
+
+    gameAudio.playPowerupChime();
+    sim.screenShake = 14;
+    spawnParticles(sim.x, sim.y, 40, '#38bdf8', 240);
+    syncEquipment();
+
+    const updatedStats = calculateDerivedStats(sim, metaLevelsRef.current);
+    sim.maxHp = updatedStats.maxHp;
+    sim.maxStamina = updatedStats.maxStamina;
+    sim.speed = updatedStats.speed;
+    syncStats(updatedStats.maxHp, updatedStats.maxStamina);
+  }, [spawnDamageNumber, spawnParticles, syncEquipment, syncStats]);
+  const buyCatalyst = useCallback(() => {
+    const sim = simRef.current;
+    if (sim.gold < 250) {
+      gameAudio.playErrorBuzz();
+      return;
+    }
+    sim.gold -= 250;
+    setRunGold(sim.gold);
+    gameAudio.playVictoryFanfare();
+    sim.screenShake = 16;
+    spawnParticles(sim.x, sim.y, 50, '#c084fc', 280);
+
+    const wepIds = sim.weapons.map((w) => w.id);
+    let fusedDef: ItemDef | null = null;
+    if (wepIds.includes('magic_missile') && wepIds.includes('spinning_dagger')) {
+      fusedDef = ITEM_DEFS.arcane_phantom_vortex;
+    } else if (wepIds.includes('flame_blast') && wepIds.includes('thunder_strike')) {
+      fusedDef = ITEM_DEFS.cataclysmic_nova;
+    } else if (wepIds.includes('radiant_aura') && wepIds.includes('venom_spores')) {
+      fusedDef = ITEM_DEFS.toxic_sanctuary;
+    } else if (wepIds.includes('frost_shard') && wepIds.includes('thunder_strike')) {
+      fusedDef = ITEM_DEFS.shatterstorm;
+    } else if (wepIds.includes('frost_shard') && wepIds.includes('spinning_dagger')) {
+      fusedDef = ITEM_DEFS.frostbite_chakrams;
+    }
+
+    if (fusedDef && fusedDef.consumedWeapons) {
+      sim.weapons = sim.weapons.filter((w) => !fusedDef!.consumedWeapons!.includes(w.id));
+      sim.weapons.push({id: fusedDef.id, level: 1});
+      spawnDamageNumber(sim.x, sim.y, `FUSION SYNTHESIZED: ${fusedDef.name}!`, '#facc15');
+      syncEquipment();
+    } else {
+      sim.fusionCatalystAvailable = true;
+      spawnDamageNumber(sim.x, sim.y, 'FUSION CATALYST ARMED! (Next Draft Fuses)', '#c084fc');
+    }
+
+    const updatedStats = calculateDerivedStats(sim, metaLevelsRef.current);
+    sim.maxHp = updatedStats.maxHp;
+    sim.maxStamina = updatedStats.maxStamina;
+    sim.speed = updatedStats.speed;
+    syncStats(updatedStats.maxHp, updatedStats.maxStamina);
+  }, [spawnDamageNumber, spawnParticles, syncEquipment, syncStats]);
   const openInventory = useCallback(() => {
     inventoryFocusIndexRef.current = 0;
     setInventoryFocusIndex(0);
@@ -533,25 +677,59 @@ export default function App() {
     }
 
     if (isInventoryOpen) {
-      const totalItems = equippedWeaponsRef.current.length + equippedPassivesRef.current.length + 1;
+      const actions = buildInventoryActionList(equippedWeaponsRef.current, equippedPassivesRef.current);
+      const total = actions.length + 1;
       if (navCooldownRef.current <= 0 && navUp) {
-        inventoryFocusIndexRef.current = (inventoryFocusIndexRef.current + totalItems - 1) % totalItems;
+        inventoryFocusIndexRef.current = (inventoryFocusIndexRef.current + total - 1) % total;
         setInventoryFocusIndex(inventoryFocusIndexRef.current);
         navCooldownRef.current = 0.2;
       } else if (navCooldownRef.current <= 0 && navDown) {
-        inventoryFocusIndexRef.current = (inventoryFocusIndexRef.current + 1) % totalItems;
+        inventoryFocusIndexRef.current = (inventoryFocusIndexRef.current + 1) % total;
         setInventoryFocusIndex(inventoryFocusIndexRef.current);
         navCooldownRef.current = 0.2;
       } else if (confirmJustPressed) {
-        const weaponCount = equippedWeaponsRef.current.length;
-        const passiveCount = equippedPassivesRef.current.length;
         const index = inventoryFocusIndexRef.current;
-        if (index < weaponCount) sellItem(equippedWeaponsRef.current[index].id);
-        else if (index < weaponCount + passiveCount) sellItem(equippedPassivesRef.current[index - weaponCount].id);
-        else setIsInventoryOpen(false);
+        if (index < actions.length) {
+          const act = actions[index];
+          if (act.type === 'ESSENCE') {
+            extractEssence(act.itemId);
+          } else {
+            sellItem(act.itemId);
+          }
+        } else {
+          setIsInventoryOpen(false);
+        }
         navCooldownRef.current = 0.3;
       } else if (cancelJustPressed || yJustPressed) {
         setIsInventoryOpen(false);
+        navCooldownRef.current = 0.3;
+      }
+      return;
+    }
+
+    if (isMerchantOpen) {
+      const total = 4;
+      if (navCooldownRef.current <= 0 && navUp) {
+        merchantFocusIndexRef.current = (merchantFocusIndexRef.current + total - 1) % total;
+        setMerchantFocusIndex(merchantFocusIndexRef.current);
+        navCooldownRef.current = 0.2;
+      } else if (navCooldownRef.current <= 0 && navDown) {
+        merchantFocusIndexRef.current = (merchantFocusIndexRef.current + 1) % total;
+        setMerchantFocusIndex(merchantFocusIndexRef.current);
+        navCooldownRef.current = 0.2;
+      } else if (confirmJustPressed) {
+        const idx = merchantFocusIndexRef.current;
+        if (idx === 0) buyOverdrive();
+        else if (idx === 1) buyForceUpgrade();
+        else if (idx === 2) buyCatalyst();
+        else {
+          setIsMerchantOpen(false);
+          merchantCooldownRef.current = true;
+        }
+        navCooldownRef.current = 0.3;
+      } else if (cancelJustPressed || xJustPressed || yJustPressed) {
+        setIsMerchantOpen(false);
+        merchantCooldownRef.current = true;
         navCooldownRef.current = 0.3;
       }
       return;
@@ -780,11 +958,32 @@ export default function App() {
       }
     }
 
+    // Wandering Black Market Proximity & Interaction Check
+    if (sim.merchant) {
+      const distToMerchant = Math.hypot(sim.x - sim.merchant.x, sim.y - sim.merchant.y);
+      if (distToMerchant <= sim.merchant.radius + 20) {
+        if (!isMerchantOpen && !merchantCooldownRef.current) {
+          merchantFocusIndexRef.current = 0;
+          setMerchantFocusIndex(0);
+          setIsMerchantOpen(true);
+          gameAudio.playPowerupChime();
+        }
+      } else if (distToMerchant > sim.merchant.radius + 60) {
+        merchantCooldownRef.current = false;
+      }
+    }
+
+    // Synchronize Overdrive Display
+    setOverdriveDisplay(Math.ceil(sim.overdriveTimer || 0));
+
     // Synchronize Active Objective Banner
     if (sim.cursedArena && sim.cursedArena.active) {
       setActiveObjective({type: 'BLOOD_TRIAL', progress: Math.ceil(sim.cursedArena.duration)});
     } else if (sim.obelisk) {
       setActiveObjective({type: 'OBELISK', progress: Math.round(sim.obelisk.charge)});
+    } else if (sim.merchant) {
+      const dist = Math.round(Math.hypot(sim.x - sim.merchant.x, sim.y - sim.merchant.y));
+      setActiveObjective({type: 'MERCHANT', progress: dist});
     } else {
       setActiveObjective(null);
     }
@@ -806,19 +1005,25 @@ export default function App() {
     setGameState((state) => ({...state, timer: Math.floor(sim.runTimer)}));
   }, [
     bankRunGold,
+    buyCatalyst,
+    buyForceUpgrade,
     buyMetaUpgrade,
+    buyOverdrive,
     chestReward,
     claimChestReward,
+    extractEssence,
     initGame,
     isHowToPlayOpen,
     isInventoryOpen,
     isLevelUpOpen,
+    isMerchantOpen,
     isPauseOpen,
     isSanctumOpen,
     openInventory,
     openSanctum,
     reroll,
     selectUpgrade,
+    sellItem,
     spawnDamageNumber,
     spawnParticles,
     triggerLevelUp,
@@ -979,6 +1184,91 @@ export default function App() {
         ) {
           event.preventDefault();
           setIsInventoryOpen(false);
+          return;
+        }
+        const actions = buildInventoryActionList(equippedWeaponsRef.current, equippedPassivesRef.current);
+        const total = actions.length + 1;
+        if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
+          event.preventDefault();
+          inventoryFocusIndexRef.current = (inventoryFocusIndexRef.current + total - 1) % total;
+          setInventoryFocusIndex(inventoryFocusIndexRef.current);
+          return;
+        }
+        if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') {
+          event.preventDefault();
+          inventoryFocusIndexRef.current = (inventoryFocusIndexRef.current + 1) % total;
+          setInventoryFocusIndex(inventoryFocusIndexRef.current);
+          return;
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          const index = inventoryFocusIndexRef.current;
+          if (index < actions.length) {
+            const act = actions[index];
+            if (act.type === 'ESSENCE') {
+              extractEssence(act.itemId);
+            } else {
+              sellItem(act.itemId);
+            }
+          } else {
+            setIsInventoryOpen(false);
+          }
+          return;
+        }
+        return;
+      }
+      if (isMerchantOpen) {
+        if (
+          event.key === 'Escape' ||
+          event.key === 'Backspace' ||
+          event.key === 'Tab' ||
+          event.key === 'i' ||
+          event.key === 'I'
+        ) {
+          event.preventDefault();
+          setIsMerchantOpen(false);
+          merchantCooldownRef.current = true;
+          return;
+        }
+        if (event.key === '1') {
+          event.preventDefault();
+          buyOverdrive();
+          return;
+        }
+        if (event.key === '2') {
+          event.preventDefault();
+          buyForceUpgrade();
+          return;
+        }
+        if (event.key === '3') {
+          event.preventDefault();
+          buyCatalyst();
+          return;
+        }
+        const total = 4;
+        if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
+          event.preventDefault();
+          merchantFocusIndexRef.current = (merchantFocusIndexRef.current + total - 1) % total;
+          setMerchantFocusIndex(merchantFocusIndexRef.current);
+          return;
+        }
+        if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') {
+          event.preventDefault();
+          merchantFocusIndexRef.current = (merchantFocusIndexRef.current + 1) % total;
+          setMerchantFocusIndex(merchantFocusIndexRef.current);
+          return;
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          const idx = merchantFocusIndexRef.current;
+          if (idx === 0) buyOverdrive();
+          else if (idx === 1) buyForceUpgrade();
+          else if (idx === 2) buyCatalyst();
+          else {
+            setIsMerchantOpen(false);
+            merchantCooldownRef.current = true;
+          }
+          return;
         }
         return;
       }
@@ -1087,12 +1377,17 @@ export default function App() {
       window.removeEventListener('keyup', keyUp);
     };
   }, [
+    buyCatalyst,
+    buyForceUpgrade,
+    buyOverdrive,
     chestReward,
     claimChestReward,
+    extractEssence,
     initGame,
     isHowToPlayOpen,
     isInventoryOpen,
     isLevelUpOpen,
+    isMerchantOpen,
     isPauseOpen,
     isSanctumOpen,
     openInventory,
@@ -1100,6 +1395,7 @@ export default function App() {
     reroll,
     returnToStart,
     selectUpgrade,
+    sellItem,
   ]);
 
   const stats = calculateDerivedStats(simRef.current, metaLevels);
@@ -1132,6 +1428,7 @@ export default function App() {
         isMobile={isMobile}
         isPlaying={gameState.status === 'PLAYING'}
         activeObjective={activeObjective}
+        overdriveRemaining={overdriveDisplay}
         touchJoystickRef={touchJoystickRef}
       />
       {assetsReady && (
@@ -1181,7 +1478,27 @@ export default function App() {
           setInventoryFocusIndex(index);
         }}
         onSellItem={sellItem}
+        onExtractEssence={extractEssence}
         inventoryItemsRef={inventoryItemsRef}
+      />
+      <MerchantModal
+        isOpen={isMerchantOpen}
+        onClose={() => {
+          setIsMerchantOpen(false);
+          merchantCooldownRef.current = true;
+        }}
+        runGold={runGold}
+        onBuyOverdrive={buyOverdrive}
+        onBuyForceUpgrade={buyForceUpgrade}
+        onBuyCatalyst={buyCatalyst}
+        overdriveRemaining={overdriveDisplay}
+        catalystAvailable={Boolean(simRef.current.fusionCatalystAvailable)}
+        merchantFocusIndex={merchantFocusIndex}
+        onSelectIndex={(index) => {
+          merchantFocusIndexRef.current = index;
+          setMerchantFocusIndex(index);
+        }}
+        merchantItemsRef={merchantItemsRef}
       />
       <DraftModal
         isOpen={isLevelUpOpen}
@@ -1209,6 +1526,7 @@ export default function App() {
         equippedWeapons={equippedWeapons}
         equippedPassives={equippedPassives}
         weaponDamageDealt={simRef.current.weaponDamageDealt}
+        extractedEssences={extractedEssences}
         pauseMenuFocusIndex={pauseMenuFocusIndex}
         onSelectMenuIndex={(index) => {
           pauseMenuFocusIndexRef.current = index;

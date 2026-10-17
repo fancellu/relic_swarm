@@ -494,5 +494,55 @@ export function updateWeaponCasting(
         }
       }
     }
+
+    // --- Gilded Chakram & Midas' Wrath (Unbanked Gold Scaling) ---
+    else if (wep.id === 'gilded_chakram' || wep.id === 'midas_wrath') {
+      if (sim.weaponTimers[timerKey] >= actualCd && sim.enemies.length > 0) {
+        sim.weaponTimers[timerKey] = 0;
+        gameAudio.playArcadeLaser();
+
+        const isMidas = wep.id === 'midas_wrath';
+        // Wealth Scaling: +1% damage per 50 unbanked gold (+2% for Midas' Wrath)
+        const goldRatio = Math.max(0, sim.gold / 50);
+        const goldDmgMult = 1 + goldRatio * (isMidas ? 0.02 : 0.01);
+
+        const count = isMidas ? 6 : 2 + Math.floor(wep.level / 2);
+        const dmg =
+          (def.baseDamage || 28) *
+          stats.mightMult *
+          goldDmgMult *
+          (1 + (wep.level - 1) * 0.22);
+
+        // Find nearest enemies
+        const sorted = [...sim.enemies].sort(
+          (a, b) => Math.hypot(a.x - sim.x, a.y - sim.y) - Math.hypot(b.x - sim.x, b.y - sim.y),
+        );
+
+        for (let i = 0; i < count; i++) {
+          const target = sorted[i % sorted.length];
+          const baseAngle = target ? Math.atan2(target.y - sim.y, target.x - sim.x) : Math.random() * Math.PI * 2;
+          const spread = count > 1 ? (i - (count - 1) / 2) * 0.35 : 0;
+          const angle = baseAngle + spread;
+
+          sim.projectiles.push({
+            id: sim.nextProjId++,
+            type: 'gilded_disc',
+            sourceWeapon: wep.id,
+            x: sim.x,
+            y: sim.y,
+            vx: Math.cos(angle) * (isMidas ? 480 : 400),
+            vy: Math.sin(angle) * (isMidas ? 480 : 400),
+            damage: dmg,
+            radius: (isMidas ? 18 : 13 + wep.level * 1.5) * stats.areaMult,
+            duration: isMidas ? 2.8 : 2.0,
+            maxDuration: isMidas ? 2.8 : 2.0,
+            pierce: isMidas ? 6 : 2 + wep.level,
+            hitList: [],
+            color: '#facc15',
+            inflictsPoison: stats.toxicLevel > 0 && Math.random() < 0.35,
+          });
+        }
+      }
+    }
   });
 }

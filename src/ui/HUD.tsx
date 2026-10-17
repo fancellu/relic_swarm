@@ -21,7 +21,8 @@ export interface HUDProps {
   onOpenMenu: () => void;
   isMobile: boolean;
   isPlaying?: boolean;
-  activeObjective?: {type: 'OBELISK' | 'BLOOD_TRIAL'; progress: number} | null;
+  activeObjective?: {type: 'OBELISK' | 'BLOOD_TRIAL' | 'MERCHANT'; progress: number} | null;
+  overdriveRemaining?: number;
   touchJoystickRef: React.RefObject<{
     active: boolean;
     startX: number;
@@ -52,6 +53,7 @@ export const HUD: React.FC<HUDProps> = ({
   isMobile,
   isPlaying = true,
   activeObjective,
+  overdriveRemaining,
   touchJoystickRef,
 }) => {
   return (
@@ -98,22 +100,35 @@ export const HUD: React.FC<HUDProps> = ({
               }}
             />
           </div>
-          <div className="text-[11px] font-mono text-slate-400 flex items-center gap-2">
+          <div className="text-[11px] font-mono text-slate-400 flex items-center gap-2 flex-wrap justify-center">
             <span>Time: {formatTime(timer || 0)}</span>
             <span>•</span>
             <span className="text-rose-400">Kills: {killCount}</span>
+            {overdriveRemaining !== undefined && overdriveRemaining > 0 && (
+              <>
+                <span>•</span>
+                <span className="bg-orange-950/90 text-orange-300 border border-orange-500/80 px-1.5 py-0.2 rounded-full text-[10px] font-bold animate-pulse flex items-center gap-1">
+                  <Zap size={10} className="text-orange-400" />
+                  <span>OVERDRIVE {Math.ceil(overdriveRemaining)}s</span>
+                </span>
+              </>
+            )}
           </div>
           {activeObjective && (
             <div
               className={`mt-0.5 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide border shadow-sm animate-pulse ${
                 activeObjective.type === 'OBELISK'
                   ? 'bg-purple-950/90 border-purple-400/80 text-purple-200'
-                  : 'bg-rose-950/90 border-rose-400/80 text-rose-200'
+                  : activeObjective.type === 'BLOOD_TRIAL'
+                  ? 'bg-rose-950/90 border-rose-400/80 text-rose-200'
+                  : 'bg-amber-950/90 border-amber-400/80 text-amber-200'
               }`}>
               <span>
                 {activeObjective.type === 'OBELISK'
                   ? `⚡ PURIFY OBELISK: ${activeObjective.progress}%`
-                  : `💀 BLOOD TRIAL: ${activeObjective.progress}s REMAINING`}
+                  : activeObjective.type === 'BLOOD_TRIAL'
+                  ? `💀 BLOOD TRIAL: ${activeObjective.progress}s REMAINING`
+                  : `🎪 BLACK MARKET NEARBY: ${activeObjective.progress}m`}
               </span>
             </div>
           )}

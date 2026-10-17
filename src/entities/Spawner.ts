@@ -76,6 +76,25 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
     }
   }
 
+  // Wandering Black Market Merchant Cart (every 3 minutes: 180s, 360s, 540s, 720s)
+  if (!sim.merchant && sim.runTimer >= (sim.nextMerchantSpawnTime || 180)) {
+    sim.nextMerchantSpawnTime = (sim.nextMerchantSpawnTime || 180) + 180;
+    const angle = Math.random() * Math.PI * 2;
+    const spawnDist = 260 + Math.random() * 80;
+    sim.merchant = {
+      id: sim.nextEnemyId++,
+      x: sim.x + Math.cos(angle) * spawnDist,
+      y: sim.y + Math.sin(angle) * spawnDist,
+      radius: 38,
+      visited: false,
+      hasOverdrive: true,
+      hasForceUpgrade: true,
+      hasCatalyst: true,
+    };
+    gameAudio.playPowerupChime();
+    sim.screenShake = 6;
+  }
+
   // Boss Titan Spawn Trigger
   if (sim.runTimer >= bossSpawnTime && !sim.bossSpawned) {
     sim.bossSpawned = true;

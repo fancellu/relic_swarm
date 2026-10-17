@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import React from 'react';
 import {DerivedStats} from '../entities/Player';
-import {EquippedItem} from '../types/entities';
+import {EquippedItem, ExtractedEssence} from '../types/entities';
 import {ITEM_DEFS} from '../types/items';
 import {formatTime, gameAudio, MenuOverlay} from '../../utils/helper';
 
@@ -43,7 +43,8 @@ export interface PauseMenuProps {
   sfxMuted: boolean;
   pauseMenuItemsRef: React.RefObject<(HTMLButtonElement | null)[]>;
   onOpenInventory: () => void;
-  activeObjective?: {type: 'OBELISK' | 'BLOOD_TRIAL'; progress: number} | null;
+  activeObjective?: {type: 'OBELISK' | 'BLOOD_TRIAL' | 'MERCHANT'; progress: number} | null;
+  extractedEssences?: ExtractedEssence[];
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -67,6 +68,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
   pauseMenuItemsRef,
   onOpenInventory,
   activeObjective,
+  extractedEssences,
   scrollContainerRef,
 }) => {
   if (!isOpen) return null;
@@ -335,6 +337,27 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                 </div>
               )}
             </div>
+
+            {/* Extracted Relic Essences (Sacrificial Buffs) */}
+            {extractedEssences && extractedEssences.length > 0 && (
+              <div className="bg-purple-950/40 p-3.5 rounded-xl border border-purple-500/50 flex flex-col gap-2">
+                <div className="font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1.5 text-xs">
+                  <Sparkles size={14} className="text-purple-400" />
+                  <span>Forged Relic Essences ({extractedEssences.length} Sacrificial Buffs Active)</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {extractedEssences.map((ess, eIdx) => (
+                    <div key={`${ess.id}-${eIdx}`} className="bg-slate-900/90 p-2.5 rounded-lg border border-purple-800/60 flex items-center gap-2.5">
+                      <img src={ess.icon} alt={ess.name} className="w-6 h-6 object-contain shrink-0" />
+                      <div>
+                        <div className="font-bold text-xs text-purple-200">{ess.name}</div>
+                        <div className="text-[10px] text-amber-300 font-mono">{ess.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -387,6 +410,46 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                   </div>
                   <div className="text-[10px] text-amber-300/90 bg-amber-950/30 p-1.5 rounded border border-amber-900/30 leading-tight">
                     <span className="font-bold text-amber-300">Survival Reward:</span> Outlast the 20s siege without escaping boundary walls to earn a guaranteed <span className="text-emerald-300 font-bold">Chest</span>, <span className="text-yellow-300 font-bold">+150 Gold</span>, and a burst of <span className="text-purple-300 font-bold">Purple XP Gems</span>!
+                  </div>
+                </div>
+
+                {/* Wandering Black Market */}
+                <div className="bg-slate-900/80 p-3 rounded-xl border border-amber-900/40 flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="font-bold text-amber-300 text-xs flex items-center gap-1.5">
+                      <DollarSign size={14} className="text-amber-400" />
+                      <span>Wandering Black Market</span>
+                    </div>
+                    <span className="text-[9px] bg-amber-950 text-amber-300 px-1.5 py-0.5 rounded border border-amber-800/60 font-mono">
+                      Every 3 Mins
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-slate-300 leading-normal">
+                    A stationary smuggler cart spawns near the hero. Touch it to spend <span className="text-amber-300 font-bold">unbanked run gold</span> on high-impact contraband:
+                  </div>
+                  <div className="text-[10px] text-amber-300/90 bg-amber-950/30 p-1.5 rounded border border-amber-900/30 leading-tight">
+                    • <span className="text-white font-bold">60s Overdrive (100g):</span> +40% Might, +25% CDR, +20% Speed.<br />
+                    • <span className="text-white font-bold">Blacksmith Tempering (175g):</span> +1 Weapon Level.<br />
+                    • <span className="text-white font-bold">Fusion Catalyst (250g):</span> Wildcard fusion synthesis!
+                  </div>
+                </div>
+
+                {/* Relic Forging & Wealth Scaling */}
+                <div className="bg-slate-900/80 p-3 rounded-xl border border-purple-900/40 flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="font-bold text-purple-300 text-xs flex items-center gap-1.5">
+                      <Sparkles size={14} className="text-purple-400" />
+                      <span>Relic Forging & Wealth Scaling</span>
+                    </div>
+                    <span className="text-[9px] bg-purple-950 text-purple-300 px-1.5 py-0.5 rounded border border-purple-800/60 font-mono">
+                      Arsenal Sacrifices
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-slate-300 leading-normal">
+                    Open Arsenal (<span className="text-indigo-300 font-bold">Tab / Y</span>) to pivot builds. For maxed Level 5 items, choose <span className="text-purple-300 font-bold">Extract Essence</span> (0g) to permanently inherit 20% of their power!
+                  </div>
+                  <div className="text-[10px] text-amber-300/90 bg-amber-950/30 p-1.5 rounded border border-amber-900/30 leading-tight">
+                    <span className="font-bold text-amber-300">Gilded Chakram:</span> Whirling golden blades dealing <span className="text-yellow-300 font-bold">+1% bonus damage per 50 run gold</span> held in your pouch!
                   </div>
                 </div>
               </div>

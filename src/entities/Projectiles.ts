@@ -250,6 +250,9 @@ export function updateProjectiles(
 
             if (proj.inflictsPoison) applyEnemyPoison(enemy, proj.damage * 0.5);
             if (proj.inflictsSlow) applyEnemySlow(enemy, 0.5, 3.0);
+            if (proj.type === 'gilded_disc' && Math.random() < 0.25) {
+              gameAudio.playCoinPickup();
+            }
 
             // Thermal Shock: Glacial / Ice hits a burning enemy
             if ((proj.type === 'ice' || proj.inflictsSlow) && enemy.burnTimer > 0) {

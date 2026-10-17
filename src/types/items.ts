@@ -216,6 +216,18 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     cost: 60,
     inflictsSlow: true,
   },
+  gilded_chakram: {
+    id: 'gilded_chakram',
+    name: 'Gilded Chakram',
+    type: 'WEAPON',
+    icon: 'assets/images/item_gold_coin.png',
+    desc: 'Launches ricocheting golden chakrams. Scales with unbanked wealth: +1% damage per 50 run gold held.',
+    maxLevel: 5,
+    baseDamage: 28,
+    cooldown: 0.85,
+    evolutionPair: 'greed_coin',
+    cost: 65,
+  },
 
   // Level 5 + Level 5 Weapon Fusions (Evolutions)
   arcane_phantom_vortex: {
@@ -379,6 +391,18 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     isEvolution: true,
     cost: 165,
     inflictsPoison: true,
+  },
+  midas_wrath: {
+    id: 'midas_wrath',
+    name: "Midas' Wrath",
+    type: 'WEAPON',
+    icon: 'assets/images/item_gold_coin.png',
+    desc: "Awakened (Gilded Chakram + Greed Coin): Swarms the screen with 6 giant piercing golden sawblades (+2% damage per 50 run gold held).",
+    maxLevel: 1,
+    baseDamage: 65,
+    cooldown: 0.55,
+    isEvolution: true,
+    cost: 180,
   },
 
   // Passives

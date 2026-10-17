@@ -70,6 +70,7 @@ export interface ProjectileEntity {
     | 'ice'
     | 'vortex'
     | 'chakram'
+    | 'gilded_disc'
     | 'beetle';
   sourceWeapon?: string;
   x: number;
@@ -175,6 +176,25 @@ export interface CursedArena {
   miniBossId?: number;
 }
 
+export interface ExtractedEssence {
+  id: string;
+  name: string;
+  desc: string;
+  icon: string;
+  bonusType: string;
+}
+
+export interface MerchantEntity {
+  id: number;
+  x: number;
+  y: number;
+  radius: number;
+  visited: boolean;
+  hasOverdrive: boolean;
+  hasForceUpgrade: boolean;
+  hasCatalyst: boolean;
+}
+
 export interface SimulationState {
   hero: HeroData;
   x: number;
@@ -223,6 +243,11 @@ export interface SimulationState {
   bonusCdr: number;
   bonusArmor: number;
   bonusStamina: number;
+  bonusRegen: number;
+  bonusArea: number;
+  bonusMagnet: number;
+  bonusGreed: number;
+  bonusPoisonChance: number;
   aegisShieldTimer: number;
   solarPulseCounter?: number;
   conduitPylons?: {x: number; y: number; life: number}[];
@@ -231,4 +256,10 @@ export interface SimulationState {
   obeliskSpawnTimer: number;
   inObeliskZone: boolean;
   cursedArena: CursedArena | null;
+  // Economy & Mid-Run Pivoting
+  merchant: MerchantEntity | null;
+  nextMerchantSpawnTime: number;
+  overdriveTimer: number;
+  fusionCatalystAvailable: boolean;
+  extractedEssences: ExtractedEssence[];
 }

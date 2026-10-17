@@ -1,4 +1,4 @@
-import {Compass, Flame, HelpCircle, Skull, Sparkles, X, Zap} from 'lucide-react';
+import {Coins, Compass, Flame, HelpCircle, Skull, Sparkles, X, Zap} from 'lucide-react';
 import React from 'react';
 import {MenuOverlay} from '../../utils/helper';
 
@@ -74,6 +74,17 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({isOpen, onClose, 
             </div>
             <div>• <span className="text-pink-300 font-bold">Corrupted Obelisks</span>: Follow the HUD compass. Stand within the 150px zone to channel 100% purification (+30% swarm frenzy) for a holy shockwave & Chest/Magnet.</div>
             <div>• <span className="text-rose-300 font-bold">Cursed Blood Trials</span>: Pick up elite Blood Chalices to enter a 20s sealed 600x600 arena for +150 Gold, Chest & Purple XP.</div>
+          </div>
+
+          <div className="bg-slate-950/70 p-2.5 rounded-xl border border-amber-900/60 bg-amber-950/20">
+            <div className="font-bold text-amber-400 mb-1 flex items-center gap-1.5">
+              <Coins size={14} />
+              <span>Economy, Relic Forging & Black Market</span>
+            </div>
+            <div>• <span className="text-amber-300 font-bold">Mid-Run Pivoting</span>: Open Inventory with <span className="text-amber-300 font-bold">[Tab / I / Gamepad Y]</span> to sell equipped items for a 70% gold refund to alter your build on the fly.</div>
+            <div>• <span className="text-emerald-300 font-bold">Relic Forging (Essence Extraction)</span>: Maxed Level 5 items offer sacrificial extraction (0g refund) — permanently granting 20% of their stats for the run while freeing the item slot!</div>
+            <div>• <span className="text-yellow-300 font-bold">Wealth Scaling</span>: <span className="text-yellow-200 font-bold">Gilded Chakram</span> and evolved <span className="text-yellow-200 font-bold">Midas' Wrath</span> deal +1% damage per 50 unbanked gold held in your pouch.</div>
+            <div>• <span className="text-amber-200 font-bold">Wandering Black Market</span>: A smuggler cart arrives every 3 minutes. Touch the cart to buy Overdrive Infusion (+40% Might, +25% CDR, +20% Speed for 60s), Blacksmith's Tempering (+1 weapon level or +50 Max HP), or Arcane Fusion Catalysts!</div>
           </div>
         </div>
 
