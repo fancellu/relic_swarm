@@ -22,6 +22,7 @@ https://relic-swarm.vercel.app/ &nbsp;
   - **Level 5 + Level 5 Fusions**: Combine max-level weapons to form dual-aspect super-weapons (*Arcane Phantom Vortex*, *Cataclysmic Supernova*, *Plague Sanctuary*, *Shatterstorm*, *Frostbite Chakrams*).
   - **Awakened Evolutions**: Pair maxed weapons with matching passives in boss chests for legendary forms (*Chrono Missiles*, *Hellfire Nova*, *Mjolnir's Conduit*, *Solar Eclipse*, *Necrotic Blight*, *Phantom Storm*, *Absolute Zero*).
 - **Persistent Sanctum Meta-Shop**: Bank earned gold across runs in your Sanctum Vault and permanently enhance your attributes (Health, Might, Movement Speed, Cooldown Haste, Magnet Radius, Greed, and Fate Rerolls).
+- **Arena Objectives & Spatial Hazards**: Dynamic world events break up passive kiting — capture glowing **Corrupted Obelisks** under intense enemy swarms for massive screen shockwaves, risk your life in sealed **Blood Trials** for elite chests, and trigger explosive **Elemental Ground Synergies**.
 - **Universal Controls**: Full support for Keyboard, Gamepad / Controllers, and Virtual Touch controls for mobile and handheld play.
 
 ---
@@ -82,6 +83,27 @@ Players have **4 Weapon Slots** and **4 Passive Slots**.
 - **Necrotic Blight**: *Venom Spores* + *Toxic Vial* $\to$ Massive corrosive spores; afflicted enemies that die explode into homing plague beetles.
 - **Phantom Storm**: *Orbiting Daggers* + *Might Talisman* $\to$ 8 ethereal hyper-speed scythes.
 - **Absolute Zero**: *Glacial Shards* + *Frost Amulet* $\to$ Cryogenic storms freezing and shattering enemies.
+
+---
+
+## 🏛️ Arena Objectives & Spatial Mechanics
+
+Combat in Relic Swarm moves beyond passive circle-kiting with interactive dynamic spatial events:
+
+### ⚡ Corrupted Obelisks (King-of-the-Hill Zones)
+- **Periodic Off-Screen Spawns**: Monolithic corruption spires materialize across the arena. An animated HUD objective banner and off-screen directional beacon point towards their coordinates with live distance and purification meters.
+- **Charge Circle**: Step inside the 150px corruption perimeter to channel purification at ~12% charge per second.
+- **Enraged Horde Threat**: Standing within the zone increases enemy spawn rate by **+30%** and increases enemy movement speeds by **+30%**.
+- **Purification Shockwave**: Reaching 100% purification triggers a blinding arena shockwave that damages and knocks back all swarming enemies, dropping a guaranteed **Treasure Chest** or **Magnet Rune**.
+
+### 🩸 Cursed Relics & Blood Trials
+- **The Blood Chalice**: Slain Elite enemies possess a **35% chance** to drop a glowing Blood Chalice.
+- **Demonic Containment Arena**: Picking up the chalice encloses you within a 600x600 walled perimeter of bone pillars and demonic flame barriers, summoning an enraged Hound mini-boss. The perimeter prevents kiting beyond the cage boundary.
+- **20-Second Survival**: Outlast the timer in tight quarters. Surviving the 20-second trial shatters the bone walls and yields a guaranteed high-tier **Treasure Chest**, **+150 Gold**, and large clusters of purple XP gems.
+
+### 💥 Elemental Ground Synergies
+- **Combustion Chain Reaction**: Lingering ground fire pools from *Flame Blast* and *Hellfire Nova* react with overlapping *Venom Spore* toxic gas clouds, instantly igniting the gas into a violent high-damage chemical burst with screen shake.
+- **Thermal Shock**: Striking burning enemies with *Glacial Shards* or *Absolute Zero* triggers Thermal Shock, dealing **1.8x bonus critical damage** and rapidly chunking elite health pools.
 
 ---
 

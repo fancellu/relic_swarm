@@ -1,14 +1,18 @@
 import {
   Activity,
+  Compass,
   DollarSign,
   Heart,
   HelpCircle,
   Play,
+  Radio,
   RotateCcw,
   Settings,
   Shield,
+  Skull,
   Sparkles,
   Sword,
+  Target,
   Volume2,
   VolumeX,
   X,
@@ -39,6 +43,8 @@ export interface PauseMenuProps {
   sfxMuted: boolean;
   pauseMenuItemsRef: React.RefObject<(HTMLButtonElement | null)[]>;
   onOpenInventory: () => void;
+  activeObjective?: {type: 'OBELISK' | 'BLOOD_TRIAL'; progress: number} | null;
+  scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export const PauseMenu: React.FC<PauseMenuProps> = ({
@@ -60,12 +66,14 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
   sfxMuted,
   pauseMenuItemsRef,
   onOpenInventory,
+  activeObjective,
+  scrollContainerRef,
 }) => {
   if (!isOpen) return null;
 
   return (
     <MenuOverlay tone="neutral" zIndex={50}>
-      <div className="w-full max-w-2xl bg-[#0d0a1d] border-2 border-slate-700/80 rounded-2xl p-5 md:p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+      <div ref={scrollContainerRef} className="w-full max-w-2xl bg-[#0d0a1d] border-2 border-slate-700/80 rounded-2xl p-5 md:p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
         {/* Header & Status */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div>
@@ -91,6 +99,37 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Live Active Objective Banner (when an arena objective is active) */}
+        {activeObjective && (
+          <div
+            className={`p-3 rounded-xl border flex items-center justify-between text-xs font-bold ${
+              activeObjective.type === 'BLOOD_TRIAL'
+                ? 'bg-red-950/70 border-red-500/80 text-red-200'
+                : 'bg-pink-950/70 border-pink-500/80 text-pink-200'
+            }`}>
+            <div className="flex items-center gap-2">
+              {activeObjective.type === 'BLOOD_TRIAL' ? (
+                <Skull size={18} className="text-red-400 animate-pulse" />
+              ) : (
+                <Radio size={18} className="text-pink-400 animate-pulse" />
+              )}
+              <div>
+                <div className="text-[10px] uppercase tracking-wider text-amber-300 font-black">
+                  {activeObjective.type === 'BLOOD_TRIAL' ? 'Active Arena Trial' : 'Active Spatial Objective'}
+                </div>
+                <div className="text-xs font-extrabold text-white">
+                  {activeObjective.type === 'BLOOD_TRIAL'
+                    ? `Cursed Blood Arena: ${activeObjective.progress}s Remaining`
+                    : `Corrupted Obelisk: ${activeObjective.progress}% Purified`}
+                </div>
+              </div>
+            </div>
+            <div className="text-[10px] px-2 py-0.5 rounded bg-black/50 border border-slate-700 text-slate-300">
+              {activeObjective.type === 'BLOOD_TRIAL' ? 'Confined 600x600 arena' : '150px beacon zone'}
+            </div>
+          </div>
+        )}
 
         {/* Tab Navigation (Keys 1, 2, 3 or Q/E or Gamepad D-pad/LB/RB) */}
         <div className="grid grid-cols-3 gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs font-bold">
@@ -119,7 +158,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
             }`}>
             <Sparkles size={14} />
-            <span>[2] Evolutions Guide</span>
+            <span>[2] Grimoire & Arena Guide</span>
           </button>
 
           <button
@@ -302,6 +341,57 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
         {/* --- TAB 2: GRIMOIRE & EVOLUTIONS --- */}
         {pauseTab === 'GRIMOIRE' && (
           <div className="flex flex-col gap-3 text-xs">
+            {/* Arena Objectives & Spatial Mechanics Section */}
+            <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 flex flex-col gap-2.5">
+              <div className="font-bold text-rose-400 uppercase tracking-wider flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Compass size={14} className="text-rose-400" />
+                  <span>Arena Objectives & Spatial Mechanics</span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-normal">Dynamic Field Events</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Corrupted Obelisks */}
+                <div className="bg-slate-900/80 p-3 rounded-xl border border-pink-900/40 flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="font-bold text-pink-300 text-xs flex items-center gap-1.5">
+                      <Radio size={14} className="text-pink-400" />
+                      <span>Corrupted Obelisks</span>
+                    </div>
+                    <span className="text-[9px] bg-pink-950 text-pink-300 px-1.5 py-0.5 rounded border border-pink-800/60 font-mono">
+                      King of the Hill
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-slate-300 leading-normal">
+                    Spawns periodically off-screen, tracked by a <span className="text-pink-300 font-bold">HUD compass beacon</span>. Stand inside the 150px circle to channel purification (+12%/s).
+                  </div>
+                  <div className="text-[10px] text-amber-300/90 bg-amber-950/30 p-1.5 rounded border border-amber-900/30 leading-tight">
+                    <span className="font-bold text-amber-300">Risk & Bounty:</span> Swarm speed & spawn rate surge +30% while in zone. At 100%, an arena holy shockwave knocks back foes, deals 200x Might DMG, and drops a guaranteed <span className="text-emerald-300 font-bold">Chest or Magnet</span>!
+                  </div>
+                </div>
+
+                {/* Cursed Blood Trials */}
+                <div className="bg-slate-900/80 p-3 rounded-xl border border-rose-900/40 flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="font-bold text-rose-300 text-xs flex items-center gap-1.5">
+                      <Skull size={14} className="text-rose-400" />
+                      <span>Cursed Blood Trials</span>
+                    </div>
+                    <span className="text-[9px] bg-rose-950 text-rose-300 px-1.5 py-0.5 rounded border border-rose-800/60 font-mono">
+                      35% Elite Drop
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-slate-300 leading-normal">
+                    Elite monsters drop a <span className="text-rose-400 font-bold">Blood Chalice</span>. Stepping onto it locks you into a confined <span className="text-rose-300 font-bold">600x600 runic arena for 20s</span>.
+                  </div>
+                  <div className="text-[10px] text-amber-300/90 bg-amber-950/30 p-1.5 rounded border border-amber-900/30 leading-tight">
+                    <span className="font-bold text-amber-300">Survival Reward:</span> Outlast the 20s siege without escaping boundary walls to earn a guaranteed <span className="text-emerald-300 font-bold">Chest</span>, <span className="text-yellow-300 font-bold">+150 Gold</span>, and a burst of <span className="text-purple-300 font-bold">Purple XP Gems</span>!
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Weapon Fusions (Lv5 + Lv5) */}
             <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 flex flex-col gap-2.5">
               <div className="font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -512,7 +602,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
 
         {/* Modal Footer Controls info */}
         <div className="pt-2 border-t border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
-          <span>[1-3 / Q,E / LB,RB] Tabs • [W,S / D-Pad] Navigate • [Enter / A] Select • [Tab / Y] Sell Screen</span>
+          <span>[1-3 / Q,E / LB,RB] Tabs • [W,S / Sticks / D-Pad] Navigate & Scroll • [Enter / A] Select • [Tab / Y] Sell Screen</span>
           <button
             onClick={() => {
               onClose();

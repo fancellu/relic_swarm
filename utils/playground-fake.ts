@@ -258,7 +258,6 @@ export class FakePlaygroundSDK {
     console.log(`🛑 [Fake SDK] gameOver called.`);
     this._broadcast({type: 'GAME_OVER', lobbyId});
     this._triggerLobbyStatus('GAME_ENDED');
-    this._showMockLeaderboard();
   }
 
   pauseStateChanged(isPaused: boolean): void {
@@ -267,6 +266,9 @@ export class FakePlaygroundSDK {
   }
 
   private _showMockLeaderboard() {
+    const existing = document.getElementById('mock-leaderboard-overlay');
+    if (existing) existing.remove();
+    return;
     if (document.getElementById('mock-leaderboard-overlay')) return;
 
     const overlay = document.createElement('div');
@@ -915,7 +917,6 @@ export class FakePlaygroundSDK {
       case 'GAME_OVER':
         console.log('🛑 [Fake SDK] Received game over signal.');
         this._triggerLobbyStatus('GAME_ENDED');
-        this._showMockLeaderboard();
         break;
     }
   }

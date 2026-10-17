@@ -96,6 +96,10 @@ function createSimulation(heroIndex = 0): SimulationState {
     bonusArmor: 0,
     bonusStamina: 0,
     aegisShieldTimer: 0,
+    obelisk: null,
+    obeliskSpawnTimer: 0,
+    inObeliskZone: false,
+    cursedArena: null,
   };
 }
 
@@ -143,6 +147,7 @@ export default function App() {
   const [inventoryFocusIndex, setInventoryFocusIndex] = useState(0);
   const [pauseMenuFocusIndex, setPauseMenuFocusIndex] = useState(0);
   const [endScreenFocusIndex, setEndScreenFocusIndex] = useState(0);
+  const [activeObjective, setActiveObjective] = useState<{type: 'OBELISK' | 'BLOOD_TRIAL'; progress: number} | null>(null);
 
   const [runGold, setRunGold] = useState(0);
   const [killCount, setKillCount] = useState(0);
@@ -174,6 +179,12 @@ export default function App() {
   const sanctumFocusIndexRef = useRef(0);
   const inventoryFocusIndexRef = useRef(0);
   const pauseMenuFocusIndexRef = useRef(0);
+  const endScreenFocusIndexRef = useRef(0);
+  endScreenFocusIndexRef.current = endScreenFocusIndex;
+  const pauseScrollRef = useRef<HTMLDivElement>(null);
+  const howToPlayScrollRef = useRef<HTMLDivElement>(null);
+  const pauseTabRef = useRef(pauseTab);
+  pauseTabRef.current = pauseTab;
   const touchJoystickRef = useRef({active: false, startX: 0, startY: 0, currentX: 0, currentY: 0, dx: 0, dy: 0, sprintTouch: false});
   const keyboardSprintRef = useRef(false);
   const navCooldownRef = useRef(0);
@@ -193,7 +204,11 @@ export default function App() {
   }, [inventoryFocusIndex, isInventoryOpen]);
   useEffect(() => {
     if (pauseTab === 'MENU') pauseMenuItemsRef.current[pauseMenuFocusIndex]?.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+    if (pauseScrollRef.current) pauseScrollRef.current.scrollTop = 0;
   }, [pauseMenuFocusIndex, pauseTab, isPauseOpen]);
+  useEffect(() => {
+    if (isHowToPlayOpen && howToPlayScrollRef.current) howToPlayScrollRef.current.scrollTop = 0;
+  }, [isHowToPlayOpen]);
   useEffect(() => {
     (window as any).canHandleBackKey = gameState.status !== 'START';
   }, [gameState.status]);
@@ -252,10 +267,18 @@ export default function App() {
   const returnToStart = useCallback(() => {
     bankRunGold();
     setPersistentGold(getStoredGold());
+    setActiveObjective(null);
     setIsPauseOpen(false);
     setIsInventoryOpen(false);
     setIsLevelUpOpen(false);
     setChestReward(null);
+    endScreenFocusIndexRef.current = 0;
+    setEndScreenFocusIndex(0);
+    navCooldownRef.current = 0.4;
+    lastKeyboardCancelRef.current = true;
+    lastGpCancelRef.current = true;
+    lastGpConfirmRef.current = true;
+    gameStateRef.current = {...gameStateRef.current, status: 'START'};
     setGameState((state) => ({...state, status: 'START'}));
   }, [bankRunGold]);
 
@@ -270,6 +293,7 @@ export default function App() {
     simRef.current = sim;
     runBankedRef.current = false;
     setSelectedHeroIndex(heroIndex);
+    setActiveObjective(null);
     setRunGold(0);
     setKillCount(0);
     setEquippedWeapons([...sim.weapons]);
@@ -395,6 +419,7 @@ export default function App() {
       navLeft = gpX < -0.45 || Boolean(gamepad.buttons[4]?.pressed);
       navRight = gpX > 0.45 || Boolean(gamepad.buttons[5]?.pressed);
     }
+    const rightStickY = Math.abs(gamepad?.axes[3] || 0) > 0.2 ? (gamepad?.axes[3] || 0) : 0;
 
     const confirmJustPressed = confirm && !lastGpConfirmRef.current;
     const cancelJustPressed = cancel && !lastGpCancelRef.current;
@@ -436,7 +461,18 @@ export default function App() {
           setIsSanctumOpen(false);
         }
       } else if (isHowToPlayOpen) {
-        if (confirmJustPressed || cancelJustPressed) setIsHowToPlayOpen(false);
+        if (confirmJustPressed || cancelJustPressed) {
+          setIsHowToPlayOpen(false);
+          navCooldownRef.current = 0.3;
+        } else {
+          let scrollY = 0;
+          if (Math.abs(rightStickY) > 0.2) scrollY = rightStickY * 700 * dt;
+          else if (navUp || gpY < -0.3) scrollY = -700 * dt;
+          else if (navDown || gpY > 0.3) scrollY = 700 * dt;
+          if (scrollY !== 0 && howToPlayScrollRef.current) {
+            howToPlayScrollRef.current.scrollTop += scrollY;
+          }
+        }
       } else if (navCooldownRef.current <= 0) {
         if (navLeft) {
           setSelectedHeroIndex((index) => (index + HEROES.length - 1) % HEROES.length);
@@ -445,6 +481,7 @@ export default function App() {
           setSelectedHeroIndex((index) => (index + 1) % HEROES.length);
           navCooldownRef.current = 0.2;
         } else if (confirmJustPressed) {
+          navCooldownRef.current = 0.3;
           initGame();
         } else if (xJustPressed || yJustPressed) {
           openSanctum();
@@ -455,16 +492,19 @@ export default function App() {
 
     if (gameStateRef.current.status === 'GAME_OVER' || gameStateRef.current.status === 'VICTORY') {
       if (navCooldownRef.current <= 0 && (navUp || navLeft)) {
+        endScreenFocusIndexRef.current = 0;
         setEndScreenFocusIndex(0);
         navCooldownRef.current = 0.2;
       } else if (navCooldownRef.current <= 0 && (navDown || navRight)) {
+        endScreenFocusIndexRef.current = 1;
         setEndScreenFocusIndex(1);
         navCooldownRef.current = 0.2;
       } else if (confirmJustPressed) {
-        if (endScreenFocusIndex === 0) initGame();
+        navCooldownRef.current = 0.4;
+        if (endScreenFocusIndexRef.current === 0) initGame();
         else returnToStart();
-        navCooldownRef.current = 0.35;
       } else if (cancelJustPressed) {
+        navCooldownRef.current = 0.4;
         returnToStart();
       }
       return;
@@ -522,24 +562,40 @@ export default function App() {
         setIsPauseOpen(false);
       } else if (navCooldownRef.current <= 0 && navLeft) {
         setPauseTab((tab) => (tab === 'STATS' ? 'MENU' : tab === 'GRIMOIRE' ? 'STATS' : 'GRIMOIRE'));
-        navCooldownRef.current = 0.2;
+        navCooldownRef.current = 0.25;
       } else if (navCooldownRef.current <= 0 && navRight) {
         setPauseTab((tab) => (tab === 'STATS' ? 'GRIMOIRE' : tab === 'GRIMOIRE' ? 'MENU' : 'STATS'));
-        navCooldownRef.current = 0.2;
+        navCooldownRef.current = 0.25;
       } else if (yJustPressed) {
         openInventory();
-      } else if (pauseTab === 'MENU' && navCooldownRef.current <= 0 && navUp) {
-        pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 6) % 7;
-        setPauseMenuFocusIndex(pauseMenuFocusIndexRef.current);
-        navCooldownRef.current = 0.2;
-      } else if (pauseTab === 'MENU' && navCooldownRef.current <= 0 && navDown) {
-        pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 1) % 7;
-        setPauseMenuFocusIndex(pauseMenuFocusIndexRef.current);
-        navCooldownRef.current = 0.2;
-      } else if (confirmJustPressed) {
-        if (pauseTab === 'MENU') triggerPauseMenuAction(pauseMenuFocusIndexRef.current);
-        else if (pauseTab === 'STATS') openInventory();
-        navCooldownRef.current = 0.3;
+      } else if (pauseTabRef.current === 'MENU') {
+        if (navCooldownRef.current <= 0 && navUp) {
+          pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 6) % 7;
+          setPauseMenuFocusIndex(pauseMenuFocusIndexRef.current);
+          navCooldownRef.current = 0.2;
+        } else if (navCooldownRef.current <= 0 && navDown) {
+          pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 1) % 7;
+          setPauseMenuFocusIndex(pauseMenuFocusIndexRef.current);
+          navCooldownRef.current = 0.2;
+        } else if (confirmJustPressed) {
+          triggerPauseMenuAction(pauseMenuFocusIndexRef.current);
+          navCooldownRef.current = 0.3;
+        }
+        if (Math.abs(rightStickY) > 0.2 && pauseScrollRef.current) {
+          pauseScrollRef.current.scrollTop += rightStickY * 700 * dt;
+        }
+      } else {
+        let scrollY = 0;
+        if (Math.abs(rightStickY) > 0.2) scrollY = rightStickY * 700 * dt;
+        else if (navUp || gpY < -0.3) scrollY = -700 * dt;
+        else if (navDown || gpY > 0.3) scrollY = 700 * dt;
+        if (scrollY !== 0 && pauseScrollRef.current) {
+          pauseScrollRef.current.scrollTop += scrollY;
+        }
+        if (confirmJustPressed) {
+          if (pauseTabRef.current === 'STATS') openInventory();
+          navCooldownRef.current = 0.3;
+        }
       }
       return;
     }
@@ -574,6 +630,7 @@ export default function App() {
     updateWeaponCasting(sim, stats, dt, spawnDamageNumber, spawnParticles);
     updateProjectiles(sim, dt, spawnDamageNumber, spawnParticles, (damage) => setCurrentHp(Math.round(sim.hp)));
     updateEnemySpawner(sim, dt);
+    let bossDefeated = false;
     const died = updateEnemies(
       sim,
       stats,
@@ -584,15 +641,26 @@ export default function App() {
       setKillCount,
       (score) => setGameState((state) => ({...state, score: state.score + score})),
       () => {
+        bossDefeated = true;
         bankRunGold();
+        endScreenFocusIndexRef.current = 0;
+        setEndScreenFocusIndex(0);
+        navCooldownRef.current = 0.5;
+        gameStateRef.current = {...gameStateRef.current, status: 'VICTORY'};
         setGameState((state) => ({...state, status: 'VICTORY'}));
       },
       () => setCurrentHp(Math.round(sim.hp)),
     );
     if (died) {
       bankRunGold();
+      endScreenFocusIndexRef.current = 0;
       setEndScreenFocusIndex(0);
+      navCooldownRef.current = 0.5;
+      gameStateRef.current = {...gameStateRef.current, status: 'GAME_OVER'};
       setGameState((state) => ({...state, status: 'GAME_OVER'}));
+      return;
+    }
+    if (bossDefeated) {
       return;
     }
     updateDrops(
@@ -614,6 +682,113 @@ export default function App() {
         setNextLevelXpDisplay(nextXp);
       },
     );
+
+    // Corrupted Obelisk Mechanics: Zone Detection & Charging
+    if (sim.obelisk) {
+      const distToObelisk = Math.hypot(sim.x - sim.obelisk.x, sim.y - sim.obelisk.y);
+      if (distToObelisk <= sim.obelisk.radius) {
+        sim.inObeliskZone = true;
+        sim.obelisk.charge = Math.min(100, sim.obelisk.charge + dt * 12);
+
+        if (Math.random() < 0.25) {
+          spawnParticles(sim.obelisk.x, sim.obelisk.y, 2, '#ec4899', 80);
+        }
+
+        if (sim.obelisk.charge >= 100) {
+          gameAudio.playVictoryFanfare();
+          sim.screenShake = 18;
+          spawnDamageNumber(sim.obelisk.x, sim.obelisk.y, 'OBELISK PURIFIED!', '#f43f5e');
+          spawnParticles(sim.obelisk.x, sim.obelisk.y, 50, '#ec4899', 320);
+
+          sim.enemies.forEach((enemy) => {
+            const edx = enemy.x - sim.obelisk!.x;
+            const edy = enemy.y - sim.obelisk!.y;
+            const edist = Math.hypot(edx, edy) || 1;
+            const push = Math.max(60, 420 - edist * 0.35);
+            enemy.x += (edx / edist) * push;
+            enemy.y += (edy / edist) * push;
+            const shockDmg = Math.round(200 * stats.mightMult);
+            enemy.hp -= shockDmg;
+            spawnDamageNumber(enemy.x, enemy.y, shockDmg.toString(), '#f43f5e');
+          });
+
+          if (Math.random() < 0.6) {
+            sim.drops.push({
+              id: sim.nextDropId++,
+              type: 'chest',
+              x: sim.obelisk.x,
+              y: sim.obelisk.y,
+              value: 100,
+              attracted: false,
+            });
+          } else {
+            sim.drops.push({
+              id: sim.nextDropId++,
+              type: 'magnet',
+              x: sim.obelisk.x,
+              y: sim.obelisk.y,
+              value: 1,
+              attracted: false,
+            });
+          }
+
+          sim.obelisk = null;
+          sim.inObeliskZone = false;
+        }
+      } else {
+        sim.inObeliskZone = false;
+      }
+    } else {
+      sim.inObeliskZone = false;
+    }
+
+    // Cursed Arena Trial Countdown & Survival Reward
+    if (sim.cursedArena && sim.cursedArena.active) {
+      sim.cursedArena.duration -= dt;
+      if (sim.cursedArena.duration <= 0) {
+        gameAudio.playVictoryFanfare();
+        sim.screenShake = 15;
+        spawnDamageNumber(sim.x, sim.y, 'TRIAL SURVIVED!', '#f59e0b');
+        spawnParticles(sim.cursedArena.x, sim.cursedArena.y, 45, '#ef4444', 260);
+
+        sim.drops.push({
+          id: sim.nextDropId++,
+          type: 'chest',
+          x: sim.x,
+          y: sim.y,
+          value: 150,
+          attracted: false,
+        });
+        sim.drops.push({
+          id: sim.nextDropId++,
+          type: 'gold',
+          x: sim.x + 25,
+          y: sim.y,
+          value: Math.round(150 * stats.greedMult),
+          attracted: false,
+        });
+        sim.drops.push({
+          id: sim.nextDropId++,
+          type: 'xp_purple',
+          x: sim.x - 25,
+          y: sim.y,
+          value: 120,
+          attracted: false,
+        });
+
+        sim.cursedArena = null;
+      }
+    }
+
+    // Synchronize Active Objective Banner
+    if (sim.cursedArena && sim.cursedArena.active) {
+      setActiveObjective({type: 'BLOOD_TRIAL', progress: Math.ceil(sim.cursedArena.duration)});
+    } else if (sim.obelisk) {
+      setActiveObjective({type: 'OBELISK', progress: Math.round(sim.obelisk.charge)});
+    } else {
+      setActiveObjective(null);
+    }
+
     for (let i = sim.particles.length - 1; i >= 0; i--) {
       const particle = sim.particles[i];
       particle.life -= dt;
@@ -682,13 +857,37 @@ export default function App() {
   useEffect(() => {
     const keyDown = (event: KeyboardEvent) => {
       if (event.key === 'Shift' || event.key === 'Control') keyboardSprintRef.current = true;
+      if (isHowToPlayOpen) {
+        if (event.key === 'Escape' || event.key === 'h' || event.key === 'H' || event.key === 'Enter') {
+          event.preventDefault();
+          setIsHowToPlayOpen(false);
+          return;
+        }
+        if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
+          event.preventDefault();
+          howToPlayScrollRef.current?.scrollBy({top: -100, behavior: 'smooth'});
+          return;
+        }
+        if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') {
+          event.preventDefault();
+          howToPlayScrollRef.current?.scrollBy({top: 100, behavior: 'smooth'});
+          return;
+        }
+        if (event.key === 'PageUp') {
+          event.preventDefault();
+          howToPlayScrollRef.current?.scrollBy({top: -260, behavior: 'smooth'});
+          return;
+        }
+        if (event.key === 'PageDown' || event.key === ' ') {
+          event.preventDefault();
+          howToPlayScrollRef.current?.scrollBy({top: 260, behavior: 'smooth'});
+          return;
+        }
+        return;
+      }
       if (gameStateRef.current.status === 'START') {
         if (isSanctumOpen && (event.key === 'Escape' || event.key === 'Backspace')) {
           setIsSanctumOpen(false);
-          return;
-        }
-        if (isHowToPlayOpen && (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ')) {
-          setIsHowToPlayOpen(false);
           return;
         }
         if (!isSanctumOpen && !isHowToPlayOpen) {
@@ -711,14 +910,36 @@ export default function App() {
           }
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
+            if (navCooldownRef.current > 0) return;
             initGame();
             return;
           }
         }
       }
       if (gameStateRef.current.status === 'GAME_OVER' || gameStateRef.current.status === 'VICTORY') {
-        if (event.key === 'Enter' || event.key === ' ') initGame();
-        else if (event.key === 'Escape' || event.key === 'Backspace') returnToStart();
+        if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W' || event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') {
+          event.preventDefault();
+          endScreenFocusIndexRef.current = 0;
+          setEndScreenFocusIndex(0);
+          return;
+        }
+        if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S' || event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') {
+          event.preventDefault();
+          endScreenFocusIndexRef.current = 1;
+          setEndScreenFocusIndex(1);
+          return;
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          if (endScreenFocusIndexRef.current === 0) initGame();
+          else returnToStart();
+          return;
+        }
+        if (event.key === 'Escape' || event.key === 'Backspace') {
+          event.preventDefault();
+          returnToStart();
+          return;
+        }
         return;
       }
       if (chestReward && (event.key === 'Enter' || event.key === ' ' || event.key === 'Escape')) {
@@ -762,11 +983,88 @@ export default function App() {
         return;
       }
       if (isPauseOpen) {
-        if (event.key === 'Escape' || event.key === 'p' || event.key === 'P') setIsPauseOpen(false);
-        else if (event.key === '1') setPauseTab('STATS');
-        else if (event.key === '2') setPauseTab('GRIMOIRE');
-        else if (event.key === '3') setPauseTab('MENU');
-        else if (event.key === 'Tab' || event.key === 'i' || event.key === 'I') openInventory();
+        if (event.key === 'Escape' || event.key === 'p' || event.key === 'P') {
+          event.preventDefault();
+          setIsPauseOpen(false);
+          return;
+        }
+        if (event.key === '1') {
+          setPauseTab('STATS');
+          return;
+        }
+        if (event.key === '2') {
+          setPauseTab('GRIMOIRE');
+          return;
+        }
+        if (event.key === '3') {
+          setPauseTab('MENU');
+          return;
+        }
+        if (event.key === 'Tab' || event.key === 'i' || event.key === 'I') {
+          event.preventDefault();
+          openInventory();
+          return;
+        }
+        if (event.key === 'ArrowLeft' || event.key === 'q' || event.key === 'Q') {
+          event.preventDefault();
+          setPauseTab((tab) => (tab === 'STATS' ? 'MENU' : tab === 'GRIMOIRE' ? 'STATS' : 'GRIMOIRE'));
+          return;
+        }
+        if (event.key === 'ArrowRight' || event.key === 'e' || event.key === 'E') {
+          event.preventDefault();
+          setPauseTab((tab) => (tab === 'STATS' ? 'GRIMOIRE' : tab === 'GRIMOIRE' ? 'MENU' : 'STATS'));
+          return;
+        }
+        if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
+          event.preventDefault();
+          if (pauseTabRef.current === 'MENU') {
+            pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 6) % 7;
+            setPauseMenuFocusIndex(pauseMenuFocusIndexRef.current);
+          } else if (pauseScrollRef.current) {
+            pauseScrollRef.current.scrollBy({top: -100, behavior: 'smooth'});
+          }
+          return;
+        }
+        if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') {
+          event.preventDefault();
+          if (pauseTabRef.current === 'MENU') {
+            pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 1) % 7;
+            setPauseMenuFocusIndex(pauseMenuFocusIndexRef.current);
+          } else if (pauseScrollRef.current) {
+            pauseScrollRef.current.scrollBy({top: 100, behavior: 'smooth'});
+          }
+          return;
+        }
+        if (event.key === 'PageUp') {
+          event.preventDefault();
+          pauseScrollRef.current?.scrollBy({top: -260, behavior: 'smooth'});
+          return;
+        }
+        if (event.key === 'PageDown') {
+          event.preventDefault();
+          pauseScrollRef.current?.scrollBy({top: 260, behavior: 'smooth'});
+          return;
+        }
+        if (event.key === 'Home') {
+          event.preventDefault();
+          pauseScrollRef.current?.scrollTo({top: 0, behavior: 'smooth'});
+          return;
+        }
+        if (event.key === 'End') {
+          event.preventDefault();
+          pauseScrollRef.current?.scrollTo({top: 99999, behavior: 'smooth'});
+          return;
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          if (pauseTabRef.current === 'MENU') {
+            event.preventDefault();
+            triggerPauseMenuAction(pauseMenuFocusIndexRef.current);
+          } else if (pauseTabRef.current === 'STATS') {
+            event.preventDefault();
+            openInventory();
+          }
+          return;
+        }
         return;
       }
       if (gameStateRef.current.status === 'PLAYING') {
@@ -833,6 +1131,7 @@ export default function App() {
         onOpenMenu={() => setIsPauseOpen(true)}
         isMobile={isMobile}
         isPlaying={gameState.status === 'PLAYING'}
+        activeObjective={activeObjective}
         touchJoystickRef={touchJoystickRef}
       />
       {assetsReady && (
@@ -920,6 +1219,8 @@ export default function App() {
         sfxMuted={sfxMuted}
         pauseMenuItemsRef={pauseMenuItemsRef}
         onOpenInventory={openInventory}
+        activeObjective={activeObjective}
+        scrollContainerRef={pauseScrollRef}
       />
       <EndGameModal
         status={gameState.status}
@@ -930,11 +1231,14 @@ export default function App() {
         runGold={runGold}
         persistentGold={persistentGold}
         endScreenFocusIndex={endScreenFocusIndex}
-        onSelectIndex={setEndScreenFocusIndex}
+        onSelectIndex={(index) => {
+          endScreenFocusIndexRef.current = index;
+          setEndScreenFocusIndex(index);
+        }}
         onRestart={() => initGame()}
         onReturnToMenu={returnToStart}
       />
-      <HowToPlayModal isOpen={isHowToPlayOpen} onClose={() => setIsHowToPlayOpen(false)} />
+      <HowToPlayModal isOpen={isHowToPlayOpen} onClose={() => setIsHowToPlayOpen(false)} scrollContainerRef={howToPlayScrollRef} />
     </div>
   );
 }

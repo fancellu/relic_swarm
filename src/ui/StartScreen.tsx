@@ -238,7 +238,6 @@ export const StartScreen: React.FC<StartScreenProps> = ({
         <div className="w-full flex flex-col gap-2">
           <button
             onClick={() => onStartGame(selectedHeroIndex)}
-            autoFocus
             className="w-full bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-black text-base md:text-lg py-3 rounded-xl shadow-lg shadow-rose-950/50 transition-all flex items-center justify-center gap-2">
             <Play size={20} className="fill-white" />
             <span>START RUN (Enter / Space / A)</span>
