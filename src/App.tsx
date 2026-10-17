@@ -20,7 +20,7 @@ import {calculateDerivedStats, updatePlayerMovement} from './entities/Player';
 import {updateProjectiles} from './entities/Projectiles';
 import {updateEnemies, updateEnemySpawner} from './entities/Spawner';
 import {updateWeaponCasting} from './entities/Weapons';
-import {ChestRewardData, EquippedItem, SimulationState} from './types/entities';
+import {addDrop, ChestRewardData, EquippedItem, SimulationState} from './types/entities';
 import {HEROES, ItemDef} from './types/items';
 import {
   getStoredGold,
@@ -713,7 +713,7 @@ export default function App() {
           });
 
           if (Math.random() < 0.6) {
-            sim.drops.push({
+            addDrop(sim, {
               id: sim.nextDropId++,
               type: 'chest',
               x: sim.obelisk.x,
@@ -722,7 +722,7 @@ export default function App() {
               attracted: false,
             });
           } else {
-            sim.drops.push({
+            addDrop(sim, {
               id: sim.nextDropId++,
               type: 'magnet',
               x: sim.obelisk.x,
@@ -751,7 +751,7 @@ export default function App() {
         spawnDamageNumber(sim.x, sim.y, 'TRIAL SURVIVED!', '#f59e0b');
         spawnParticles(sim.cursedArena.x, sim.cursedArena.y, 45, '#ef4444', 260);
 
-        sim.drops.push({
+        addDrop(sim, {
           id: sim.nextDropId++,
           type: 'chest',
           x: sim.x,
@@ -759,7 +759,7 @@ export default function App() {
           value: 150,
           attracted: false,
         });
-        sim.drops.push({
+        addDrop(sim, {
           id: sim.nextDropId++,
           type: 'gold',
           x: sim.x + 25,
@@ -767,7 +767,7 @@ export default function App() {
           value: Math.round(150 * stats.greedMult),
           attracted: false,
         });
-        sim.drops.push({
+        addDrop(sim, {
           id: sim.nextDropId++,
           type: 'xp_purple',
           x: sim.x - 25,

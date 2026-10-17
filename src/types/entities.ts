@@ -92,6 +92,27 @@ export interface ProjectileEntity {
   targetId?: number;
 }
 
+export const MAX_DROPS = 200;
+
+export function addDrop(sim: SimulationState, drop: DropEntity): void {
+  if (sim.drops.length >= MAX_DROPS) {
+    // Drop is full: remove oldest drop, preferring non-critical drops (not chest/chalice)
+    let removeIdx = -1;
+    for (let i = 0; i < sim.drops.length; i++) {
+      const type = sim.drops[i].type;
+      if (type !== 'chest' && type !== 'blood_chalice') {
+        removeIdx = i;
+        break;
+      }
+    }
+    if (removeIdx === -1) {
+      removeIdx = 0;
+    }
+    sim.drops.splice(removeIdx, 1);
+  }
+  sim.drops.push(drop);
+}
+
 export interface DropEntity {
   id: number;
   type: 'xp_blue' | 'xp_purple' | 'gold' | 'potion' | 'magnet' | 'chest' | 'blood_chalice';

@@ -1,7 +1,7 @@
 import {getConfig} from '../constants';
 import {SpriteRenderer} from '../SpriteRenderer';
 import {gameAudio} from '../../utils/helper';
-import {EnemyEntity, SimulationState} from '../types/entities';
+import {addDrop, EnemyEntity, SimulationState} from '../types/entities';
 import {MAX_WORLD_CHESTS} from '../types/meta';
 import {DerivedStats} from './Player';
 
@@ -266,7 +266,7 @@ export function updateEnemies(
         spawnDamageNumber(sim.x, sim.y, `VICTORY BONUS +${victoryBonus}g!`, '#facc15');
 
         if (currentWorldChests < MAX_WORLD_CHESTS) {
-          sim.drops.push({
+          addDrop(sim, {
             id: sim.nextDropId++,
             type: 'chest',
             x: enemy.x,
@@ -275,7 +275,7 @@ export function updateEnemies(
             attracted: false,
           });
         } else {
-          sim.drops.push({
+          addDrop(sim, {
             id: sim.nextDropId++,
             type: 'xp_purple',
             x: enemy.x,
@@ -283,7 +283,7 @@ export function updateEnemies(
             value: 150,
             attracted: false,
           });
-          sim.drops.push({
+          addDrop(sim, {
             id: sim.nextDropId++,
             type: 'potion',
             x: enemy.x + 20,
@@ -299,7 +299,7 @@ export function updateEnemies(
 
         // 35% chance for Elites to drop a Cursed Blood Chalice if not currently in a Cursed Trial
         if (!sim.cursedArena && Math.random() < 0.35) {
-          sim.drops.push({
+          addDrop(sim, {
             id: sim.nextDropId++,
             type: 'blood_chalice',
             x: enemy.x,
@@ -310,7 +310,7 @@ export function updateEnemies(
         }
 
         if (currentWorldChests < MAX_WORLD_CHESTS) {
-          sim.drops.push({
+          addDrop(sim, {
             id: sim.nextDropId++,
             type: 'chest',
             x: enemy.x,
@@ -319,7 +319,7 @@ export function updateEnemies(
             attracted: false,
           });
         } else {
-          sim.drops.push({
+          addDrop(sim, {
             id: sim.nextDropId++,
             type: 'xp_purple',
             x: enemy.x - 15,
@@ -327,7 +327,7 @@ export function updateEnemies(
             value: 60,
             attracted: false,
           });
-          sim.drops.push({
+          addDrop(sim, {
             id: sim.nextDropId++,
             type: 'gold',
             x: enemy.x,
@@ -335,7 +335,7 @@ export function updateEnemies(
             value: Math.round((20 + Math.floor(Math.random() * 10)) * stats.greedMult),
             attracted: false,
           });
-          sim.drops.push({
+          addDrop(sim, {
             id: sim.nextDropId++,
             type: 'potion',
             x: enemy.x + 15,
@@ -348,7 +348,7 @@ export function updateEnemies(
         // Standard enemy drops: 1-3 gold
         const dropRoll = Math.random();
         if (dropRoll < 0.7) {
-          sim.drops.push({
+          addDrop(sim, {
             id: sim.nextDropId++,
             type: 'xp_blue',
             x: enemy.x,
@@ -358,7 +358,7 @@ export function updateEnemies(
           });
         } else if (dropRoll < 0.85) {
           const coinVal = 1 + Math.floor(Math.random() * 3);
-          sim.drops.push({
+          addDrop(sim, {
             id: sim.nextDropId++,
             type: 'gold',
             x: enemy.x,
@@ -367,7 +367,7 @@ export function updateEnemies(
             attracted: false,
           });
         } else if (dropRoll < 0.9) {
-          sim.drops.push({
+          addDrop(sim, {
             id: sim.nextDropId++,
             type: 'potion',
             x: enemy.x,
@@ -376,7 +376,7 @@ export function updateEnemies(
             attracted: false,
           });
         } else if (dropRoll < 0.93) {
-          sim.drops.push({
+          addDrop(sim, {
             id: sim.nextDropId++,
             type: 'magnet',
             x: enemy.x,

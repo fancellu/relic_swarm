@@ -1,5 +1,5 @@
 import {gameAudio} from '../../utils/helper';
-import {SimulationState} from '../types/entities';
+import {MAX_DROPS, SimulationState} from '../types/entities';
 import {DerivedStats} from './Player';
 import {createEnemy} from './Spawner';
 
@@ -16,6 +16,19 @@ export function updateDrops(
   onScoreAdd: (score: number) => void,
   onXpChange: (xp: number, nextXp: number) => void,
 ): void {
+  // Cap drops at MAX_DROPS (200), pruning oldest drops
+  while (sim.drops.length > MAX_DROPS) {
+    let removeIdx = -1;
+    for (let j = 0; j < sim.drops.length; j++) {
+      const type = sim.drops[j].type;
+      if (type !== 'chest' && type !== 'blood_chalice') {
+        removeIdx = j;
+        break;
+      }
+    }
+    if (removeIdx === -1) removeIdx = 0;
+    sim.drops.splice(removeIdx, 1);
+  }
   for (let i = sim.drops.length - 1; i >= 0; i--) {
     const drop = sim.drops[i];
     const dx = sim.x - drop.x;
