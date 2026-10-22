@@ -617,3 +617,48 @@ export|save|format|png|jpeg|gif
   
 ### **References**
   - Pixel art export best practices
+
+
+## Alpha Cross-Fade Dissolves Create Blurry Ghosting in Pixel Art
+
+### **Id**
+alpha-crossfade-ghosting
+### **Severity**
+CRITICAL
+### **Description**
+Blending two distinct keyframes using linear pixel averaging (`lerp(frameA, frameB, t)`) creates translucent "double vision" artifacts, faint duplicate weapons, and muddy silhouettes.
+### **Symptoms**
+  - Sprites appear blurry or semi-transparent during motion
+  - Two faint heads, weapons, or limbs visible simultaneously
+  - Loss of crisp pixel contours and sharp contrast
+### **Solution**
+Every pixel art animation frame must be 100% solid and opaque (`alpha: 255`). Generate discrete intermediate keyframes (contact, passing, drive extension) and apply nearest-neighbor squash & stretch micro-transforms rather than opacity cross-fading.
+
+## Single-Stride Run Repetition Freezes Footwork
+
+### **Id**
+single-stride-repetition
+### **Severity**
+HIGH
+### **Description**
+Duplicating a single 8-frame stride across a 16-frame run cycle prevents alternating leg leads. Foot contact coordinates remain static while the body vibrates up and down, looking like a sliding cardboard cutout.
+### **Symptoms**
+  - Character looks like a rigid figurine sliding across the ground
+  - Foot bounding box does not alternate or change width
+  - Feet appear to slide without pushing off the floor
+### **Solution**
+Construct a two-step gait: Stride 1 (Frames 0–7) with lead leg A, Stride 2 (Frames 8–15) with lead leg B, connected by passing crossover poses where feet gather beneath hips.
+
+## Baking Left-Facing Direction in Symmetrical Engine Pipelines
+
+### **Id**
+baked-facing-flip
+### **Severity**
+CRITICAL
+### **Description**
+Baking flipped or left-facing frames into base character sprite sheets conflicts with 2D game engines that perform dynamic horizontal flipping at runtime (`ctx.scale(-1, 1)` via `sim.facingLeft`).
+### **Symptoms**
+  - Character turns backwards while running in the forward direction
+  - Sudden direction snap or flicker during animation cycles
+### **Solution**
+Base sprite sheets must face strictly to the right (3 o'clock) across all frames without baked negative horizontal scales.
