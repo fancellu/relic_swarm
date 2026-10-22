@@ -167,3 +167,64 @@ npm run preview
 ## 7. TODO
 
 Look at [EXTRA.md](EXTRA.md)
+
+---
+
+## 8. Character Creation & Sprite Animation Playbook (Lessons Learned)
+
+When creating new playable heroes or complex animated mobs (e.g., Monk, Huntress, Necromancer), strictly adhere to the following animation, pixel art, and architectural rules discovered during the Barbarian implementation:
+
+### 8.1 Hard Visual & Structural Invariants
+1. **Strict Right-Facing Default (3 o'clock)**:
+   - **All base sprite frames MUST face strictly to the right**.
+   - Left-facing movement in game is handled dynamically at runtime by the canvas engine (`ctx.scale(-1, 1)` via `sim.facingLeft`).
+   - Under no circumstances should individual frames in a run, idle, attack, or hurt sheet face left or be horizontally flipped during spritesheet generation.
+2. **Standard Frame Dimensions & Rates**:
+   - Frame box: `512 x 512` px.
+   - Spritesheet rows & counts:
+     - `IDLE`: 4 frames (`2048 x 512`), 6 fps, looping.
+     - `RUN`: 16 frames (`8192 x 512`), 16 fps, looping.
+     - `ATTACK`: 16 frames (`8192 x 512`), 16 fps, non-looping.
+     - `HURT`: 16 frames (`8192 x 512`), 10 fps, non-looping (`loop: false`).
+     - `DEATH`: 16 frames (`8192 x 512`), 10 fps, non-looping (`loop: false`).
+     - Master composite sheet: `8192 x 3328` (Run row at `y=0`, Attack at `y=550`, Hurt at `y=1100`, Death at `y=1650`, Idle at `y=2200`).
+3. **Foot Grounding**: Anchor feet at `footY = 508` in the 512×512 frame box so sprites do not sink into the ground or hover.
+
+### 8.2 Animation Quality & Anti-Jank Principles
+1. **NEVER Use Alpha Cross-Fading (`blendFrames` / Opacity Dissolves)**:
+   - In 2D pixel art, alpha cross-fading creates a blurry, translucent "double-vision" ghost (two weapons, four faint limbs, smeared silhouettes).
+   - Every single frame **must be a solid, crisp sprite** with 100% opaque pixels (alpha 0 or 255) and hard pixel contours.
+2. **Run Cycles Require Two Alternating Strides (Two-Step Gait)**:
+   - A 16-frame run cycle consists of two distinct 8-frame steps:
+     - **Stride 1 (Frames 0–7)**: Right leg leads. Plant/compression $\rightarrow$ forward drive extension $\rightarrow$ push-off $\rightarrow$ passing crossover.
+     - **Stride 2 (Frames 8–15)**: Left leg leads. Alternate plant/compression $\rightarrow$ forward drive extension $\rightarrow$ push-off $\rightarrow$ passing crossover.
+   - Frames 8–15 must **never** be an exact copy of frames 0–7. Duplicating frames freezes the foot coordinates in place, making the character look like a sliding cardboard cutout.
+3. **Discrete Keyframe Set for Sprite Generation**:
+   Generate distinct keyframe poses using the `image-generator` subagent against a solid black background:
+   - `concept` (Idle ready pose: weapon in grip, upright stance)
+   - `run_stride` (Near leg thrust forward, far leg driving far behind)
+   - `run_pass` (Passing crossover: feet gathered closely under hips, body at stride apex)
+   - `run_stride_alt` (Opposite leg thrust forward, near leg driving behind)
+   - `attack_strike` (Full cleave/thrust release with forward extension)
+   - `death_fall` (Defeated posture fallen on ground)
+4. **Biomechanical Squash & Stretch**:
+   Apply natural weight and bounce through nearest-neighbor transforms on solid frames:
+   - **Footstrike / Plant** (Frames 0 & 8): Knee compression (`offsetY: +4`, `scaleY: 0.985`, `scaleX: 1.015`, `skewX: 2°`).
+   - **Full Drive Extension** (Frames 3 & 11): Torso leans forward into sprint (`skewX: 4°`, `offsetX: +3`, `offsetY: -3`).
+   - **Airborne Passing Apex** (Frames 6 & 14): Highest flight point (`offsetY: -8`, `scaleY: 1.015`, `scaleX: 0.985`, `skewX: 1°`).
+5. **No Single-Frame Visual Pops**:
+   Never spawn dust puffs or ground effects for only 1 frame in spritesheet generation; single-frame artifacts cause high-frequency visual flicker. Let the engine's particle system handle dynamic combat dust.
+
+### 8.3 Character Integration Checklist
+When introducing a new character to Relic Swarm:
+1. **Asset Generation**: Generate clean keyframes via `image-generator` (1:1 aspect ratio, black background).
+2. **Background Removal & Stitching**: Run automated border flood-fill extraction (`loadCleanSprite`) with nearest-neighbor scaling and stitch individual `.png` files and master composite into `assets/images/`.
+3. **Direction Verification**: Run an automated script to verify beard/face and weapon X coordinates are on the right side across all frames.
+4. **Configuration Wiring**:
+   - `design/asset_manifest.json`: Add character metadata, prompts, actions.
+   - `src/core/assets.ts`: Add image URLs to `ASSETS_MANIFEST`.
+   - `src/core/sprites.ts`: Instantiate `SpriteRenderer` in `initSpriteRenderers()`.
+   - `src/types/items.ts`: Append champion definition to `CHAMPIONS` array (base stats, starting weapon, lore, archetype).
+   - `src/ui/StartScreen.tsx`: Adjust grid columns and render hero card.
+   - `README.md`: Document new champion in the Champions table.
+5. **Validation**: Run `npm run build` to confirm zero TypeScript errors and a clean Vite bundle.

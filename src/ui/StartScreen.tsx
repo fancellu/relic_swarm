@@ -132,7 +132,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
               [A / D or D-Pad] Change Hero
             </span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             {HEROES.map((hero, idx) => {
               const isSelected = selectedHeroIndex === idx;
               return (

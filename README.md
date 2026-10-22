@@ -19,7 +19,7 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 - **Fluid Horde Combat**: High-density swarms rendered at a fixed 60 FPS with damage-scaled screen shake, micro hit-stop freeze frames, and responsive crowd-clearing feedback.
 - **Dynamic Arsenal Selling & Relic Forging (Mid-Run Pivoting)**: Don't get trapped in a dead-end build. Open your inventory or draft modal at any time to sell gear for an instant **70% gold refund**, or permanently **Extract Essence** from maxed Level 5 items to keep 20% of their power while freeing build slots.
 - **Wandering Black Market**: Every 3 minutes, a smuggler merchant cart arrives offering combat Overdrives, weapon temperings, and instant fusion catalysts for unbanked gold.
-- **4 Distinct Champions**: Choose from Arcanist Vael, Knight Commander Roland, Pyromancer Ignis, and Plague Alchemist Mortis — each featuring unique baseline stats, starting weapons, and passive affinities.
+- **5 Distinct Champions**: Choose from Arcanist Vael, Knight Commander Roland, Pyromancer Ignis, Plague Alchemist Mortis, and Barbarian Thorgar — each featuring unique baseline stats, starting weapons, and passive affinities.
 - **Weapons, Evolutions & Fusions**:
   - **8 Base Weapons**: Magic Missiles, Orbiting Daggers, Flame Blast, Thunder Strike, Radiant Aura, Venom Spores, Glacial Shards, and the gold-scaling Gilded Chakram.
   - **Level 5 + Level 5 Fusions**: Combine max-level weapons to form dual-aspect super-weapons (*Arcane Phantom Vortex*, *Cataclysmic Supernova*, *Plague Sanctuary*, *Shatterstorm*, *Frostbite Chakrams*).
@@ -55,6 +55,7 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 | **Knight Commander Roland** | Heavy Vanguard | Orbiting Daggers | Vitality Charm | +50 Base Max HP & +2 Damage Resistance |
 | **Pyromancer Ignis** | Burst DPS | Flame Blast | Might Talisman | +25% Global Damage & +20% Blast Area |
 | **Plague Alchemist Mortis** | Agile Harvester | Venom Spores | Toxic Vial | +20% Move Speed, +1 HP/s Regen & Toxic Mastery |
+| **Barbarian Thorgar** | Dread Berserker | Gilded Chakram | Vitality Charm | +60 Base Max HP, +30% Might & Heavy Armor |
 
 ---
 

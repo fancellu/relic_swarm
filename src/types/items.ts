@@ -97,6 +97,25 @@ export const HEROES: HeroData[] = [
     idleSheet: 'assets/images/hero_voidstalker_idle.png',
     spriteKey: 'hero_voidstalker',
   },
+  {
+    id: 'thorgar',
+    name: 'Barbarian Thorgar',
+    title: 'Dread Berserker',
+    desc: 'Unstoppable mountain warrior wielding the Gilded Chakram with brutal might and raw fury resilience.',
+    startingWeapon: 'gilded_chakram',
+    startingPassive: 'vitality_charm',
+    statBonus: '+60 Base Max HP, +30% Might & Heavy Armor',
+    baseHp: 160,
+    baseSpeed: 1.05,
+    areaBonus: 1.1,
+    cdrBonus: 0.0,
+    mightBonus: 0.3,
+    armorBonus: 3,
+    regenBonus: 0.75,
+    color: '#eab308',
+    idleSheet: 'assets/images/hero_barbarian_idle.png',
+    spriteKey: 'hero_barbarian',
+  },
 ];
 
 export const ITEM_DEFS: Record<string, ItemDef> = {

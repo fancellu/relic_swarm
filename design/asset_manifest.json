@@ -1,5 +1,25 @@
 [
   {
+    "id": "hero_barbarian",
+    "name": "Barbarian Thorgar",
+    "art_style": "pixelated",
+    "category": null,
+    "media_type": "spritesheet",
+    "description": "Barbarian Thorgar",
+    "aspect_ratio": "1:1",
+    "usage": "Playable character class specializing in high health, heavy armor, and devastating melee cleaves",
+    "chroma_key": true,
+    "prompt": "Muscular Nordic barbarian warrior with horned iron helm, braided ginger beard, wolf pelt mantle, blue woad war tattoos, wielding a massive double-bitted battleaxe, pixel art style, high contrast, clean silhouette, zero commercial icons, new design, completely independent styling",
+    "actions": [
+      "IDLE",
+      "RUN",
+      "ATTACK",
+      "HURT",
+      "DEATH"
+    ],
+    "resolution": null
+  },
+  {
     "id": "effect_radiant_aura",
     "name": "Radiant Aura Ring",
     "art_style": "pixelated",

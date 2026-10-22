@@ -8,6 +8,12 @@ export const ASSETS_MANIFEST: Record<string, string> = {
   hero_spellblade_hurt: 'assets/images/hero_spellblade_hurt.png',
   hero_spellblade_death: 'assets/images/hero_spellblade_death.png',
 
+  hero_barbarian_idle: 'assets/images/hero_barbarian_idle.png',
+  hero_barbarian_run: 'assets/images/hero_barbarian_run.png',
+  hero_barbarian_attack: 'assets/images/hero_barbarian_attack.png',
+  hero_barbarian_hurt: 'assets/images/hero_barbarian_hurt.png',
+  hero_barbarian_death: 'assets/images/hero_barbarian_death.png',
+
   hero_pyromancer_idle: 'assets/images/hero_pyromancer_idle.png',
   hero_pyromancer_run: 'assets/images/hero_pyromancer_run.png',
   hero_pyromancer_attack: 'assets/images/hero_pyromancer_attack.png',

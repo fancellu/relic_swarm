@@ -2,6 +2,7 @@ import {SpriteActionConfig, SpriteRenderer} from '../SpriteRenderer';
 
 export interface GameSpriteRenderers {
   hero_spellblade: SpriteRenderer;
+  hero_barbarian: SpriteRenderer;
   hero_pyromancer: SpriteRenderer;
   hero_voidstalker: SpriteRenderer;
   skeleton: SpriteRenderer;
@@ -29,6 +30,13 @@ export function initSpriteRenderers(): GameSpriteRenderers {
   });
 
   return {
+    hero_barbarian: new SpriteRenderer({
+      IDLE: makeConfig('hero_barbarian_idle', 4, 6),
+      RUN: makeConfig('hero_barbarian_run', 16, 16),
+      ATTACK: makeConfig('hero_barbarian_attack', 16, 16),
+      HURT: makeConfig('hero_barbarian_hurt', 16, 10, 512, 512, false),
+      DEATH: makeConfig('hero_barbarian_death', 16, 10, 512, 512, false),
+    }),
     hero_spellblade: new SpriteRenderer({
       IDLE: makeConfig('hero_spellblade_idle', 4, 6),
       RUN: makeConfig('hero_spellblade_run', 16, 16),
