@@ -183,6 +183,106 @@ export function updateWeaponCasting(
       }
     }
 
+    // --- Chain Lightning Gun ---
+    else if (wep.id === 'chain_lightning_gun') {
+      if (sim.weaponTimers[timerKey] >= actualCd && sim.enemies.length > 0) {
+        sim.weaponTimers[timerKey] = 0;
+        gameAudio.playArcadeLaser();
+
+        let firstTarget = sim.enemies[0];
+        let closestDistSq = Number.POSITIVE_INFINITY;
+        for (let i = 0; i < sim.enemies.length; i++) {
+          const enemy = sim.enemies[i];
+          const dx = enemy.x - sim.x;
+          const dy = enemy.y - sim.y;
+          const distSq = dx * dx + dy * dy;
+          if (distSq < closestDistSq) {
+            closestDistSq = distSq;
+            firstTarget = enemy;
+          }
+        }
+
+        const hitIds = [firstTarget.id];
+        const baseDamage = (def.baseDamage || 48) * stats.mightMult * (1 + (wep.level - 1) * 0.2);
+        const chainChance = Math.min(0.9, 0.55 + wep.level * 0.07);
+        const maxChains = 1 + Math.floor((wep.level - 1) / 2);
+        const chainRangeSq = (240 * stats.areaMult) ** 2;
+        const zap = (fromX: number, fromY: number, target: EnemyEntity, damage: number): void => {
+          target.hp -= damage;
+          sim.weaponDamageDealt[wep.id] = (sim.weaponDamageDealt[wep.id] || 0) + damage;
+          if (stats.toxicLevel > 0 && Math.random() < 0.35) applyEnemyPoison(target, damage * 0.5);
+          spawnDamageNumber(target.x, target.y, Math.round(damage).toString(), '#67e8f9');
+          spawnParticles(target.x, target.y, 5, '#67e8f9', 115);
+          sim.projectiles.push({
+            id: sim.nextProjId++,
+            type: 'chain_lightning',
+            sourceWeapon: wep.id,
+            x: fromX,
+            y: fromY,
+            vx: 0,
+            vy: 0,
+            damage: 0,
+            radius: 0,
+            duration: 0.12,
+            maxDuration: 0.12,
+            pierce: 0,
+            hitList: [],
+            color: '#67e8f9',
+            chainEndX: target.x,
+            chainEndY: target.y,
+          });
+        };
+
+        zap(sim.x, sim.y, firstTarget, baseDamage);
+        let chainSource = firstTarget;
+        let chainDamage = baseDamage * 0.72;
+
+        for (let jump = 0; jump < maxChains && Math.random() < chainChance; jump++) {
+          let nextTarget: EnemyEntity | undefined;
+          let nextDistSq = chainRangeSq;
+          for (let i = 0; i < sim.enemies.length; i++) {
+            const enemy = sim.enemies[i];
+            if (hitIds.includes(enemy.id)) continue;
+            const dx = enemy.x - chainSource.x;
+            const dy = enemy.y - chainSource.y;
+            const distSq = dx * dx + dy * dy;
+            if (distSq < nextDistSq) {
+              nextDistSq = distSq;
+              nextTarget = enemy;
+            }
+          }
+          if (!nextTarget) break;
+
+          hitIds.push(nextTarget.id);
+          zap(chainSource.x, chainSource.y, nextTarget, chainDamage);
+
+          // At high levels the first bounce forks into a second nearby target.
+          if (wep.level >= 4 && jump === 0 && Math.random() < chainChance) {
+            let splitTarget: EnemyEntity | undefined;
+            let splitDistSq = chainRangeSq;
+            for (let i = 0; i < sim.enemies.length; i++) {
+              const enemy = sim.enemies[i];
+              if (hitIds.includes(enemy.id)) continue;
+              const dx = enemy.x - chainSource.x;
+              const dy = enemy.y - chainSource.y;
+              const distSq = dx * dx + dy * dy;
+              if (distSq < splitDistSq) {
+                splitDistSq = distSq;
+                splitTarget = enemy;
+              }
+            }
+            if (splitTarget) {
+              hitIds.push(splitTarget.id);
+              zap(chainSource.x, chainSource.y, splitTarget, chainDamage * 0.7);
+            }
+          }
+
+          chainSource = nextTarget;
+          chainDamage *= 0.72;
+        }
+      }
+    }
+
     // --- Thunder Strike & Mjolnir's Conduit ---
     else if (wep.id === 'thunder_strike' || wep.id === 'mjolnir_conduit') {
       if (sim.weaponTimers[timerKey] >= actualCd && sim.enemies.length > 0) {

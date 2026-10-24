@@ -73,7 +73,8 @@ export interface ProjectileEntity {
     | 'gilded_disc'
     | 'beetle'
     | 'shotgun_pellet'
-    | 'homing_missile';
+    | 'homing_missile'
+    | 'chain_lightning';
   sourceWeapon?: string;
   x: number;
   y: number;
@@ -93,6 +94,8 @@ export interface ProjectileEntity {
   inflictsPoison?: boolean;
   inflictsSlow?: boolean;
   targetId?: number;
+  chainEndX?: number;
+  chainEndY?: number;
 }
 
 export const MAX_DROPS = 200;

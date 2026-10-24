@@ -638,6 +638,20 @@ export function renderGame(
       ctx.closePath();
       ctx.fill();
       ctx.restore();
+    } else if (proj.type === 'chain_lightning' && proj.chainEndX !== undefined && proj.chainEndY !== undefined) {
+      ctx.save();
+      ctx.strokeStyle = proj.color;
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 12;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(proj.x, proj.y);
+      const midX = (proj.x + proj.chainEndX) / 2 + Math.sin(proj.id * 17) * 10;
+      const midY = (proj.y + proj.chainEndY) / 2 + Math.cos(proj.id * 13) * 10;
+      ctx.lineTo(midX, midY);
+      ctx.lineTo(proj.chainEndX, proj.chainEndY);
+      ctx.stroke();
+      ctx.restore();
     } else if (proj.isEnemy) {
       ctx.fillStyle = proj.color;
       ctx.shadowColor = proj.color;

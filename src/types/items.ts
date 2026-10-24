@@ -269,6 +269,17 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     cooldown: 1.5,
     cost: 70,
   },
+  chain_lightning_gun: {
+    id: 'chain_lightning_gun',
+    name: 'Chain Lightning Gun',
+    type: 'WEAPON',
+    icon: 'assets/images/proj_thunder_strike.png',
+    desc: 'Zaps the nearest enemy with volatile lightning that can jump and split through nearby foes.',
+    maxLevel: 5,
+    baseDamage: 48,
+    cooldown: 1.35,
+    cost: 75,
+  },
 
   // Level 5 + Level 5 Weapon Fusions (Evolutions)
   arcane_phantom_vortex: {

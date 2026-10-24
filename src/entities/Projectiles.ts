@@ -149,6 +149,8 @@ export function updateProjectiles(
           }
         }
       });
+    } else if (proj.type === 'chain_lightning') {
+      // Damage is applied at cast time; retain the projectile only for its brief visual arc.
     } else if (proj.type === 'spore') {
       // Lingering toxic cloud field
       sim.enemies.forEach((enemy) => {

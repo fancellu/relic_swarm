@@ -391,6 +391,10 @@ export function extractItemEssence(
     sim.bonusCdr = (sim.bonusCdr || 0) + 0.12;
     sim.bonusMight = (sim.bonusMight || 0) + 0.12;
     bonusDesc = '+12% CDR & +12% Might';
+  } else if (itemId === 'chain_lightning_gun') {
+    sim.bonusCdr = (sim.bonusCdr || 0) + 0.15;
+    sim.bonusArea = (sim.bonusArea || 0) + 0.12;
+    bonusDesc = '+15% CDR & +12% Area';
   } else if (itemId === 'might_talisman') {
     sim.bonusMight = (sim.bonusMight || 0) + 0.18;
     bonusDesc = '+18% Global Attack Damage';
