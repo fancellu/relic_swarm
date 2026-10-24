@@ -622,6 +622,22 @@ export function renderGame(
       ctx.arc(proj.x, proj.y, Math.max(0, proj.radius), 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
+    } else if (proj.type === 'homing_missile') {
+      const angle = Math.atan2(proj.vy, proj.vx);
+      ctx.save();
+      ctx.translate(proj.x, proj.y);
+      ctx.rotate(angle);
+      ctx.fillStyle = proj.color;
+      ctx.shadowColor = '#7c3aed';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(proj.radius * 1.5, 0);
+      ctx.lineTo(-proj.radius, -proj.radius * 0.75);
+      ctx.lineTo(-proj.radius * 0.45, 0);
+      ctx.lineTo(-proj.radius, proj.radius * 0.75);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
     } else if (proj.isEnemy) {
       ctx.fillStyle = proj.color;
       ctx.shadowColor = proj.color;

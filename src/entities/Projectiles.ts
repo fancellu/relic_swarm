@@ -198,8 +198,8 @@ export function updateProjectiles(
         });
       }
     } else {
-      // Homing for plague beetles
-      if (proj.type === 'beetle') {
+      // Homing projectiles retarget automatically when their current prey dies.
+      if (proj.type === 'beetle' || proj.type === 'homing_missile') {
         let target = sim.enemies.find((e) => e.id === proj.targetId);
         if (!target && sim.enemies.length > 0) {
           target = sim.enemies[0];
@@ -207,12 +207,14 @@ export function updateProjectiles(
         }
         if (target) {
           const bAngle = Math.atan2(target.y - proj.y, target.x - proj.x);
-          proj.vx += Math.cos(bAngle) * 900 * dt;
-          proj.vy += Math.sin(bAngle) * 900 * dt;
+          const turnForce = proj.type === 'homing_missile' ? 1050 : 900;
+          const maxSpeed = proj.type === 'homing_missile' ? 420 : 450;
+          proj.vx += Math.cos(bAngle) * turnForce * dt;
+          proj.vy += Math.sin(bAngle) * turnForce * dt;
           const curSpeed = Math.hypot(proj.vx, proj.vy);
-          if (curSpeed > 450) {
-            proj.vx = (proj.vx / curSpeed) * 450;
-            proj.vy = (proj.vy / curSpeed) * 450;
+          if (curSpeed > maxSpeed) {
+            proj.vx = (proj.vx / curSpeed) * maxSpeed;
+            proj.vy = (proj.vy / curSpeed) * maxSpeed;
           }
         }
       }

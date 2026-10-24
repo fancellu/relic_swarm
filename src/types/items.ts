@@ -258,6 +258,17 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     cooldown: 1.1,
     cost: 65,
   },
+  homing_missiles: {
+    id: 'homing_missiles',
+    name: 'Homing Missiles',
+    type: 'WEAPON',
+    icon: 'assets/images/proj_magic_missile.png',
+    desc: 'Launches heavy arcane missiles that relentlessly track enemies and retarget when prey falls.',
+    maxLevel: 5,
+    baseDamage: 42,
+    cooldown: 1.5,
+    cost: 70,
+  },
 
   // Level 5 + Level 5 Weapon Fusions (Evolutions)
   arcane_phantom_vortex: {

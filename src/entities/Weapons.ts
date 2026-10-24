@@ -146,6 +146,43 @@ export function updateWeaponCasting(
       }
     }
 
+    // --- Homing Missiles ---
+    else if (wep.id === 'homing_missiles') {
+      if (sim.weaponTimers[timerKey] >= actualCd && sim.enemies.length > 0) {
+        sim.weaponTimers[timerKey] = 0;
+        gameAudio.playArcadeLaser();
+
+        const missileCount = 1 + Math.floor((wep.level - 1) / 2);
+        const damage = (def.baseDamage || 42) * stats.mightMult * (1 + (wep.level - 1) * 0.22);
+
+        for (let i = 0; i < missileCount; i++) {
+          const target = sim.enemies[Math.floor(Math.random() * sim.enemies.length)];
+          if (!target) continue;
+
+          const angle = Math.atan2(target.y - sim.y, target.x - sim.x) + (i - (missileCount - 1) / 2) * 0.16;
+          sim.projectiles.push({
+            id: sim.nextProjId++,
+            type: 'homing_missile',
+            sourceWeapon: wep.id,
+            x: sim.x,
+            y: sim.y,
+            vx: Math.cos(angle) * 300,
+            vy: Math.sin(angle) * 300,
+            damage,
+            radius: 11 * stats.areaMult,
+            duration: 4.0,
+            maxDuration: 4.0,
+            pierce: 1 + Math.floor((wep.level - 1) / 2),
+            hitList: [],
+            color: '#a78bfa',
+            targetId: target.id,
+            inflictsPoison: stats.toxicLevel > 0 && Math.random() < 0.35,
+          });
+        }
+        spawnParticles(sim.x, sim.y, 6, '#a78bfa', 100);
+      }
+    }
+
     // --- Thunder Strike & Mjolnir's Conduit ---
     else if (wep.id === 'thunder_strike' || wep.id === 'mjolnir_conduit') {
       if (sim.weaponTimers[timerKey] >= actualCd && sim.enemies.length > 0) {

@@ -387,6 +387,10 @@ export function extractItemEssence(
     sim.bonusMight = (sim.bonusMight || 0) + 0.18;
     sim.bonusArmor = (sim.bonusArmor || 0) + 1;
     bonusDesc = '+18% Might & +1 Armor';
+  } else if (itemId === 'homing_missiles') {
+    sim.bonusCdr = (sim.bonusCdr || 0) + 0.12;
+    sim.bonusMight = (sim.bonusMight || 0) + 0.12;
+    bonusDesc = '+12% CDR & +12% Might';
   } else if (itemId === 'might_talisman') {
     sim.bonusMight = (sim.bonusMight || 0) + 0.18;
     bonusDesc = '+18% Global Attack Damage';
