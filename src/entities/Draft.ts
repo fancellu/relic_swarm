@@ -383,6 +383,10 @@ export function extractItemEssence(
     sim.bonusGreed = (sim.bonusGreed || 0) + 0.25;
     sim.bonusMight = (sim.bonusMight || 0) + 0.15;
     bonusDesc = '+25% Gold Drops & +15% Might';
+  } else if (itemId === 'scattershot') {
+    sim.bonusMight = (sim.bonusMight || 0) + 0.18;
+    sim.bonusArmor = (sim.bonusArmor || 0) + 1;
+    bonusDesc = '+18% Might & +1 Armor';
   } else if (itemId === 'might_talisman') {
     sim.bonusMight = (sim.bonusMight || 0) + 0.18;
     bonusDesc = '+18% Global Attack Damage';

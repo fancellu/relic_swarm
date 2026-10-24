@@ -71,7 +71,8 @@ export interface ProjectileEntity {
     | 'vortex'
     | 'chakram'
     | 'gilded_disc'
-    | 'beetle';
+    | 'beetle'
+    | 'shotgun_pellet';
   sourceWeapon?: string;
   x: number;
   y: number;

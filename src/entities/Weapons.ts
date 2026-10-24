@@ -97,6 +97,55 @@ export function updateWeaponCasting(
       }
     }
 
+    // --- Scattershot (short-range cone) ---
+    else if (wep.id === 'scattershot') {
+      if (sim.weaponTimers[timerKey] >= actualCd && sim.enemies.length > 0) {
+        sim.weaponTimers[timerKey] = 0;
+        gameAudio.playArcadeLaser();
+
+        let target = sim.enemies[0];
+        let closestDistSq = Number.POSITIVE_INFINITY;
+        for (let i = 0; i < sim.enemies.length; i++) {
+          const enemy = sim.enemies[i];
+          const dx = enemy.x - sim.x;
+          const dy = enemy.y - sim.y;
+          const distSq = dx * dx + dy * dy;
+          if (distSq < closestDistSq) {
+            closestDistSq = distSq;
+            target = enemy;
+          }
+        }
+
+        const pelletCount = 5 + wep.level;
+        const centerAngle = Math.atan2(target.y - sim.y, target.x - sim.x);
+        const spread = 0.7;
+        const damage = (def.baseDamage || 15) * stats.mightMult * (1 + (wep.level - 1) * 0.18);
+
+        for (let i = 0; i < pelletCount; i++) {
+          const offset = pelletCount === 1 ? 0 : (i / (pelletCount - 1) - 0.5) * spread;
+          const angle = centerAngle + offset;
+          sim.projectiles.push({
+            id: sim.nextProjId++,
+            type: 'shotgun_pellet',
+            sourceWeapon: wep.id,
+            x: sim.x,
+            y: sim.y,
+            vx: Math.cos(angle) * 540,
+            vy: Math.sin(angle) * 540,
+            damage,
+            radius: 6 * stats.areaMult,
+            duration: 0.48,
+            maxDuration: 0.48,
+            pierce: 1,
+            hitList: [],
+            color: '#fbbf24',
+            inflictsPoison: stats.toxicLevel > 0 && Math.random() < 0.35,
+          });
+        }
+        spawnParticles(sim.x, sim.y, 8, '#fbbf24', 110);
+      }
+    }
+
     // --- Thunder Strike & Mjolnir's Conduit ---
     else if (wep.id === 'thunder_strike' || wep.id === 'mjolnir_conduit') {
       if (sim.weaponTimers[timerKey] >= actualCd && sim.enemies.length > 0) {

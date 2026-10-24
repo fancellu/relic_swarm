@@ -613,6 +613,15 @@ export function renderGame(
       ctx.fillStyle = '#fef08a';
       ctx.fillRect(-proj.radius * 0.25, -proj.radius * 0.8, proj.radius * 0.5, proj.radius * 1.6);
       ctx.restore();
+    } else if (proj.type === 'shotgun_pellet') {
+      ctx.save();
+      ctx.fillStyle = proj.color;
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 7;
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, Math.max(0, proj.radius), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     } else if (proj.isEnemy) {
       ctx.fillStyle = proj.color;
       ctx.shadowColor = proj.color;

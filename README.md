@@ -21,7 +21,7 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 - **Wandering Black Market**: Every 3 minutes, a smuggler merchant cart arrives offering combat Overdrives, weapon temperings, and instant fusion catalysts for unbanked gold.
 - **5 Distinct Champions**: Choose from Arcanist Vael, Knight Commander Roland, Pyromancer Ignis, Plague Alchemist Mortis, and Barbarian Thorgar — each featuring unique baseline stats, starting weapons, and passive affinities.
 - **Weapons, Evolutions & Fusions**:
-  - **8 Base Weapons**: Magic Missiles, Orbiting Daggers, Flame Blast, Thunder Strike, Radiant Aura, Venom Spores, Glacial Shards, and the gold-scaling Gilded Chakram.
+  - **9 Base Weapons**: Magic Missiles, Orbiting Daggers, Flame Blast, Thunder Strike, Radiant Aura, Venom Spores, Glacial Shards, Gilded Chakram, and Scattershot.
   - **Level 5 + Level 5 Fusions**: Combine max-level weapons to form dual-aspect super-weapons (*Arcane Phantom Vortex*, *Cataclysmic Supernova*, *Plague Sanctuary*, *Shatterstorm*, *Frostbite Chakrams*).
   - **Awakened Evolutions**: Pair maxed weapons with matching passives in boss chests for legendary forms (*Chrono Missiles*, *Hellfire Nova*, *Mjolnir's Conduit*, *Solar Eclipse*, *Necrotic Blight*, *Phantom Storm*, *Absolute Zero*, *Midas' Wrath*).
 - **Persistent Sanctum Meta-Shop**: Bank earned gold across runs in your Sanctum Vault and permanently enhance your attributes (Health, Might, Movement Speed, Cooldown Haste, Magnet Radius, Greed, and Fate Rerolls).
@@ -72,6 +72,7 @@ Players have **4 Weapon Slots** and **4 Passive Slots**.
 - **Venom Spores**: Toxic cloud eruptions inflicting stacking Poison DoT.
 - **Glacial Shards**: Piercing frost spikes inflicting movement slow.
 - **Gilded Chakram**: Heavy golden disc ricocheting between enemies. Base damage scales with unbanked run gold (+1% damage per 50 run gold held).
+- **Scattershot**: Fires a wide, short-range burst of arcane pellets at the nearest enemy; gains additional pellets with each level.
 
 ### Legendary Weapon Fusions (Level 5 + Level 5)
 - **Arcane Phantom Vortex**: *Magic Missile L5* + *Orbiting Daggers L5* $\to$ 8 astral blades firing rapid homing energy beams.

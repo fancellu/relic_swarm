@@ -247,6 +247,17 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     evolutionPair: 'greed_coin',
     cost: 65,
   },
+  scattershot: {
+    id: 'scattershot',
+    name: 'Scattershot',
+    type: 'WEAPON',
+    icon: 'assets/images/proj_flame_blast.png',
+    desc: 'Fires a devastating short-range cone of arcane pellets at the nearest enemy.',
+    maxLevel: 5,
+    baseDamage: 15,
+    cooldown: 1.1,
+    cost: 65,
+  },
 
   // Level 5 + Level 5 Weapon Fusions (Evolutions)
   arcane_phantom_vortex: {
