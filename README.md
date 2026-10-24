@@ -72,7 +72,7 @@ Players have **4 Weapon Slots** and **4 Passive Slots**.
 - **Venom Spores**: Toxic cloud eruptions inflicting stacking Poison DoT.
 - **Glacial Shards**: Piercing frost spikes inflicting movement slow.
 - **Gilded Chakram**: Heavy golden disc ricocheting between enemies. Base damage scales with unbanked run gold (+1% damage per 50 run gold held).
-- **Scattershot**: Fires a wide, short-range burst of arcane pellets at the nearest enemy; gains additional pellets with each level.
+- **Scattershot**: Fires a wide, short-range burst of arcane pellets at the nearest enemy; gains additional pellets with each level. Does knockback.
 - **Homing Missiles**: Launches heavy tracking missiles that seek enemies, retarget when a foe dies, and gain missiles and pierce as they level.
 - **Chain Lightning Gun**: Zaps the nearest enemy, with a level-scaling chance to chain through nearby foes; higher levels add bounces and a split bolt.
 

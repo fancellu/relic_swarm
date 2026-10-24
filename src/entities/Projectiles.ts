@@ -254,6 +254,14 @@ export function updateProjectiles(
 
             if (proj.inflictsPoison) applyEnemyPoison(enemy, proj.damage * 0.5);
             if (proj.inflictsSlow) applyEnemySlow(enemy, 0.5, 3.0);
+            if (proj.type === 'shotgun_pellet') {
+              const speed = Math.hypot(proj.vx, proj.vy);
+              if (speed > 1) {
+                const knockback = proj.sourceWeapon === 'starfall_scattergun' ? 28 : 20;
+                enemy.x += (proj.vx / speed) * knockback;
+                enemy.y += (proj.vy / speed) * knockback;
+              }
+            }
             if (proj.type === 'gilded_disc' && Math.random() < 0.25) {
               gameAudio.playCoinPickup();
             }
