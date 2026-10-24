@@ -162,7 +162,10 @@ export function updateWeaponCasting(
           const target = sim.enemies[Math.floor(Math.random() * sim.enemies.length)];
           if (!target) continue;
 
-          const angle = Math.atan2(target.y - sim.y, target.x - sim.x) + (i - (missileCount - 1) / 2) * 0.16;
+          const targetAngle = Math.atan2(target.y - sim.y, target.x - sim.x);
+          // Launch sideways so the target-seeking force draws an obvious curved flight path.
+          const launchSide = i % 2 === 0 ? 1 : -1;
+          const angle = targetAngle + launchSide * Math.PI / 2 + (i - (missileCount - 1) / 2) * 0.1;
           sim.projectiles.push({
             id: sim.nextProjId++,
             type: 'homing_missile',
