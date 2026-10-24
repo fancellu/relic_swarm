@@ -479,6 +479,8 @@ export default function App() {
       fusedDef = ITEM_DEFS.shatterstorm;
     } else if (wepIds.includes('frost_shard') && wepIds.includes('spinning_dagger')) {
       fusedDef = ITEM_DEFS.frostbite_chakrams;
+    } else if (wepIds.includes('scattershot') && wepIds.includes('homing_missiles')) {
+      fusedDef = ITEM_DEFS.stormfront_barrage;
     }
 
     if (fusedDef && fusedDef.consumedWeapons) {

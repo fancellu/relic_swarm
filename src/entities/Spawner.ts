@@ -316,8 +316,8 @@ export function updateEnemies(
       } else if (enemy.isElite) {
         gameAudio.playConfirmSelect();
 
-        // 35% chance for Elites to drop a Cursed Blood Chalice if not currently in a Cursed Trial
-        if (!sim.cursedArena && Math.random() < 0.35) {
+        // 10% chance for Elites to drop a Cursed Blood Chalice if not currently in a Cursed Trial
+        if (!sim.cursedArena && Math.random() < 0.10) {
           addDrop(sim, {
             id: sim.nextDropId++,
             type: 'blood_chalice',

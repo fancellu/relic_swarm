@@ -56,6 +56,15 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
     ) {
       pool.push(ITEM_DEFS.frostbite_chakrams);
     }
+
+    // 6. Stormfront Barrage (Scattershot + Homing Missiles)
+    if (
+      wepIds.includes('scattershot') &&
+      wepIds.includes('homing_missiles') &&
+      !sim.weapons.some((w) => w.id === 'stormfront_barrage')
+    ) {
+      pool.push(ITEM_DEFS.stormfront_barrage);
+    }
   }
 
   // Check Weapon + Passive Evolutions
@@ -107,6 +116,24 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
         const chakram = sim.weapons.find((w) => w.id === 'gilded_chakram');
         const coin = sim.passives.find((p) => p.id === 'greed_coin');
         if (chakram && chakram.level >= 5 && coin && !sim.weapons.some((w) => w.id === item.id)) {
+          pool.push(item);
+        }
+      } else if (item.id === 'starfall_scattergun') {
+        const scattershot = sim.weapons.find((w) => w.id === 'scattershot');
+        const might = sim.passives.find((p) => p.id === 'might_talisman');
+        if (scattershot && scattershot.level >= 5 && might && !sim.weapons.some((w) => w.id === item.id)) {
+          pool.push(item);
+        }
+      } else if (item.id === 'swarm_seekers') {
+        const missiles = sim.weapons.find((w) => w.id === 'homing_missiles');
+        const magnet = sim.passives.find((p) => p.id === 'magnet_rune');
+        if (missiles && missiles.level >= 5 && magnet && !sim.weapons.some((w) => w.id === item.id)) {
+          pool.push(item);
+        }
+      } else if (item.id === 'tesla_tempest') {
+        const lightning = sim.weapons.find((w) => w.id === 'chain_lightning_gun');
+        const boots = sim.passives.find((p) => p.id === 'swift_boots');
+        if (lightning && lightning.level >= 5 && boots && !sim.weapons.some((w) => w.id === item.id)) {
           pool.push(item);
         }
       }
@@ -246,6 +273,15 @@ export function applyUpgradeSelection(
       sim.weapons.push({id: item.id, level: 1});
     } else if (item.id === 'midas_wrath') {
       sim.weapons = sim.weapons.filter((w) => w.id !== 'gilded_chakram');
+      sim.weapons.push({id: item.id, level: 1});
+    } else if (item.id === 'starfall_scattergun') {
+      sim.weapons = sim.weapons.filter((w) => w.id !== 'scattershot');
+      sim.weapons.push({id: item.id, level: 1});
+    } else if (item.id === 'swarm_seekers') {
+      sim.weapons = sim.weapons.filter((w) => w.id !== 'homing_missiles');
+      sim.weapons.push({id: item.id, level: 1});
+    } else if (item.id === 'tesla_tempest') {
+      sim.weapons = sim.weapons.filter((w) => w.id !== 'chain_lightning_gun');
       sim.weapons.push({id: item.id, level: 1});
     }
     if (sim.fusionCatalystAvailable && item.isFusion) {

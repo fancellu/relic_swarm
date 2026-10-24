@@ -98,7 +98,7 @@ export function updateWeaponCasting(
     }
 
     // --- Scattershot (short-range cone) ---
-    else if (wep.id === 'scattershot') {
+    else if (wep.id === 'scattershot' || wep.id === 'starfall_scattergun') {
       if (sim.weaponTimers[timerKey] >= actualCd && sim.enemies.length > 0) {
         sim.weaponTimers[timerKey] = 0;
         gameAudio.playArcadeLaser();
@@ -116,9 +116,10 @@ export function updateWeaponCasting(
           }
         }
 
-        const pelletCount = 5 + wep.level;
+        const isStarfall = wep.id === 'starfall_scattergun';
+        const pelletCount = isStarfall ? 13 : 5 + wep.level;
         const centerAngle = Math.atan2(target.y - sim.y, target.x - sim.x);
-        const spread = 0.7;
+        const spread = isStarfall ? 0.85 : 0.7;
         const damage = (def.baseDamage || 15) * stats.mightMult * (1 + (wep.level - 1) * 0.18);
 
         for (let i = 0; i < pelletCount; i++) {
@@ -130,15 +131,15 @@ export function updateWeaponCasting(
             sourceWeapon: wep.id,
             x: sim.x,
             y: sim.y,
-            vx: Math.cos(angle) * 540,
-            vy: Math.sin(angle) * 540,
+            vx: Math.cos(angle) * (isStarfall ? 620 : 540),
+            vy: Math.sin(angle) * (isStarfall ? 620 : 540),
             damage,
             radius: 6 * stats.areaMult,
-            duration: 0.48,
-            maxDuration: 0.48,
-            pierce: 1,
+            duration: isStarfall ? 0.7 : 0.48,
+            maxDuration: isStarfall ? 0.7 : 0.48,
+            pierce: isStarfall ? 2 : 1,
             hitList: [],
-            color: '#fbbf24',
+            color: isStarfall ? '#fef08a' : '#fbbf24',
             inflictsPoison: stats.toxicLevel > 0 && Math.random() < 0.35,
           });
         }
@@ -147,12 +148,14 @@ export function updateWeaponCasting(
     }
 
     // --- Homing Missiles ---
-    else if (wep.id === 'homing_missiles') {
+    else if (wep.id === 'homing_missiles' || wep.id === 'swarm_seekers' || wep.id === 'stormfront_barrage') {
       if (sim.weaponTimers[timerKey] >= actualCd && sim.enemies.length > 0) {
         sim.weaponTimers[timerKey] = 0;
         gameAudio.playArcadeLaser();
 
-        const missileCount = 1 + Math.floor((wep.level - 1) / 2);
+        const isSwarmSeekers = wep.id === 'swarm_seekers';
+        const isStormfront = wep.id === 'stormfront_barrage';
+        const missileCount = isStormfront ? 9 : isSwarmSeekers ? 5 : 1 + Math.floor((wep.level - 1) / 2);
         const damage = (def.baseDamage || 42) * stats.mightMult * (1 + (wep.level - 1) * 0.22);
 
         for (let i = 0; i < missileCount; i++) {
@@ -166,15 +169,15 @@ export function updateWeaponCasting(
             sourceWeapon: wep.id,
             x: sim.x,
             y: sim.y,
-            vx: Math.cos(angle) * 300,
-            vy: Math.sin(angle) * 300,
+            vx: Math.cos(angle) * (isStormfront ? 360 : 300),
+            vy: Math.sin(angle) * (isStormfront ? 360 : 300),
             damage,
-            radius: 11 * stats.areaMult,
-            duration: 4.0,
-            maxDuration: 4.0,
-            pierce: 1 + Math.floor((wep.level - 1) / 2),
+            radius: (isStormfront ? 8 : 11) * stats.areaMult,
+            duration: isStormfront ? 3.2 : 4.0,
+            maxDuration: isStormfront ? 3.2 : 4.0,
+            pierce: isStormfront ? 2 : isSwarmSeekers ? 4 : 1 + Math.floor((wep.level - 1) / 2),
             hitList: [],
-            color: '#a78bfa',
+            color: isStormfront ? '#fbbf24' : isSwarmSeekers ? '#c4b5fd' : '#a78bfa',
             targetId: target.id,
             inflictsPoison: stats.toxicLevel > 0 && Math.random() < 0.35,
           });
@@ -184,7 +187,7 @@ export function updateWeaponCasting(
     }
 
     // --- Chain Lightning Gun ---
-    else if (wep.id === 'chain_lightning_gun') {
+    else if (wep.id === 'chain_lightning_gun' || wep.id === 'tesla_tempest') {
       if (sim.weaponTimers[timerKey] >= actualCd && sim.enemies.length > 0) {
         sim.weaponTimers[timerKey] = 0;
         gameAudio.playArcadeLaser();
@@ -202,11 +205,12 @@ export function updateWeaponCasting(
           }
         }
 
+        const isTeslaTempest = wep.id === 'tesla_tempest';
         const hitIds = [firstTarget.id];
         const baseDamage = (def.baseDamage || 48) * stats.mightMult * (1 + (wep.level - 1) * 0.2);
-        const chainChance = Math.min(0.9, 0.55 + wep.level * 0.07);
-        const maxChains = 1 + Math.floor((wep.level - 1) / 2);
-        const chainRangeSq = (240 * stats.areaMult) ** 2;
+        const chainChance = isTeslaTempest ? 1 : Math.min(0.9, 0.55 + wep.level * 0.07);
+        const maxChains = isTeslaTempest ? 5 : 1 + Math.floor((wep.level - 1) / 2);
+        const chainRangeSq = ((isTeslaTempest ? 300 : 240) * stats.areaMult) ** 2;
         const zap = (fromX: number, fromY: number, target: EnemyEntity, damage: number): void => {
           target.hp -= damage;
           sim.weaponDamageDealt[wep.id] = (sim.weaponDamageDealt[wep.id] || 0) + damage;
@@ -257,7 +261,7 @@ export function updateWeaponCasting(
           zap(chainSource.x, chainSource.y, nextTarget, chainDamage);
 
           // At high levels the first bounce forks into a second nearby target.
-          if (wep.level >= 4 && jump === 0 && Math.random() < chainChance) {
+          if ((wep.level >= 4 || isTeslaTempest) && jump === 0 && Math.random() < chainChance) {
             let splitTarget: EnemyEntity | undefined;
             let splitDistSq = chainRangeSq;
             for (let i = 0; i < sim.enemies.length; i++) {

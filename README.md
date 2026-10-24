@@ -82,6 +82,7 @@ Players have **4 Weapon Slots** and **4 Passive Slots**.
 - **Plague Sanctuary**: *Radiant Aura L5* + *Venom Spores L5* $\to$ Massive aura slowing enemies by 40% and dealing 24 poison DPS.
 - **Shatterstorm**: *Glacial Shards L5* + *Thunder Strike L5* $\to$ Piercing ice lances freezing targets, followed by lightning shattering slowed/frozen foes.
 - **Frostbite Chakrams**: *Glacial Shards L5* + *Orbiting Daggers L5* $\to$ Expanding and contracting ring of 8 cryogenic chakrams trailing freezing slipstreams.
+- **Stormfront Barrage**: *Scattershot L5* + *Homing Missiles L5* $\to$ A wide fan of micro-missiles that curves back into nearby enemies.
 
 ### Awakened Evolutions (Max Weapon + Matched Passive via Boss Chest)
 - **Chrono Missiles**: *Magic Missile* + *Swift Boots* $\to$ Continuous stream of hyper-velocity laser bolts.
@@ -92,6 +93,9 @@ Players have **4 Weapon Slots** and **4 Passive Slots**.
 - **Phantom Storm**: *Orbiting Daggers* + *Might Talisman* $\to$ 8 ethereal hyper-speed scythes.
 - **Absolute Zero**: *Glacial Shards* + *Frost Amulet* $\to$ Cryogenic storms freezing and shattering enemies.
 - **Midas' Wrath**: *Gilded Chakram* + *Greed Coin* $\to$ Twin golden sawblades shedding radiant gold coins on impact, doubling greed scaling (+2% damage per 50 unbanked run gold).
+- **Starfall Scattergun**: *Scattershot* + *Might Talisman* $\to$ A dense, piercing blast of star-metal pellets.
+- **Swarm Seekers**: *Homing Missiles* + *Attraction Rune* $\to$ A piercing flock of aggressive tracking missiles.
+- **Tesla Tempest**: *Chain Lightning Gun* + *Swift Boots* $\to$ Lightning that reliably leaps and forks through the horde.
 
 ---
 
