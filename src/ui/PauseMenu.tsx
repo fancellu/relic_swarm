@@ -502,6 +502,14 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                     Expanding & contracting ring of 8 cryogenic chakrams leaving freezing slipstream trails.
                   </div>
                 </div>
+
+                <div className="bg-slate-900/80 p-2.5 rounded-xl border border-amber-900/40">
+                  <div className="font-bold text-amber-300">Stormfront Barrage</div>
+                  <div className="text-slate-400 text-[10px]">Scattershot (Lv 5) + Homing Missiles (Lv 5)</div>
+                  <div className="text-slate-300 text-[10px] mt-1">
+                    A wide fan of micro-missiles that curves back into the surrounding swarm.
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -553,6 +561,30 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                   <div className="font-bold text-purple-300">Absolute Zero</div>
                   <div className="text-slate-400 text-[10px]">Glacial Shards (Lv 5) + Frost Amulet</div>
                   <div className="text-slate-300 text-[10px] mt-1">6 cryogenic piercing frost spikes with freeze.</div>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
+                  <div className="font-bold text-purple-300">Midas&apos; Wrath</div>
+                  <div className="text-slate-400 text-[10px]">Gilded Chakram (Lv 5) + Greed Coin</div>
+                  <div className="text-slate-300 text-[10px] mt-1">Golden sawblades with doubled damage scaling from unbanked run gold.</div>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
+                  <div className="font-bold text-purple-300">Starfall Scattergun</div>
+                  <div className="text-slate-400 text-[10px]">Scattershot (Lv 5) + Might Talisman</div>
+                  <div className="text-slate-300 text-[10px] mt-1">A dense, piercing cone of star-metal pellets.</div>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
+                  <div className="font-bold text-purple-300">Swarm Seekers</div>
+                  <div className="text-slate-400 text-[10px]">Homing Missiles (Lv 5) + Attraction Rune</div>
+                  <div className="text-slate-300 text-[10px] mt-1">A piercing flock of tracking missiles that continually retargets prey.</div>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
+                  <div className="font-bold text-purple-300">Tesla Tempest</div>
+                  <div className="text-slate-400 text-[10px]">Chain Lightning Gun (Lv 5) + Swift Boots</div>
+                  <div className="text-slate-300 text-[10px] mt-1">Lightning leaps reliably, reaches farther, and forks through clustered enemies.</div>
                 </div>
               </div>
             </div>
