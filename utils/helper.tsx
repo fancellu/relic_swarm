@@ -175,6 +175,9 @@ const ACTION_KEYS: Record<string, InputAction> = {
   Escape: 'cancel',
 };
 
+const getKeyboardAction = (key: string): InputAction | undefined =>
+  ACTION_KEYS[key.length === 1 ? key.toLowerCase() : key];
+
 /**
  * Initializes all input actions to a default 'false' state.
  */
@@ -229,7 +232,7 @@ export const useInput = (
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      const action = ACTION_KEYS[event.key];
+      const action = getKeyboardAction(event.key);
       if (!action) return;
       if (
         ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(
@@ -242,7 +245,7 @@ export const useInput = (
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      const action = ACTION_KEYS[event.key];
+      const action = getKeyboardAction(event.key);
       if (!action) return;
       inputRef.current.actions[action] = false;
     };

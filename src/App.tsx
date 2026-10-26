@@ -1063,7 +1063,7 @@ export default function App() {
 
   useEffect(() => {
     const keyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Shift' || event.key === 'Control') keyboardSprintRef.current = true;
+      keyboardSprintRef.current = event.shiftKey || event.ctrlKey;
       if (isHowToPlayOpen) {
         if (event.key === 'Escape' || event.key === 'h' || event.key === 'H' || event.key === 'Enter') {
           event.preventDefault();
@@ -1370,13 +1370,23 @@ export default function App() {
       }
     };
     const keyUp = (event: KeyboardEvent) => {
-      if (event.key === 'Shift' || event.key === 'Control') keyboardSprintRef.current = false;
+      keyboardSprintRef.current = event.shiftKey || event.ctrlKey;
+    };
+    const clearKeyboardSprint = () => {
+      keyboardSprintRef.current = false;
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') clearKeyboardSprint();
     };
     window.addEventListener('keydown', keyDown);
     window.addEventListener('keyup', keyUp);
+    window.addEventListener('blur', clearKeyboardSprint);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       window.removeEventListener('keydown', keyDown);
       window.removeEventListener('keyup', keyUp);
+      window.removeEventListener('blur', clearKeyboardSprint);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [
     buyCatalyst,
