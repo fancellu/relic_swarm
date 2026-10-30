@@ -306,6 +306,7 @@ export default function App() {
     setIsInventoryOpen(false);
     setIsMerchantOpen(false);
     setIsLevelUpOpen(false);
+    isStageClearOpenRef.current = false;
     setIsStageClearOpen(false);
     setChestReward(null);
     setOverdriveDisplay(0);
@@ -334,6 +335,7 @@ export default function App() {
     sim.totalRunTimer = 0;
     simRef.current = sim;
     runBankedRef.current = false;
+    isStageClearOpenRef.current = false;
     setIsStageClearOpen(false);
     setSelectedHeroIndex(heroIndex);
     setActiveObjective(null);
@@ -531,6 +533,15 @@ export default function App() {
     gameAudio.playCrispClick();
   }, []);
   const handleDescendNextStage = useCallback(() => {
+    isStageClearOpenRef.current = false;
+    setIsStageClearOpen(false);
+    navCooldownRef.current = 0.5;
+    lastGpConfirmRef.current = true;
+    lastGpCancelRef.current = true;
+    lastKeyboardCancelRef.current = true;
+    stageClearFocusIndexRef.current = 0;
+    setStageClearFocusIndex(0);
+
     const sim = simRef.current;
     const weaponId = selectedCarryWeaponIdRef.current || sim.weapons[0]?.id || sim.hero.startingWeapon;
     const {refundGold, nextStage} = levelManager.advanceToNextStage(sim, weaponId);
@@ -543,10 +554,8 @@ export default function App() {
     setMaxStaminaDisplay(sim.maxStamina);
     setXpDisplay(sim.xp);
     setNextLevelXpDisplay(sim.nextXp);
-    setGameState((state) => ({...state, level: 1}));
-
-    setIsStageClearOpen(false);
-    navCooldownRef.current = 0.4;
+    gameStateRef.current = {...gameStateRef.current, level: 1, timer: 0, status: 'PLAYING'};
+    setGameState((state) => ({...state, level: 1, timer: 0, status: 'PLAYING'}));
 
     const theme = levelManager.getModifiers(nextStage).theme;
     gameAudio.playPowerupChime();
@@ -554,11 +563,15 @@ export default function App() {
   }, [spawnDamageNumber, syncEquipment]);
 
   const handleClaimVictory = useCallback(() => {
+    isStageClearOpenRef.current = false;
     setIsStageClearOpen(false);
     bankRunGold();
     endScreenFocusIndexRef.current = 0;
     setEndScreenFocusIndex(0);
     navCooldownRef.current = 0.5;
+    lastGpConfirmRef.current = true;
+    lastGpCancelRef.current = true;
+    lastKeyboardCancelRef.current = true;
     gameStateRef.current = {...gameStateRef.current, status: 'VICTORY'};
     setGameState((state) => ({...state, status: 'VICTORY'}));
   }, [bankRunGold]);
@@ -760,7 +773,7 @@ export default function App() {
       return;
     }
 
-    if (isStageClearOpen) {
+    if (isStageClearOpenRef.current) {
       const weapons = simRef.current.weapons;
       const weaponCount = weapons.length;
       const descendIndex = weaponCount;
@@ -771,14 +784,21 @@ export default function App() {
         stageClearFocusIndexRef.current = (stageClearFocusIndexRef.current + totalFocusable - 1) % totalFocusable;
         setStageClearFocusIndex(stageClearFocusIndexRef.current);
         navCooldownRef.current = 0.2;
+        gameAudio.playCrispClick();
       } else if (navCooldownRef.current <= 0 && (navDown || navRight)) {
         stageClearFocusIndexRef.current = (stageClearFocusIndexRef.current + 1) % totalFocusable;
         setStageClearFocusIndex(stageClearFocusIndexRef.current);
         navCooldownRef.current = 0.2;
+        gameAudio.playCrispClick();
       } else if (confirmJustPressed) {
         const idx = stageClearFocusIndexRef.current;
         if (idx < weaponCount) {
-          setSelectedCarryWeaponId(weapons[idx].id);
+          const wId = weapons[idx].id;
+          setSelectedCarryWeaponId(wId);
+          selectedCarryWeaponIdRef.current = wId;
+          stageClearFocusIndexRef.current = descendIndex;
+          setStageClearFocusIndex(descendIndex);
+          gameAudio.playCrispClick();
         } else if (idx === descendIndex) {
           handleDescendNextStage();
         } else if (idx === victoryIndex) {
@@ -907,11 +927,17 @@ export default function App() {
       () => {
         bossDefeated = true;
         const currentWeapons = simRef.current.weapons;
-        setSelectedCarryWeaponId(currentWeapons[0]?.id || simRef.current.hero.startingWeapon);
+        const defaultWep = currentWeapons[0]?.id || simRef.current.hero.startingWeapon;
+        setSelectedCarryWeaponId(defaultWep);
+        selectedCarryWeaponIdRef.current = defaultWep;
         stageClearFocusIndexRef.current = currentWeapons.length; // Default focus to Descend button
         setStageClearFocusIndex(currentWeapons.length);
+        isStageClearOpenRef.current = true;
         setIsStageClearOpen(true);
         navCooldownRef.current = 0.5;
+        lastGpConfirmRef.current = true;
+        lastGpCancelRef.current = true;
+        lastKeyboardCancelRef.current = true;
       },
       () => setCurrentHp(Math.round(sim.hp)),
     );
@@ -1098,6 +1124,8 @@ export default function App() {
     chestReward,
     claimChestReward,
     extractEssence,
+    handleClaimVictory,
+    handleDescendNextStage,
     initGame,
     isHowToPlayOpen,
     isInventoryOpen,
@@ -1105,9 +1133,11 @@ export default function App() {
     isMerchantOpen,
     isPauseOpen,
     isSanctumOpen,
+    isStageClearOpen,
     openInventory,
     openSanctum,
     reroll,
+    selectedCarryWeaponId,
     selectUpgrade,
     sellItem,
     spawnDamageNumber,
@@ -1303,7 +1333,7 @@ export default function App() {
         }
         return;
       }
-      if (isStageClearOpen) {
+      if (isStageClearOpenRef.current) {
         const weapons = simRef.current.weapons;
         const weaponCount = weapons.length;
         const descendIndex = weaponCount;
@@ -1314,9 +1344,12 @@ export default function App() {
           const num = Number(event.key);
           if (num <= weaponCount) {
             event.preventDefault();
-            setSelectedCarryWeaponId(weapons[num - 1].id);
-            stageClearFocusIndexRef.current = num - 1;
-            setStageClearFocusIndex(num - 1);
+            const wId = weapons[num - 1].id;
+            setSelectedCarryWeaponId(wId);
+            selectedCarryWeaponIdRef.current = wId;
+            stageClearFocusIndexRef.current = descendIndex;
+            setStageClearFocusIndex(descendIndex);
+            gameAudio.playCrispClick();
             return;
           }
         }
@@ -1324,19 +1357,26 @@ export default function App() {
           event.preventDefault();
           stageClearFocusIndexRef.current = (stageClearFocusIndexRef.current + total - 1) % total;
           setStageClearFocusIndex(stageClearFocusIndexRef.current);
+          gameAudio.playCrispClick();
           return;
         }
         if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S' || event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') {
           event.preventDefault();
           stageClearFocusIndexRef.current = (stageClearFocusIndexRef.current + 1) % total;
           setStageClearFocusIndex(stageClearFocusIndexRef.current);
+          gameAudio.playCrispClick();
           return;
         }
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
           const idx = stageClearFocusIndexRef.current;
           if (idx < weaponCount) {
-            setSelectedCarryWeaponId(weapons[idx].id);
+            const wId = weapons[idx].id;
+            setSelectedCarryWeaponId(wId);
+            selectedCarryWeaponIdRef.current = wId;
+            stageClearFocusIndexRef.current = descendIndex;
+            setStageClearFocusIndex(descendIndex);
+            gameAudio.playCrispClick();
           } else if (idx === descendIndex) {
             handleDescendNextStage();
           } else if (idx === victoryIndex) {
@@ -1528,6 +1568,8 @@ export default function App() {
     chestReward,
     claimChestReward,
     extractEssence,
+    handleClaimVictory,
+    handleDescendNextStage,
     initGame,
     isHowToPlayOpen,
     isInventoryOpen,
@@ -1535,6 +1577,7 @@ export default function App() {
     isMerchantOpen,
     isPauseOpen,
     isSanctumOpen,
+    isStageClearOpen,
     openInventory,
     openSanctum,
     reroll,

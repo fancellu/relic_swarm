@@ -117,7 +117,7 @@ export const StageClearModal: React.FC<StageClearModalProps> = ({
                   type="button"
                   onClick={() => {
                     onSelectWeapon(weapon.id);
-                    onSelectFocusIndex(idx);
+                    onSelectFocusIndex(descendButtonIndex);
                   }}
                   onPointerEnter={() => onSelectFocusIndex(idx)}
                   className={`p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
