@@ -445,18 +445,22 @@ export default function App() {
       gameAudio.playErrorBuzz();
       return;
     }
-    const upgradeable = sim.weapons.find((w) => {
+    // Non-evolved / non-fused weapons can increase level without limit
+    const nonEvolvedWeapons = sim.weapons.filter((w) => {
       const def = ITEM_DEFS[w.id];
-      return def && !def.isEvolution && w.level < def.maxLevel;
+      return def && !def.isEvolution && !def.isFusion;
     });
 
     sim.gold -= 175;
     setRunGold(sim.gold);
 
-    if (upgradeable) {
+    if (nonEvolvedWeapons.length > 0) {
+      // Prioritize lowest level non-evolved weapon first so weapons level up evenly
+      nonEvolvedWeapons.sort((a, b) => a.level - b.level);
+      const upgradeable = nonEvolvedWeapons[0];
       upgradeable.level += 1;
       const def = ITEM_DEFS[upgradeable.id];
-      spawnDamageNumber(sim.x, sim.y, `${def?.name || upgradeable.id} UPGRADED TO L${upgradeable.level}!`, '#38bdf8');
+      spawnDamageNumber(sim.x, sim.y, `${def?.name || upgradeable.id} TEMPERED TO L${upgradeable.level}!`, '#38bdf8');
     } else {
       sim.bonusMaxHp = (sim.bonusMaxHp || 0) + 50;
       sim.hp = Math.min(sim.maxHp + 50, sim.hp + 50);

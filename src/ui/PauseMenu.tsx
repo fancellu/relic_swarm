@@ -429,7 +429,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                   </div>
                   <div className="text-[10px] text-amber-300/90 bg-amber-950/30 p-1.5 rounded border border-amber-900/30 leading-tight">
                     • <span className="text-white font-bold">60s Overdrive (100g):</span> +40% Might, +25% CDR, +20% Speed.<br />
-                    • <span className="text-white font-bold">Blacksmith Tempering (175g):</span> +1 Weapon Level.<br />
+                    • <span className="text-white font-bold">Blacksmith Tempering (175g):</span> +1 Non-evolved Weapon Level (unlimited scaling), or +50 Max HP.<br />
                     • <span className="text-white font-bold">Fusion Catalyst (250g):</span> Wildcard fusion synthesis!
                   </div>
                 </div>

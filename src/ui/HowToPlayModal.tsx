@@ -84,7 +84,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({isOpen, onClose, 
             <div>• <span className="text-amber-300 font-bold">Mid-Run Pivoting</span>: Open Inventory with <span className="text-amber-300 font-bold">[Tab / I / Gamepad Y]</span> to sell equipped items for a 70% gold refund to alter your build on the fly.</div>
             <div>• <span className="text-emerald-300 font-bold">Relic Forging (Essence Extraction)</span>: Maxed Level 5 items offer sacrificial extraction (0g refund) — permanently granting 20% of their stats for the run while freeing the item slot!</div>
             <div>• <span className="text-yellow-300 font-bold">Wealth Scaling</span>: <span className="text-yellow-200 font-bold">Gilded Chakram</span> and evolved <span className="text-yellow-200 font-bold">Midas' Wrath</span> deal +1% damage per 50 unbanked gold held in your pouch.</div>
-            <div>• <span className="text-amber-200 font-bold">Wandering Black Market</span>: A smuggler cart arrives every 3 minutes. Touch the cart to buy Overdrive Infusion (+40% Might, +25% CDR, +20% Speed for 60s), Blacksmith's Tempering (+1 weapon level or +50 Max HP), or Arcane Fusion Catalysts!</div>
+            <div>• <span className="text-amber-200 font-bold">Wandering Black Market</span>: A smuggler cart arrives every 3 minutes. Touch the cart to buy Overdrive Infusion (+40% Might, +25% CDR, +20% Speed for 60s), Blacksmith's Tempering (+1 non-evolved weapon level without limit, or +50 Max HP), or Arcane Fusion Catalysts!</div>
           </div>
 
           <div className="bg-slate-950/70 p-2.5 rounded-xl border border-purple-900/60 bg-purple-950/20">

@@ -137,7 +137,7 @@ export const MerchantModal: React.FC<MerchantModalProps> = ({
                   <span>Blacksmith's Tempering</span>
                 </div>
                 <div className="text-[10px] text-slate-400 mt-0.5">
-                  Force-upgrade an equipped non-max weapon by +1 Level immediately!
+                  Upgrade an equipped non-evolved weapon by +1 Level (no level cap), or +50 Max HP if all are evolved!
                 </div>
               </div>
             </div>

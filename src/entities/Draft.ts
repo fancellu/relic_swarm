@@ -144,7 +144,8 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
     if (item.type === 'WEAPON' && !item.isEvolution) {
       const equipped = sim.weapons.find((w) => w.id === item.id);
       if (equipped) {
-        if (equipped.level < item.maxLevel) pool.push(item);
+        // Non-evolved / non-fused weapons can increase level without limit
+        pool.push(item);
       } else if (sim.weapons.length < 4) {
         pool.push(item);
       }

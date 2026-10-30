@@ -112,7 +112,7 @@ When a weapon or passive achieves its maximum rank (Level 5 or Awakened form), y
 ### 🎪 Wandering Black Market Bazaar
 A Smuggler Merchant Cart arrives every 3 minutes (180s, 360s, 540s...) near the player. Step into the cart's proximity circle to open the bazaar:
 - **Overdrive Infusion (100g)**: 60-second combat surge granting +40% Might, +25% Cooldown Reduction, and +20% Movement Speed with golden ember trail effects.
-- **Blacksmith's Tempering (175g)**: Upgrades an un-maxed weapon by +1 Level, or grants +50 Max HP and a complete restore if all current weapons are fully maxed.
+- **Blacksmith's Tempering (175g)**: Upgrades an equipped non-evolved weapon by +1 Level without limit (prioritizing lowest level), or grants +50 Max HP and a complete restore if all current weapons are fully evolved/fused.
 - **Arcane Fusion Catalyst (250g)**: Instantly fuses any currently compatible weapon pair in your loadout, or primes a wildcard catalyst token that guarantees an immediate fusion on your next level-up draft.
 
 ## 🏛️ Arena Objectives & Spatial Mechanics
