@@ -20,11 +20,11 @@ export interface LevelModifiers {
 }
 
 export const STAGE_THEMES: StageTheme[] = [
-  {name: 'GOTHIC SANCTUM', bg: '#0a0814', grid: '#1a162b', border: '#e11d48'},
-  {name: 'BLOOD CATACOMBS', bg: '#14080c', grid: '#2b141d', border: '#f97316'},
-  {name: 'GLACIAL ABYSS', bg: '#071318', grid: '#122932', border: '#06b6d4'},
-  {name: 'BLIGHTED NECROPOLIS', bg: '#09140b', grid: '#162b1a', border: '#22c55e'},
-  {name: 'ASTRAL VOID', bg: '#12081c', grid: '#261438', border: '#a855f7'},
+  {name: 'Gothic Sanctum', bg: '#0a0814', grid: '#1a162b', border: '#e11d48'},
+  {name: 'Blood Catacombs', bg: '#14080c', grid: '#2b141d', border: '#f97316'},
+  {name: 'Glacial Abyss', bg: '#071318', grid: '#122932', border: '#06b6d4'},
+  {name: 'Blighted Necropolis', bg: '#09140b', grid: '#162b1a', border: '#22c55e'},
+  {name: 'Astral Void', bg: '#12081c', grid: '#261438', border: '#a855f7'},
 ];
 
 export class LevelManager {
@@ -64,7 +64,13 @@ export class LevelManager {
   public advanceToNextStage(
     sim: SimulationState,
     chosenWeaponId: string,
-  ): {refundGold: number; carriedWeaponId: string; nextStage: number} {
+  ): {
+    refundGold: number;
+    carriedWeaponId: string;
+    carriedWeaponLevel: number;
+    reducedLevels: number;
+    nextStage: number;
+  } {
     this.stage += 1;
     sim.stage = this.stage;
 
@@ -73,20 +79,33 @@ export class LevelManager {
       sim.weapons.find((w) => w.id === chosenWeaponId) ||
       sim.weapons[0] || {id: sim.hero.startingWeapon, level: 1};
 
-    // 2. Auto-refund 70% gold for unchosen weapons and passives
-    let refundGold = 0;
+    // 2. Cap carried weapon level to stage * 5 (e.g., Stage 2 caps at L10) to preserve challenge
+    const maxCarriedLevel = this.stage * 5;
+    const def = ITEM_DEFS[carriedWeapon.id];
+    let effectiveCarriedLevel = carriedWeapon.level;
+    let levelReductionRefund = 0;
+    let reducedLevels = 0;
+
+    if (!def?.isEvolution && !def?.isFusion && carriedWeapon.level > maxCarriedLevel) {
+      reducedLevels = carriedWeapon.level - maxCarriedLevel;
+      effectiveCarriedLevel = maxCarriedLevel;
+      levelReductionRefund = Math.round(reducedLevels * (def?.cost || 50) * 0.7);
+    }
+
+    // 3. Auto-refund 70% gold for unchosen weapons, passives, and excess levels
+    let refundGold = levelReductionRefund;
     for (let i = 0; i < sim.weapons.length; i++) {
       const w = sim.weapons[i];
       if (w.id !== carriedWeapon.id) {
-        const def = ITEM_DEFS[w.id];
-        const val = Math.round((def?.cost || 50) * w.level * 0.7);
+        const itemDef = ITEM_DEFS[w.id];
+        const val = Math.round((itemDef?.cost || 50) * w.level * 0.7);
         refundGold += val;
       }
     }
     for (let i = 0; i < sim.passives.length; i++) {
       const p = sim.passives[i];
-      const def = ITEM_DEFS[p.id];
-      const val = Math.round((def?.cost || 40) * p.level * 0.7);
+      const itemDef = ITEM_DEFS[p.id];
+      const val = Math.round((itemDef?.cost || 40) * p.level * 0.7);
       refundGold += val;
     }
     sim.gold += refundGold;
@@ -124,8 +143,8 @@ export class LevelManager {
     sim.xp = 0;
     sim.nextXp = 10;
 
-    // 6. Set weapons to only the carried weapon, and restore hero's innate starting passive
-    sim.weapons = [{id: carriedWeapon.id, level: carriedWeapon.level}];
+    // 6. Set weapons to only the carried weapon at effective level, and restore hero's innate starting passive
+    sim.weapons = [{id: carriedWeapon.id, level: effectiveCarriedLevel}];
     sim.passives = sim.hero.startingPassive
       ? [{id: sim.hero.startingPassive, level: 1}]
       : [];
@@ -138,6 +157,8 @@ export class LevelManager {
     return {
       refundGold,
       carriedWeaponId: carriedWeapon.id,
+      carriedWeaponLevel: effectiveCarriedLevel,
+      reducedLevels,
       nextStage: this.stage,
     };
   }

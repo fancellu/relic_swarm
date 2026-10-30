@@ -93,7 +93,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({isOpen, onClose, 
               <span>Endless Realms & Intermission Carry-Over</span>
             </div>
             <div>• <span className="text-purple-300 font-bold">Endless Descent</span>: Slaying the Abyssal Titan completes the current stage and triggers an Intermission rather than abruptly ending your run!</div>
-            <div>• <span className="text-amber-300 font-bold">Weapon Carry-Over</span>: Choose 1 equipped weapon (retaining its Level, Evolution, or Fusion) to carry into the next realm. Unchosen gear is auto-liquidated for 70% gold into your pouch.</div>
+            <div>• <span className="text-amber-300 font-bold">Weapon Carry-Over & Stage Cap</span>: Choose 1 equipped weapon (retaining its Level, Evolution, or Fusion) to carry into the next realm. Carried non-evolved weapons cap at Stage × 5 (e.g. Stage 2 caps at Lv. 10), and all excess levels plus unchosen gear auto-liquidate for 70% gold refund into your pouch.</div>
             <div>• <span className="text-rose-300 font-bold">Realm Scaling</span>: Each stage compounds Enemy HP (+10%) & Damage (+10%), while boosting Hero Speed (+10%) and escalating Titan bullet-hell attacks!</div>
           </div>
         </div>

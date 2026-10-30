@@ -2,6 +2,7 @@ import {Coins, Heart, Menu, Skull, Sparkles, Sword, Zap} from 'lucide-react';
 import React from 'react';
 import {EquippedItem} from '../types/entities';
 import {ITEM_DEFS} from '../types/items';
+import {STAGE_THEMES} from '../core/LevelManager';
 import {clamp, formatTime} from '../../utils/helper';
 
 export interface HUDProps {
@@ -11,6 +12,7 @@ export interface HUDProps {
   maxStaminaDisplay: number;
   level: number;
   stage?: number;
+  stageName?: string;
   timer: number;
   killCount: number;
   runGold: number;
@@ -43,6 +45,7 @@ export const HUD: React.FC<HUDProps> = ({
   maxStaminaDisplay,
   level,
   stage = 1,
+  stageName,
   timer,
   killCount,
   runGold,
@@ -90,9 +93,12 @@ export const HUD: React.FC<HUDProps> = ({
             <Sparkles size={14} />
             <span>Lv. {level}</span>
           </div>
-          <div className="flex items-center gap-1 text-purple-300 font-bold bg-purple-950/70 px-2 py-0.5 rounded border border-purple-700/50 shadow-sm">
-            <Skull size={13} className="text-purple-400" />
-            <span>Stage {stage}</span>
+          <div className="flex items-center gap-1.5 text-purple-300 font-bold bg-purple-950/70 px-2.5 py-0.5 rounded border border-purple-700/50 shadow-sm text-xs">
+            <Skull size={13} className="text-purple-400 shrink-0" />
+            <span>Stage {stage}:</span>
+            <span className="text-purple-200 tracking-wide font-black truncate max-w-[120px] sm:max-w-none">
+              {stageName || STAGE_THEMES[(stage - 1) % STAGE_THEMES.length]?.name || 'Gothic Sanctum'}
+            </span>
           </div>
         </div>
 

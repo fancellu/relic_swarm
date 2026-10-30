@@ -2,6 +2,7 @@ import {Check, ChevronRight, Coins, Flame, Skull, Sparkles, Trophy, Zap} from 'l
 import React, {useMemo} from 'react';
 import {EquippedItem} from '../types/entities';
 import {ITEM_DEFS} from '../types/items';
+import {STAGE_THEMES} from '../core/LevelManager';
 import {MenuOverlay} from '../../utils/helper';
 
 export interface StageClearModalProps {
@@ -33,13 +34,19 @@ export const StageClearModal: React.FC<StageClearModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  // Calculate auto-liquidation refund gold for all unchosen items
+  const nextStage = stage + 1;
+  const maxCarriedLevel = nextStage * 5;
+
+  // Calculate auto-liquidation refund gold for all unchosen items and capped levels
   const autoRefundGold = useMemo(() => {
     let refund = 0;
     for (const w of equippedWeapons) {
+      const def = ITEM_DEFS[w.id];
       if (w.id !== selectedWeaponId) {
-        const def = ITEM_DEFS[w.id];
         refund += Math.round((def?.cost || 50) * w.level * 0.7);
+      } else if (!def?.isEvolution && !def?.isFusion && w.level > maxCarriedLevel) {
+        const excess = w.level - maxCarriedLevel;
+        refund += Math.round(excess * (def?.cost || 50) * 0.7);
       }
     }
     for (const p of equippedPassives) {
@@ -47,11 +54,12 @@ export const StageClearModal: React.FC<StageClearModalProps> = ({
       refund += Math.round((def?.cost || 40) * p.level * 0.7);
     }
     return refund;
-  }, [equippedWeapons, equippedPassives, selectedWeaponId]);
+  }, [equippedWeapons, equippedPassives, selectedWeaponId, maxCarriedLevel]);
 
   const weaponCount = equippedWeapons.length;
   const descendButtonIndex = weaponCount;
   const victoryButtonIndex = weaponCount + 1;
+  const nextStageTheme = STAGE_THEMES[stage % STAGE_THEMES.length]?.name || 'Next Realm';
 
   return (
     <MenuOverlay tone="victory" zIndex={50}>
@@ -101,8 +109,13 @@ export const StageClearModal: React.FC<StageClearModalProps> = ({
               const isSelected = weapon.id === selectedWeaponId;
               const isFocused = focusIndex === idx;
 
-              let badgeText = `Lv. ${weapon.level}`;
-              let badgeColor = 'bg-slate-800 text-slate-300 border-slate-700';
+              const isOverCap = !def?.isEvolution && !def?.isFusion && weapon.level > maxCarriedLevel;
+              let badgeText = isOverCap
+                ? `Lv. ${weapon.level} ➔ ${maxCarriedLevel}`
+                : `Lv. ${weapon.level}`;
+              let badgeColor = isOverCap
+                ? 'bg-amber-950 text-amber-300 border-amber-500'
+                : 'bg-slate-800 text-slate-300 border-slate-700';
               if (def?.isFusion) {
                 badgeText = 'FUSION';
                 badgeColor = 'bg-amber-950 text-amber-300 border-amber-500';
@@ -150,6 +163,11 @@ export const StageClearModal: React.FC<StageClearModalProps> = ({
                       <div className="text-[10px] text-slate-400 truncate mt-0.5">
                         {def?.desc || 'Equipped combat weapon'}
                       </div>
+                      {isOverCap && (
+                        <div className="text-[9px] text-amber-300 font-medium mt-0.5">
+                          Stage {nextStage} Cap: Lv. {maxCarriedLevel} (+{Math.round((weapon.level - maxCarriedLevel) * (def?.cost || 50) * 0.7)}g refund)
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -169,7 +187,7 @@ export const StageClearModal: React.FC<StageClearModalProps> = ({
 
           {/* Liquidation Notice */}
           <div className="text-[11px] text-amber-400/90 bg-amber-950/30 border border-amber-900/50 rounded-lg px-2.5 py-1.5 mt-1 flex items-center justify-between">
-            <span>Unchosen weapons & passives will be liquidated:</span>
+            <span>Unchosen gear & excess levels liquidated:</span>
             <span className="font-bold font-mono">+{autoRefundGold}g refund</span>
           </div>
         </div>
@@ -186,7 +204,7 @@ export const StageClearModal: React.FC<StageClearModalProps> = ({
                 ? 'bg-gradient-to-r from-amber-500 via-rose-500 to-amber-400 text-slate-950 ring-4 ring-amber-300 ring-offset-2 ring-offset-[#0c0a1a] scale-[1.02] shadow-xl shadow-amber-950'
                 : 'bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 text-white shadow-lg'
             }`}>
-            <span>DESCEND TO STAGE {stage + 1}</span>
+            <span>DESCEND TO STAGE {stage + 1}: {nextStageTheme.toUpperCase()}</span>
             <ChevronRight size={18} />
             <span className="text-xs font-mono opacity-80">[Enter / A]</span>
           </button>

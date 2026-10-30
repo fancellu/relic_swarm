@@ -1,6 +1,7 @@
 import {Coins, RotateCw, Skull, Trophy} from 'lucide-react';
 import React from 'react';
 import {formatTime, MenuOverlay} from '../../utils/helper';
+import {STAGE_THEMES} from '../core/LevelManager';
 
 export interface EndGameModalProps {
   status: 'GAME_OVER' | 'VICTORY' | string;
@@ -67,6 +68,7 @@ export const EndGameModal: React.FC<EndGameModalProps> = ({
             <div>
               <div className="text-slate-400 text-[10px]">Realm Reached</div>
               <div className="font-bold text-purple-300 text-sm">Stage {stage}</div>
+              <div className="text-[10px] text-purple-400 font-medium truncate max-w-[90px]">{STAGE_THEMES[(stage - 1) % STAGE_THEMES.length]?.name || 'Gothic Sanctum'}</div>
             </div>
             <div className="border-r border-slate-800" />
             <div>

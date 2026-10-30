@@ -548,7 +548,7 @@ export default function App() {
 
     const sim = simRef.current;
     const weaponId = selectedCarryWeaponIdRef.current || sim.weapons[0]?.id || sim.hero.startingWeapon;
-    const {refundGold, nextStage} = levelManager.advanceToNextStage(sim, weaponId);
+    const {refundGold, carriedWeaponLevel, reducedLevels, nextStage} = levelManager.advanceToNextStage(sim, weaponId);
 
     syncEquipment();
     setRunGold(sim.gold);
@@ -563,6 +563,9 @@ export default function App() {
 
     const theme = levelManager.getModifiers(nextStage).theme;
     gameAudio.playPowerupChime();
+    if (reducedLevels > 0) {
+      spawnDamageNumber(0, -90, `STAGE CAP: L${carriedWeaponLevel} (+refund gold)`, '#38bdf8');
+    }
     spawnDamageNumber(0, -60, `STAGE ${nextStage}: ${theme.name}`, '#facc15');
   }, [spawnDamageNumber, syncEquipment]);
 
@@ -1609,6 +1612,7 @@ export default function App() {
         maxStaminaDisplay={maxStaminaDisplay}
         level={gameState.level}
         stage={simRef.current.stage || 1}
+        stageName={levelManager.getModifiers(simRef.current.stage || 1).theme.name}
         timer={gameState.timer || 0}
         killCount={killCount}
         runGold={runGold}

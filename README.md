@@ -140,7 +140,7 @@ Combat in Relic Swarm moves beyond passive circle-kiting with interactive dynami
 
 Runs in Relic Swarm no longer abruptly terminate upon defeating the Abyssal Titan:
 - **Stage Clear Intermission**: Defeating the Titan boss completes the current realm and presents the **Stage Clear Intermission** modal (`StageClearModal`).
-- **Weapon Carry-Over**: The player selects **1 equipped weapon** from their current loadout (preserving its level, Awakened Evolution, or Fusion state) to anchor their build in the next realm. Unchosen weapons and passives automatically auto-liquidate for **70% gold value** directly into your carried gold pouch.
+- **Weapon Carry-Over & Stage Level Cap**: The player selects **1 equipped weapon** from their current loadout (preserving its level, Awakened Evolution, or Fusion state) to anchor their build in the next realm. To keep the challenge balanced and fun, carried non-evolved weapons are capped at $\text{Stage} \times 5$ (e.g. Stage 2 caps at Level 10, Stage 3 at Level 15). Unchosen weapons, passives, and excess levels automatically liquidate for **70% gold value** directly into your carried gold pouch.
 - **Stage Scaling**: Each subsequent realm increases **Enemy HP by +10% (compound)**, **Enemy Damage by +10% (compound)**, and **Hero Movement Speed by +10% (additive)**. The Abyssal Titan escalates with higher radial bullet-hell orb densities ($min(16, 8 + (S - 1) 	imes 2)$).
 - **Dynamic Themed Arenas**: Canvas 2D arena floor, grid lines, and perimeter borders transition through 5 distinct themes:
   1. *Gothic Sanctum* (Deep violet / crimson border)
