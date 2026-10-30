@@ -42,7 +42,8 @@ export function calculateDerivedStats(
   // Speed
   const metaSpeedMult = 1 + (meta.speed || 0) * (META_UPGRADES.speed.bonusPerLevel / 100);
   const baseSpeedVal = (getConfig('playerBaseSpeed') as number) || 220;
-  const speed = baseSpeedVal * hero.baseSpeed * metaSpeedMult * (1 + bootsLevel * 0.12 + (sim.bonusSpeed || 0));
+  const stageSpeedMult = 1 + 0.10 * Math.max(0, (sim.stage || 1) - 1);
+  const speed = baseSpeedVal * hero.baseSpeed * metaSpeedMult * stageSpeedMult * (1 + bootsLevel * 0.12 + (sim.bonusSpeed || 0));
 
   // CDR (Cooldown Reduction)
   const metaCdr = (meta.haste || 0) * (META_UPGRADES.haste.bonusPerLevel / 100);

@@ -5,6 +5,8 @@ import {formatTime, MenuOverlay} from '../../utils/helper';
 export interface EndGameModalProps {
   status: 'GAME_OVER' | 'VICTORY' | string;
   timer: number;
+  totalRunTimer?: number;
+  stage?: number;
   killCount: number;
   level: number;
   score: number;
@@ -19,6 +21,8 @@ export interface EndGameModalProps {
 export const EndGameModal: React.FC<EndGameModalProps> = ({
   status,
   timer,
+  totalRunTimer,
+  stage = 1,
   killCount,
   level,
   score,
@@ -61,8 +65,13 @@ export const EndGameModal: React.FC<EndGameModalProps> = ({
 
           <div className="w-full bg-black/60 p-3 rounded-xl border border-red-950 text-xs text-slate-300 flex justify-around">
             <div>
-              <div className="text-slate-400 text-[10px]">Survival Time</div>
-              <div className="font-bold text-slate-100 text-sm">{formatTime(timer || 0)}</div>
+              <div className="text-slate-400 text-[10px]">Realm Reached</div>
+              <div className="font-bold text-purple-300 text-sm">Stage {stage}</div>
+            </div>
+            <div className="border-r border-slate-800" />
+            <div>
+              <div className="text-slate-400 text-[10px]">Total Time</div>
+              <div className="font-bold text-slate-100 text-sm">{formatTime(totalRunTimer || timer || 0)}</div>
             </div>
             <div className="border-r border-slate-800" />
             <div>
@@ -71,7 +80,7 @@ export const EndGameModal: React.FC<EndGameModalProps> = ({
             </div>
             <div className="border-r border-slate-800" />
             <div>
-              <div className="text-slate-400 text-[10px]">Final Level</div>
+              <div className="text-slate-400 text-[10px]">Character</div>
               <div className="font-bold text-sky-400 text-sm">Lv. {level}</div>
             </div>
           </div>
@@ -134,13 +143,13 @@ export const EndGameModal: React.FC<EndGameModalProps> = ({
 
         <div className="w-full bg-black/60 p-3 rounded-xl border border-emerald-950 text-xs text-slate-300 flex justify-around">
           <div>
-            <div className="text-slate-400 text-[10px]">Final Score</div>
-            <div className="font-bold text-emerald-400 text-sm">{score}</div>
+            <div className="text-slate-400 text-[10px]">Stages Cleared</div>
+            <div className="font-bold text-amber-300 text-sm">{stage} Cleared</div>
           </div>
           <div className="border-r border-slate-800" />
           <div>
-            <div className="text-slate-400 text-[10px]">Time</div>
-            <div className="font-bold text-slate-100 text-sm">{formatTime(timer || 0)}</div>
+            <div className="text-slate-400 text-[10px]">Total Time</div>
+            <div className="font-bold text-slate-100 text-sm">{formatTime(totalRunTimer || timer || 0)}</div>
           </div>
           <div className="border-r border-slate-800" />
           <div>

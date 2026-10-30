@@ -38,7 +38,9 @@ import {HUD} from './ui/HUD';
 import {buildInventoryActionList, InventorySheet} from './ui/InventorySheet';
 import {MerchantModal} from './ui/MerchantModal';
 import {PauseMenu} from './ui/PauseMenu';
+import {levelManager} from './core/LevelManager';
 import {SanctumShop} from './ui/SanctumShop';
+import {StageClearModal} from './ui/StageClearModal';
 import {StartScreen} from './ui/StartScreen';
 
 type PauseTab = 'STATS' | 'GRIMOIRE' | 'MENU';
@@ -79,6 +81,8 @@ function createSimulation(heroIndex = 0): SimulationState {
     screenShake: 0,
     spawnTimer: 0,
     runTimer: 0,
+    totalRunTimer: 0,
+    stage: 1,
     kills: 0,
     gold: 0,
     nextEnemyId: 1,
@@ -158,6 +162,15 @@ export default function App() {
   const [sanctumFocusIndex, setSanctumFocusIndex] = useState(0);
   const [inventoryFocusIndex, setInventoryFocusIndex] = useState(0);
   const [merchantFocusIndex, setMerchantFocusIndex] = useState(0);
+  const [isStageClearOpen, setIsStageClearOpen] = useState(false);
+  const isStageClearOpenRef = useRef(false);
+  isStageClearOpenRef.current = isStageClearOpen;
+  const [stageClearFocusIndex, setStageClearFocusIndex] = useState(0);
+  const stageClearFocusIndexRef = useRef(0);
+  stageClearFocusIndexRef.current = stageClearFocusIndex;
+  const [selectedCarryWeaponId, setSelectedCarryWeaponId] = useState<string>('');
+  const selectedCarryWeaponIdRef = useRef('');
+  selectedCarryWeaponIdRef.current = selectedCarryWeaponId;
   const [pauseMenuFocusIndex, setPauseMenuFocusIndex] = useState(0);
   const [endScreenFocusIndex, setEndScreenFocusIndex] = useState(0);
   const [activeObjective, setActiveObjective] = useState<{type: 'OBELISK' | 'BLOOD_TRIAL' | 'MERCHANT'; progress: number} | null>(null);
@@ -293,6 +306,7 @@ export default function App() {
     setIsInventoryOpen(false);
     setIsMerchantOpen(false);
     setIsLevelUpOpen(false);
+    setIsStageClearOpen(false);
     setChestReward(null);
     setOverdriveDisplay(0);
     setExtractedEssences([]);
@@ -315,8 +329,12 @@ export default function App() {
     sim.maxStamina = stats.maxStamina;
     sim.stamina = stats.maxStamina;
     sim.speed = stats.speed;
+    levelManager.reset();
+    sim.stage = 1;
+    sim.totalRunTimer = 0;
     simRef.current = sim;
     runBankedRef.current = false;
+    setIsStageClearOpen(false);
     setSelectedHeroIndex(heroIndex);
     setActiveObjective(null);
     setRunGold(0);
@@ -512,6 +530,39 @@ export default function App() {
     setIsSanctumOpen(true);
     gameAudio.playCrispClick();
   }, []);
+  const handleDescendNextStage = useCallback(() => {
+    const sim = simRef.current;
+    const weaponId = selectedCarryWeaponIdRef.current || sim.weapons[0]?.id || sim.hero.startingWeapon;
+    const {refundGold, nextStage} = levelManager.advanceToNextStage(sim, weaponId);
+
+    syncEquipment();
+    setRunGold(sim.gold);
+    setCurrentHp(sim.hp);
+    setMaxHpDisplay(sim.maxHp);
+    setCurrentStamina(sim.stamina);
+    setMaxStaminaDisplay(sim.maxStamina);
+    setXpDisplay(sim.xp);
+    setNextLevelXpDisplay(sim.nextXp);
+    setGameState((state) => ({...state, level: 1}));
+
+    setIsStageClearOpen(false);
+    navCooldownRef.current = 0.4;
+
+    const theme = levelManager.getModifiers(nextStage).theme;
+    gameAudio.playPowerupChime();
+    spawnDamageNumber(0, -60, `STAGE ${nextStage}: ${theme.name}`, '#facc15');
+  }, [spawnDamageNumber, syncEquipment]);
+
+  const handleClaimVictory = useCallback(() => {
+    setIsStageClearOpen(false);
+    bankRunGold();
+    endScreenFocusIndexRef.current = 0;
+    setEndScreenFocusIndex(0);
+    navCooldownRef.current = 0.5;
+    gameStateRef.current = {...gameStateRef.current, status: 'VICTORY'};
+    setGameState((state) => ({...state, status: 'VICTORY'}));
+  }, [bankRunGold]);
+
   const buyMetaUpgrade = useCallback((upgradeId: string) => {
     const upgrade = META_UPGRADES[upgradeId];
     const level = metaLevelsRef.current[upgradeId] || 0;
@@ -709,6 +760,38 @@ export default function App() {
       return;
     }
 
+    if (isStageClearOpen) {
+      const weapons = simRef.current.weapons;
+      const weaponCount = weapons.length;
+      const descendIndex = weaponCount;
+      const victoryIndex = weaponCount + 1;
+      const totalFocusable = weaponCount + 2;
+
+      if (navCooldownRef.current <= 0 && (navUp || navLeft)) {
+        stageClearFocusIndexRef.current = (stageClearFocusIndexRef.current + totalFocusable - 1) % totalFocusable;
+        setStageClearFocusIndex(stageClearFocusIndexRef.current);
+        navCooldownRef.current = 0.2;
+      } else if (navCooldownRef.current <= 0 && (navDown || navRight)) {
+        stageClearFocusIndexRef.current = (stageClearFocusIndexRef.current + 1) % totalFocusable;
+        setStageClearFocusIndex(stageClearFocusIndexRef.current);
+        navCooldownRef.current = 0.2;
+      } else if (confirmJustPressed) {
+        const idx = stageClearFocusIndexRef.current;
+        if (idx < weaponCount) {
+          setSelectedCarryWeaponId(weapons[idx].id);
+        } else if (idx === descendIndex) {
+          handleDescendNextStage();
+        } else if (idx === victoryIndex) {
+          handleClaimVictory();
+        }
+        navCooldownRef.current = 0.3;
+      } else if (cancelJustPressed) {
+        handleClaimVictory();
+        navCooldownRef.current = 0.3;
+      }
+      return;
+    }
+
     if (isMerchantOpen) {
       const total = 4;
       if (navCooldownRef.current <= 0 && navUp) {
@@ -790,6 +873,7 @@ export default function App() {
     const sim = simRef.current;
     const stats = calculateDerivedStats(sim, metaLevelsRef.current);
     sim.runTimer += dt;
+    sim.totalRunTimer = (sim.totalRunTimer || 0) + dt;
     sim.auraVisualAngle += dt * 3;
     updatePlayerMovement(
       sim,
@@ -822,12 +906,12 @@ export default function App() {
       (score) => setGameState((state) => ({...state, score: state.score + score})),
       () => {
         bossDefeated = true;
-        bankRunGold();
-        endScreenFocusIndexRef.current = 0;
-        setEndScreenFocusIndex(0);
+        const currentWeapons = simRef.current.weapons;
+        setSelectedCarryWeaponId(currentWeapons[0]?.id || simRef.current.hero.startingWeapon);
+        stageClearFocusIndexRef.current = currentWeapons.length; // Default focus to Descend button
+        setStageClearFocusIndex(currentWeapons.length);
+        setIsStageClearOpen(true);
         navCooldownRef.current = 0.5;
-        gameStateRef.current = {...gameStateRef.current, status: 'VICTORY'};
-        setGameState((state) => ({...state, status: 'VICTORY'}));
       },
       () => setCurrentHp(Math.round(sim.hp)),
     );
@@ -1219,6 +1303,55 @@ export default function App() {
         }
         return;
       }
+      if (isStageClearOpen) {
+        const weapons = simRef.current.weapons;
+        const weaponCount = weapons.length;
+        const descendIndex = weaponCount;
+        const victoryIndex = weaponCount + 1;
+        const total = weaponCount + 2;
+
+        if (/^[1-4]$/.test(event.key)) {
+          const num = Number(event.key);
+          if (num <= weaponCount) {
+            event.preventDefault();
+            setSelectedCarryWeaponId(weapons[num - 1].id);
+            stageClearFocusIndexRef.current = num - 1;
+            setStageClearFocusIndex(num - 1);
+            return;
+          }
+        }
+        if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W' || event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') {
+          event.preventDefault();
+          stageClearFocusIndexRef.current = (stageClearFocusIndexRef.current + total - 1) % total;
+          setStageClearFocusIndex(stageClearFocusIndexRef.current);
+          return;
+        }
+        if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S' || event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') {
+          event.preventDefault();
+          stageClearFocusIndexRef.current = (stageClearFocusIndexRef.current + 1) % total;
+          setStageClearFocusIndex(stageClearFocusIndexRef.current);
+          return;
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          const idx = stageClearFocusIndexRef.current;
+          if (idx < weaponCount) {
+            setSelectedCarryWeaponId(weapons[idx].id);
+          } else if (idx === descendIndex) {
+            handleDescendNextStage();
+          } else if (idx === victoryIndex) {
+            handleClaimVictory();
+          }
+          return;
+        }
+        if (event.key === 'Escape' || event.key === 'Backspace') {
+          event.preventDefault();
+          handleClaimVictory();
+          return;
+        }
+        return;
+      }
+
       if (isMerchantOpen) {
         if (
           event.key === 'Escape' ||
@@ -1428,6 +1561,7 @@ export default function App() {
         currentStamina={currentStamina}
         maxStaminaDisplay={maxStaminaDisplay}
         level={gameState.level}
+        stage={simRef.current.stage || 1}
         timer={gameState.timer || 0}
         killCount={killCount}
         runGold={runGold}
@@ -1552,9 +1686,27 @@ export default function App() {
         activeObjective={activeObjective}
         scrollContainerRef={pauseScrollRef}
       />
+      <StageClearModal
+        isOpen={isStageClearOpen}
+        stage={simRef.current.stage || 1}
+        runGold={runGold}
+        equippedWeapons={equippedWeapons}
+        equippedPassives={equippedPassives}
+        selectedWeaponId={selectedCarryWeaponId}
+        onSelectWeapon={setSelectedCarryWeaponId}
+        focusIndex={stageClearFocusIndex}
+        onSelectFocusIndex={(idx) => {
+          stageClearFocusIndexRef.current = idx;
+          setStageClearFocusIndex(idx);
+        }}
+        onDescend={handleDescendNextStage}
+        onClaimVictory={handleClaimVictory}
+      />
       <EndGameModal
         status={gameState.status}
         timer={gameState.timer || 0}
+        totalRunTimer={simRef.current.totalRunTimer || gameState.timer || 0}
+        stage={simRef.current.stage || 1}
         killCount={killCount}
         level={gameState.level}
         score={gameState.score}

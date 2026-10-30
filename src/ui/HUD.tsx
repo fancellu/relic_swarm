@@ -1,4 +1,4 @@
-import {Coins, Heart, Menu, Sparkles, Sword, Zap} from 'lucide-react';
+import {Coins, Heart, Menu, Skull, Sparkles, Sword, Zap} from 'lucide-react';
 import React from 'react';
 import {EquippedItem} from '../types/entities';
 import {ITEM_DEFS} from '../types/items';
@@ -10,6 +10,7 @@ export interface HUDProps {
   currentStamina: number;
   maxStaminaDisplay: number;
   level: number;
+  stage?: number;
   timer: number;
   killCount: number;
   runGold: number;
@@ -41,6 +42,7 @@ export const HUD: React.FC<HUDProps> = ({
   currentStamina,
   maxStaminaDisplay,
   level,
+  stage = 1,
   timer,
   killCount,
   runGold,
@@ -87,6 +89,10 @@ export const HUD: React.FC<HUDProps> = ({
           <div className="flex items-center gap-1 text-sky-300 font-semibold bg-sky-950/50 px-2 py-0.5 rounded border border-sky-800/40">
             <Sparkles size={14} />
             <span>Lv. {level}</span>
+          </div>
+          <div className="flex items-center gap-1 text-purple-300 font-bold bg-purple-950/70 px-2 py-0.5 rounded border border-purple-700/50 shadow-sm">
+            <Skull size={13} className="text-purple-400" />
+            <span>Stage {stage}</span>
           </div>
         </div>
 

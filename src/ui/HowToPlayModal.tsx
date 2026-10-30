@@ -1,4 +1,4 @@
-import {Coins, Compass, Flame, HelpCircle, Skull, Sparkles, X, Zap} from 'lucide-react';
+import {Coins, Compass, Flame, HelpCircle, Skull, Sparkles, Trophy, X, Zap} from 'lucide-react';
 import React from 'react';
 import {MenuOverlay} from '../../utils/helper';
 
@@ -85,6 +85,16 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({isOpen, onClose, 
             <div>• <span className="text-emerald-300 font-bold">Relic Forging (Essence Extraction)</span>: Maxed Level 5 items offer sacrificial extraction (0g refund) — permanently granting 20% of their stats for the run while freeing the item slot!</div>
             <div>• <span className="text-yellow-300 font-bold">Wealth Scaling</span>: <span className="text-yellow-200 font-bold">Gilded Chakram</span> and evolved <span className="text-yellow-200 font-bold">Midas' Wrath</span> deal +1% damage per 50 unbanked gold held in your pouch.</div>
             <div>• <span className="text-amber-200 font-bold">Wandering Black Market</span>: A smuggler cart arrives every 3 minutes. Touch the cart to buy Overdrive Infusion (+40% Might, +25% CDR, +20% Speed for 60s), Blacksmith's Tempering (+1 weapon level or +50 Max HP), or Arcane Fusion Catalysts!</div>
+          </div>
+
+          <div className="bg-slate-950/70 p-2.5 rounded-xl border border-purple-900/60 bg-purple-950/20">
+            <div className="font-bold text-purple-400 mb-1 flex items-center gap-1.5">
+              <Trophy size={14} />
+              <span>Endless Realms & Intermission Carry-Over</span>
+            </div>
+            <div>• <span className="text-purple-300 font-bold">Endless Descent</span>: Slaying the Abyssal Titan completes the current stage and triggers an Intermission rather than abruptly ending your run!</div>
+            <div>• <span className="text-amber-300 font-bold">Weapon Carry-Over</span>: Choose 1 equipped weapon (retaining its Level, Evolution, or Fusion) to carry into the next realm. Unchosen gear is auto-liquidated for 70% gold into your pouch.</div>
+            <div>• <span className="text-rose-300 font-bold">Realm Scaling</span>: Each stage compounds Enemy HP (+10%) & Damage (+10%), while boosting Hero Speed (+10%) and escalating Titan bullet-hell attacks!</div>
           </div>
         </div>
 

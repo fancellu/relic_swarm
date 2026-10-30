@@ -231,6 +231,8 @@ export interface SimulationState {
   screenShake: number;
   spawnTimer: number;
   runTimer: number;
+  totalRunTimer: number;
+  stage: number;
   kills: number;
   gold: number;
   nextEnemyId: number;

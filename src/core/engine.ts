@@ -35,6 +35,9 @@ export function drawArenaFloor(
   canvasWidth: number,
   canvasHeight: number,
   arenaBounds = 2500,
+  bgColor = '#0a0814',
+  gridColor = '#1a162b',
+  borderColor = '#e11d48',
 ): void {
   const bgTileSize = 120;
   const startX = Math.floor((camera.x - canvasWidth / 2 - 200) / bgTileSize) * bgTileSize;
@@ -42,10 +45,10 @@ export function drawArenaFloor(
   const startY = Math.floor((camera.y - canvasHeight / 2 - 200) / bgTileSize) * bgTileSize;
   const endY = Math.ceil((camera.y + canvasHeight / 2 + 200) / bgTileSize) * bgTileSize;
 
-  ctx.fillStyle = '#0a0814';
+  ctx.fillStyle = bgColor;
   ctx.fillRect(startX, startY, endX - startX, endY - startY);
 
-  ctx.strokeStyle = '#1a162b';
+  ctx.strokeStyle = gridColor;
   ctx.lineWidth = 1.5;
   for (let gx = startX; gx <= endX; gx += bgTileSize) {
     ctx.beginPath();
@@ -61,7 +64,7 @@ export function drawArenaFloor(
   }
 
   // Arena Perimeter Bounds
-  ctx.strokeStyle = '#e11d48';
+  ctx.strokeStyle = borderColor;
   ctx.lineWidth = 4;
   ctx.strokeRect(-arenaBounds, -arenaBounds, arenaBounds * 2, arenaBounds * 2);
 }

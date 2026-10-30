@@ -136,6 +136,22 @@ Combat in Relic Swarm moves beyond passive circle-kiting with interactive dynami
 
 ---
 
+## 🌀 Endless Stage Progression & Realm Scaling
+
+Runs in Relic Swarm no longer abruptly terminate upon defeating the Abyssal Titan:
+- **Stage Clear Intermission**: Defeating the Titan boss completes the current realm and presents the **Stage Clear Intermission** modal (`StageClearModal`).
+- **Weapon Carry-Over**: The player selects **1 equipped weapon** from their current loadout (preserving its level, Awakened Evolution, or Fusion state) to anchor their build in the next realm. Unchosen weapons and passives automatically auto-liquidate for **70% gold value** directly into your carried gold pouch.
+- **Stage Scaling**: Each subsequent realm increases **Enemy HP by +10% (compound)**, **Enemy Damage by +10% (compound)**, and **Hero Movement Speed by +10% (additive)**. The Abyssal Titan escalates with higher radial bullet-hell orb densities ($min(16, 8 + (S - 1) 	imes 2)$).
+- **Dynamic Themed Arenas**: Canvas 2D arena floor, grid lines, and perimeter borders transition through 5 distinct themes:
+  1. *Gothic Sanctum* (Deep violet / crimson border)
+  2. *Blood Catacombs* (Charcoal / blazing orange border)
+  3. *Glacial Abyss* (Midnight cyan / frozen teal border)
+  4. *Blighted Necropolis* (Dark moss / radioactive emerald border)
+  5. *Astral Void* (Deep void / radiant cosmic purple border)
+- **Flexible Playstyles**: Players can choose to **Descend to Stage S+1** to push their build further, or **Claim Victory & Bank Gold** to retire safely and secure their Sanctum riches.
+
+---
+
 ## 🏛️ Sanctum Meta-Shop
 
 Gold collected from defeated foes and chests is banked into your permanent vault upon run conclusion:

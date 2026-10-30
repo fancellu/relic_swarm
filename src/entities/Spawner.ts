@@ -53,6 +53,10 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
   const maxEnemiesLimit = (getConfig('maxEnemies') as number) || 250;
   const bossSpawnTime = (getConfig('bossSpawnTimeSeconds') as number) || 300;
 
+  const stage = Math.max(1, sim.stage || 1);
+  const enemyHpMult = Math.pow(1.10, stage - 1);
+  const enemyDamageMult = Math.pow(1.10, stage - 1);
+
   // Standing inside Corrupted Obelisk zone increases spawn rate by 30%
   const obeliskSpawnMult = sim.inObeliskZone ? 1.3 : 1.0;
   sim.spawnTimer += dt * baseSpawnRate * (1 + sim.runTimer / 180) * obeliskSpawnMult;
@@ -105,9 +109,9 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
         'titan',
         sim.x + Math.cos(angle) * 600,
         sim.y + Math.sin(angle) * 600,
-        3500,
+        Math.round(3500 * enemyHpMult),
         90,
-        30,
+        Math.round(30 * enemyDamageMult),
         55,
         '#dc2626',
         true,
@@ -130,9 +134,9 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
 
       const roll = Math.random();
       let type: EnemyEntity['type'] = 'skeleton';
-      let hp = 30 + (sim.runTimer / 10) * 8;
+      let hp = (30 + (sim.runTimer / 10) * 8) * enemyHpMult;
       let speed = 100 + Math.random() * 20;
-      let damage = 10;
+      let damage = 10 * enemyDamageMult;
       let size = 22;
       let isElite = false;
       let color = '#94a3b8';
@@ -454,8 +458,9 @@ export function updateEnemies(
       if (enemy.shootTimer >= 4.0) {
         enemy.shootTimer = 0;
         gameAudio.playChiptuneExplosion();
-        for (let b = 0; b < 8; b++) {
-          const bAngle = (b * Math.PI * 2) / 8;
+        const orbCount = Math.min(16, 8 + (Math.max(1, sim.stage || 1) - 1) * 2);
+        for (let b = 0; b < orbCount; b++) {
+          const bAngle = (b * Math.PI * 2) / orbCount;
           sim.projectiles.push({
             id: sim.nextProjId++,
             type: 'sorcerer_orb',

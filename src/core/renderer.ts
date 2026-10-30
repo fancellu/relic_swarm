@@ -3,6 +3,7 @@ import {clamp, drawAsset, prepareCanvas} from '../../utils/helper';
 import {DerivedStats} from '../entities/Player';
 import {SimulationState} from '../types/entities';
 import {drawArenaFloor, drawDamageNumbers, drawParticles, getScreenShakeOffset} from './engine';
+import {levelManager} from './LevelManager';
 
 export function renderGame(
   ctx: CanvasRenderingContext2D,
@@ -20,8 +21,18 @@ export function renderGame(
   ctx.save();
   ctx.translate(canvasWidth / 2 - sim.camera.x + shakeX, canvasHeight / 2 - sim.camera.y + shakeY);
 
-  // 1. Gothic Arena Grid Floor
-  drawArenaFloor(ctx, sim.camera, canvasWidth, canvasHeight);
+  // 1. Dynamic Themed Arena Grid Floor
+  const stageMods = levelManager.getModifiers(sim.stage);
+  drawArenaFloor(
+    ctx,
+    sim.camera,
+    canvasWidth,
+    canvasHeight,
+    2500,
+    stageMods.floorBgColor,
+    stageMods.floorGridColor,
+    stageMods.borderAccentColor,
+  );
 
   // 1b. Render Corrupted Obelisk (Zone & Monolith)
   if (sim.obelisk) {
