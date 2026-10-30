@@ -187,7 +187,7 @@ When creating new playable heroes or complex animated mobs (e.g., Monk, Huntress
      - `ATTACK`: 16 frames (`8192 x 512`), 16 fps, non-looping.
      - `HURT`: 16 frames (`8192 x 512`), 10 fps, non-looping (`loop: false`).
      - `DEATH`: 16 frames (`8192 x 512`), 10 fps, non-looping (`loop: false`).
-     - Master composite sheet: `8192 x 3328` (Run row at `y=0`, Attack at `y=550`, Hurt at `y=1100`, Death at `y=1650`, Idle at `y=2200`).
+     - *Note*: Only individual action sheets (`hero_{name}_{action}.png`) are used by the engine. Do **not** generate or store multi-row master composite sheets (`hero_{name}.png`), which bloat bundle size by ~80 MB.
 3. **Foot Grounding**: Anchor feet at `footY = 508` in the 512×512 frame box so sprites do not sink into the ground or hover.
 
 ### 8.2 Animation Quality & Anti-Jank Principles
@@ -218,7 +218,7 @@ When creating new playable heroes or complex animated mobs (e.g., Monk, Huntress
 ### 8.3 Character Integration Checklist
 When introducing a new character to Relic Swarm:
 1. **Asset Generation**: Generate clean keyframes via `image-generator` (1:1 aspect ratio, black background).
-2. **Background Removal & Stitching**: Run automated border flood-fill extraction (`loadCleanSprite`) with nearest-neighbor scaling and stitch individual `.png` files and master composite into `assets/images/`.
+2. **Background Removal & Stitching**: Run automated border flood-fill extraction (`loadCleanSprite`) with nearest-neighbor scaling and stitch individual action `.png` files (`_idle`, `_run`, `_attack`, `_hurt`, `_death`) into `assets/images/`.
 3. **Direction Verification**: Run an automated script to verify beard/face and weapon X coordinates are on the right side across all frames.
 4. **Configuration Wiring**:
    - `design/asset_manifest.json`: Add character metadata, prompts, actions.
