@@ -493,13 +493,19 @@ export function renderGame(
       );
       ctx.restore();
     } else if (proj.type === 'flame') {
+      const speed = Math.hypot(proj.vx, proj.vy);
+      const angle = speed > 1 ? Math.atan2(proj.vy, proj.vx) - (3 * Math.PI) / 4 : (sim.runTimer * 6 + proj.id);
+      ctx.save();
+      ctx.translate(proj.x, proj.y);
+      ctx.rotate(angle);
+      const size = proj.radius * 2.2;
       drawAsset(
         ctx,
         assets['proj_flame_blast'],
-        proj.x - proj.radius,
-        proj.y - proj.radius,
-        proj.radius * 2,
-        proj.radius * 2,
+        -size / 2,
+        -size / 2,
+        size,
+        size,
         (fCtx) => {
           fCtx.fillStyle = '#f97316';
           fCtx.beginPath();
@@ -507,6 +513,7 @@ export function renderGame(
           fCtx.fill();
         },
       );
+      ctx.restore();
     } else if (proj.type === 'flame_pool') {
       ctx.save();
       const flicker = 1 + Math.sin(sim.runTimer * 10 + proj.id) * 0.08;
