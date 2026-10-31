@@ -89,6 +89,7 @@ export interface ProjectileEntity {
   orbitDist?: number;
   pierce: number;
   hitList: number[];
+  hitTimes?: Record<number, number>;
   color: string;
   splashRadius?: number;
   inflictsPoison?: boolean;
@@ -98,7 +99,26 @@ export interface ProjectileEntity {
   chainEndY?: number;
 }
 
-export const MAX_DROPS = 200;
+export interface DerivedStats {
+  maxHp: number;
+  maxStamina: number;
+  mightMult: number;
+  speed: number;
+  cdr: number;
+  magnetRadius: number;
+  greedMult: number;
+  areaMult: number;
+  vitalityLevel: number;
+  toxicLevel: number;
+  frostAmuletLevel: number;
+  baseRegen: number;
+  armor: number;
+}
+
+export const MAX_DROPS = 160;
+export const MAX_PARTICLES = 250;
+export const MAX_DAMAGE_NUMBERS = 50;
+export const MAX_PROJECTILES = 120;
 
 export function addDrop(sim: SimulationState, drop: DropEntity): void {
   if (sim.drops.length >= MAX_DROPS) {
@@ -269,4 +289,5 @@ export interface SimulationState {
   overdriveTimer: number;
   fusionCatalystAvailable: boolean;
   extractedEssences: ExtractedEssence[];
+  derivedStats?: DerivedStats;
 }

@@ -1,11 +1,34 @@
 import {gameAudio} from '../../utils/helper';
 import {EnemyEntity, EquippedItem, SimulationState} from '../types/entities';
 import {ITEM_DEFS} from '../types/items';
+import {spatialGrid} from '../core/spatial';
 import {applyEnemySlow, DerivedStats} from './Player';
 
 export function applyEnemyPoison(enemy: EnemyEntity, dps: number, duration = 4.0): void {
   enemy.poisonDps = Math.max(enemy.poisonDps, dps);
   enemy.poisonTimer = Math.max(enemy.poisonTimer, duration);
+}
+
+function getClosestEnemies(x: number, y: number, enemies: EnemyEntity[], count: number): EnemyEntity[] {
+  const best: {enemy: EnemyEntity; distSq: number}[] = [];
+  for (let i = 0; i < enemies.length; i++) {
+    const e = enemies[i];
+    if (e.hp <= 0) continue;
+    const dx = e.x - x;
+    const dy = e.y - y;
+    const dSq = dx * dx + dy * dy;
+
+    if (best.length < count) {
+      best.push({enemy: e, distSq: dSq});
+      best.sort((a, b) => a.distSq - b.distSq);
+    } else if (dSq < best[best.length - 1].distSq) {
+      best[best.length - 1] = {enemy: e, distSq: dSq};
+      best.sort((a, b) => a.distSq - b.distSq);
+    }
+  }
+  const result: EnemyEntity[] = [];
+  for (let i = 0; i < best.length; i++) result.push(best[i].enemy);
+  return result;
 }
 
 export function updateWeaponCasting(
@@ -34,9 +57,7 @@ export function updateWeaponCasting(
         const count = wep.id === 'chrono_missiles' ? 5 : 1 + Math.floor(wep.level / 2);
         const dmg = (def.baseDamage || 20) * stats.mightMult * (1 + (wep.level - 1) * 0.2);
 
-        const sorted = [...sim.enemies].sort(
-          (a, b) => Math.hypot(a.x - sim.x, a.y - sim.y) - Math.hypot(b.x - sim.x, b.y - sim.y),
-        );
+        const sorted = getClosestEnemies(sim.x, sim.y, sim.enemies, count);
 
         for (let i = 0; i < count; i++) {
           const target = sorted[i % sorted.length];
@@ -418,7 +439,7 @@ export function updateWeaponCasting(
           spawnDamageNumber(sim.x, sim.y, 'SOLAR GRAVITATIONAL BURST!', '#fbbf24');
         }
 
-        sim.enemies.forEach((enemy) => {
+        spatialGrid.forEachNearby(sim.x, sim.y, auraRadius + 40, (enemy) => {
           const dist = Math.hypot(enemy.x - sim.x, enemy.y - sim.y);
           if (dist <= auraRadius + enemy.size) {
             const hitDmg = isGravitationalPulse ? dmg * 2.2 : dmg;
@@ -454,9 +475,12 @@ export function updateWeaponCasting(
     // --- Orbiting Daggers & Phantom Storm ---
     else if (wep.id === 'spinning_dagger' || wep.id === 'phantom_storm') {
       const bladeCount = wep.id === 'phantom_storm' ? 8 : 2 + wep.level;
-      const existingBlades = sim.projectiles.filter((p) => p.type === 'dagger');
-      if (existingBlades.length < bladeCount) {
-        for (let i = existingBlades.length; i < bladeCount; i++) {
+      let existingBladeCount = 0;
+      for (let p = 0; p < sim.projectiles.length; p++) {
+        if (sim.projectiles[p].type === 'dagger') existingBladeCount++;
+      }
+      if (existingBladeCount < bladeCount) {
+        for (let i = existingBladeCount; i < bladeCount; i++) {
           sim.projectiles.push({
             id: sim.nextProjId++,
             type: 'dagger',
@@ -483,9 +507,12 @@ export function updateWeaponCasting(
     // --- FUSION 1: Arcane Phantom Vortex ---
     else if (wep.id === 'arcane_phantom_vortex') {
       const bladeCount = 8;
-      const existingBlades = sim.projectiles.filter((p) => p.type === 'vortex');
-      if (existingBlades.length < bladeCount) {
-        for (let i = existingBlades.length; i < bladeCount; i++) {
+      let existingVortexCount = 0;
+      for (let p = 0; p < sim.projectiles.length; p++) {
+        if (sim.projectiles[p].type === 'vortex') existingVortexCount++;
+      }
+      if (existingVortexCount < bladeCount) {
+        for (let i = existingVortexCount; i < bladeCount; i++) {
           sim.projectiles.push({
             id: sim.nextProjId++,
             type: 'vortex',
@@ -587,7 +614,7 @@ export function updateWeaponCasting(
         const sanctuaryRadius = 160 * stats.areaMult;
         const dmg = (def.baseDamage || 38) * stats.mightMult;
 
-        sim.enemies.forEach((enemy) => {
+        spatialGrid.forEachNearby(sim.x, sim.y, sanctuaryRadius + 40, (enemy) => {
           const dist = Math.hypot(enemy.x - sim.x, enemy.y - sim.y);
           if (dist <= sanctuaryRadius + enemy.size) {
             enemy.hp -= dmg;
@@ -630,11 +657,20 @@ export function updateWeaponCasting(
         }
 
         // 2. Chain lightning strikes down onto slowed/frozen enemies
-        const slowedEnemies = sim.enemies.filter((e) => e.slowTimer > 0);
-        const candidates = slowedEnemies.length > 0 ? slowedEnemies : sim.enemies;
-        const strikeCount = Math.min(3, candidates.length);
-        for (let k = 0; k < strikeCount; k++) {
-          const target = candidates[Math.floor(Math.random() * candidates.length)];
+        for (let k = 0; k < 3; k++) {
+          let target: EnemyEntity | null = null;
+          let slowedCount = 0;
+          for (let e = 0; e < sim.enemies.length; e++) {
+            if (sim.enemies[e].slowTimer > 0) {
+              slowedCount++;
+              if (Math.random() < 1 / slowedCount) {
+                target = sim.enemies[e];
+              }
+            }
+          }
+          if (!target && sim.enemies.length > 0) {
+            target = sim.enemies[Math.floor(Math.random() * sim.enemies.length)];
+          }
           if (target) {
             sim.projectiles.push({
               id: sim.nextProjId++,
@@ -662,9 +698,12 @@ export function updateWeaponCasting(
     // --- FUSION 5: Frostbite Chakrams (Glacial Shards L5 + Orbiting Daggers L5) ---
     else if (wep.id === 'frostbite_chakrams') {
       const bladeCount = 8;
-      const existingChakrams = sim.projectiles.filter((p) => p.type === 'chakram');
-      if (existingChakrams.length < bladeCount) {
-        for (let i = existingChakrams.length; i < bladeCount; i++) {
+      let existingChakramCount = 0;
+      for (let p = 0; p < sim.projectiles.length; p++) {
+        if (sim.projectiles[p].type === 'chakram') existingChakramCount++;
+      }
+      if (existingChakramCount < bladeCount) {
+        for (let i = existingChakramCount; i < bladeCount; i++) {
           sim.projectiles.push({
             id: sim.nextProjId++,
             type: 'chakram',

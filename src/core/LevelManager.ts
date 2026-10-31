@@ -29,6 +29,7 @@ export const STAGE_THEMES: StageTheme[] = [
 
 export class LevelManager {
   private stage = 1;
+  private cachedModifiers: Record<number, LevelModifiers> = {};
 
   public reset(): void {
     this.stage = 1;
@@ -44,8 +45,11 @@ export class LevelManager {
 
   public getModifiers(customStage?: number): LevelModifiers {
     const s = customStage !== undefined ? Math.max(1, customStage) : this.stage;
+    if (this.cachedModifiers[s]) {
+      return this.cachedModifiers[s];
+    }
     const theme = STAGE_THEMES[(s - 1) % STAGE_THEMES.length];
-    return {
+    const mods: LevelModifiers = {
       stage: s,
       enemyHpMult: Math.pow(1.10, s - 1),
       enemyDamageMult: Math.pow(1.10, s - 1),
@@ -55,6 +59,8 @@ export class LevelManager {
       floorGridColor: theme.grid,
       borderAccentColor: theme.border,
     };
+    this.cachedModifiers[s] = mods;
+    return mods;
   }
 
   /**

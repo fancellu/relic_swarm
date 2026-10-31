@@ -1,5 +1,6 @@
 import {gameAudio} from '../../utils/helper';
-import {SimulationState} from '../types/entities';
+import {MAX_PROJECTILES, SimulationState} from '../types/entities';
+import {spatialGrid} from '../core/spatial';
 import {applyEnemySlow} from './Player';
 import {applyEnemyPoison} from './Weapons';
 
@@ -10,6 +11,19 @@ export function updateProjectiles(
   spawnParticles: (x: number, y: number, count: number, color: string, speed?: number) => void,
   onPlayerHit: (damage: number) => void,
 ): void {
+  // Hard cap active projectiles to prevent lag spikes
+  while (sim.projectiles.length > MAX_PROJECTILES) {
+    let removeIdx = -1;
+    for (let p = 0; p < sim.projectiles.length; p++) {
+      const type = sim.projectiles[p].type;
+      if (type !== 'dagger' && type !== 'vortex' && type !== 'chakram') {
+        removeIdx = p;
+        break;
+      }
+    }
+    if (removeIdx !== -1) sim.projectiles.splice(removeIdx, 1);
+    else break;
+  }
   // 1. Process Mjolnir's Conduit electrified laser arcing between pylons
   if (sim.conduitPylons && sim.conduitPylons.length >= 2) {
     for (let p = sim.conduitPylons.length - 1; p >= 0; p--) {
@@ -114,13 +128,15 @@ export function updateProjectiles(
         spawnParticles(proj.x, proj.y, 1, '#06b6d4', 30);
       }
 
-      // Collision with enemies
-      sim.enemies.forEach((enemy) => {
-        if (!proj.hitList.includes(enemy.id)) {
+      // Collision with enemies (spatial query + timestamp hit tracking)
+      if (!proj.hitTimes) proj.hitTimes = {};
+      spatialGrid.forEachNearby(proj.x, proj.y, proj.radius + 60, (enemy) => {
+        const lastHit = proj.hitTimes![enemy.id] || 0;
+        if (sim.runTimer - lastHit >= 0.35) {
           const dist = Math.hypot(enemy.x - proj.x, enemy.y - proj.y);
           if (dist < proj.radius + enemy.size) {
             enemy.hp -= proj.damage;
-            proj.hitList.push(enemy.id);
+            proj.hitTimes![enemy.id] = sim.runTimer;
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
                 (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + proj.damage;
@@ -142,18 +158,14 @@ export function updateProjectiles(
               spawnParticles(enemy.x, enemy.y, 8, '#f97316', 100);
               enemy.burnTimer = 0;
             }
-
-            setTimeout(() => {
-              proj.hitList = proj.hitList.filter((id) => id !== enemy.id);
-            }, 350);
           }
         }
       });
     } else if (proj.type === 'chain_lightning') {
       // Damage is applied at cast time; retain the projectile only for its brief visual arc.
     } else if (proj.type === 'spore') {
-      // Lingering toxic cloud field
-      sim.enemies.forEach((enemy) => {
+      // Lingering toxic cloud field (spatial query)
+      spatialGrid.forEachNearby(proj.x, proj.y, proj.radius + 40, (enemy) => {
         const dist = Math.hypot(enemy.x - proj.x, enemy.y - proj.y);
         if (dist <= proj.radius + enemy.size) {
           applyEnemyPoison(enemy, proj.damage * 0.7, 3.5);
@@ -167,8 +179,8 @@ export function updateProjectiles(
         }
       });
     } else if (proj.type === 'flame_pool') {
-      // Lingering flame pool on the ground
-      sim.enemies.forEach((enemy) => {
+      // Lingering flame pool on the ground (spatial query)
+      spatialGrid.forEachNearby(proj.x, proj.y, proj.radius + 40, (enemy) => {
         const dist = Math.hypot(enemy.x - proj.x, enemy.y - proj.y);
         if (dist <= proj.radius + enemy.size) {
           enemy.burnTimer = 3.0;
@@ -187,7 +199,7 @@ export function updateProjectiles(
       }
     } else if (proj.type === 'thunder') {
       if (proj.duration >= proj.maxDuration - dt * 1.5) {
-        sim.enemies.forEach((enemy) => {
+        spatialGrid.forEachNearby(proj.x, proj.y, proj.radius + 40, (enemy) => {
           const dist = Math.hypot(enemy.x - proj.x, enemy.y - proj.y);
           if (dist <= proj.radius + enemy.size) {
             enemy.hp -= proj.damage;
@@ -237,9 +249,8 @@ export function updateProjectiles(
           proj.duration = 0;
         }
       } else {
-        for (let e = 0; e < sim.enemies.length; e++) {
-          const enemy = sim.enemies[e];
-          if (proj.hitList.includes(enemy.id)) continue;
+        spatialGrid.forEachNearby(proj.x, proj.y, proj.radius + 50, (enemy) => {
+          if (proj.duration <= 0 || proj.hitList.includes(enemy.id)) return;
 
           const dist = Math.hypot(enemy.x - proj.x, enemy.y - proj.y);
           if (dist < proj.radius + enemy.size) {
@@ -304,7 +315,7 @@ export function updateProjectiles(
               if (proj.splashRadius) {
                 gameAudio.playChiptuneExplosion();
                 sim.screenShake = 6;
-                sim.enemies.forEach((other) => {
+                spatialGrid.forEachNearby(proj.x, proj.y, proj.splashRadius + 40, (other) => {
                   if (other.id !== enemy.id) {
                     const splashDist = Math.hypot(other.x - proj.x, other.y - proj.y);
                     if (splashDist <= proj.splashRadius! + other.size) {
@@ -322,16 +333,16 @@ export function updateProjectiles(
                 });
               }
               proj.duration = 0;
-              break;
+              return;
             }
 
             proj.pierce -= 1;
             if (proj.pierce <= 0) {
               proj.duration = 0;
-              break;
+              return;
             }
           }
-        }
+        });
       }
     }
 

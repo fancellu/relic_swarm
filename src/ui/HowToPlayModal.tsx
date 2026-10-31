@@ -35,7 +35,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({isOpen, onClose, 
               <span>Movement & Sprint</span>
             </div>
             <div>• Keyboard: WASD / Arrow Keys to move, <span className="text-emerald-400 font-bold">Shift</span> to Sprint (+60% speed).</div>
-            <div>• Gamepad: Left Stick / D-pad to move, <span className="text-emerald-400 font-bold">Button B / RT / LT / X</span> to Sprint.</div>
+            <div>• Gamepad: Left Stick / D-pad to move, <span className="text-emerald-400 font-bold">Button A / B / RT / LT</span> to Sprint.</div>
             <div>• Mobile: Drag virtual joystick + tap green Sprint button.</div>
           </div>
 

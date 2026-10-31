@@ -29,6 +29,29 @@ export function updateDrops(
     if (removeIdx === -1) removeIdx = 0;
     sim.drops.splice(removeIdx, 1);
   }
+  // Spatial Gem Clustering when drop count is high to prevent draw & distance math bloat
+  if (sim.drops.length > 90) {
+    for (let a = sim.drops.length - 1; a >= 1; a--) {
+      const dropA = sim.drops[a];
+      if (dropA.type !== 'xp_blue' && dropA.type !== 'xp_purple' && dropA.type !== 'gold') continue;
+      for (let b = a - 1; b >= 0; b--) {
+        const dropB = sim.drops[b];
+        if (dropA.type === dropB.type && !dropA.attracted && !dropB.attracted) {
+          const dx = dropA.x - dropB.x;
+          const dy = dropA.y - dropB.y;
+          if (dx * dx + dy * dy <= 50 * 50) {
+            dropB.value += dropA.value;
+            if (dropB.type === 'xp_blue' && dropB.value >= 40) {
+              dropB.type = 'xp_purple';
+            }
+            sim.drops.splice(a, 1);
+            break;
+          }
+        }
+      }
+      if (sim.drops.length <= 70) break;
+    }
+  }
   for (let i = sim.drops.length - 1; i >= 0; i--) {
     const drop = sim.drops[i];
     const dx = sim.x - drop.x;

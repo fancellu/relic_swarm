@@ -50,18 +50,16 @@ export function drawArenaFloor(
 
   ctx.strokeStyle = gridColor;
   ctx.lineWidth = 1.5;
+  ctx.beginPath();
   for (let gx = startX; gx <= endX; gx += bgTileSize) {
-    ctx.beginPath();
     ctx.moveTo(gx, startY);
     ctx.lineTo(gx, endY);
-    ctx.stroke();
   }
   for (let gy = startY; gy <= endY; gy += bgTileSize) {
-    ctx.beginPath();
     ctx.moveTo(startX, gy);
     ctx.lineTo(endX, gy);
-    ctx.stroke();
   }
+  ctx.stroke();
 
   // Arena Perimeter Bounds
   ctx.strokeStyle = borderColor;
@@ -70,29 +68,30 @@ export function drawArenaFloor(
 }
 
 export function drawParticles(ctx: CanvasRenderingContext2D, particles: ParticleEntity[]): void {
+  ctx.save();
   for (let i = 0; i < particles.length; i++) {
     const p = particles[i];
-    ctx.save();
     ctx.fillStyle = p.color;
     ctx.globalAlpha = Math.max(0, p.alpha);
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
     ctx.fill();
-    ctx.restore();
   }
+  ctx.restore();
 }
 
 export function drawDamageNumbers(ctx: CanvasRenderingContext2D, damageNumbers: DamageNumber[]): void {
   ctx.save();
   ctx.textAlign = 'center';
   ctx.font = 'bold 16px monospace';
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#000000';
   for (let i = 0; i < damageNumbers.length; i++) {
     const dmg = damageNumbers[i];
     const alpha = dmg.life / dmg.maxLife;
     ctx.fillStyle = dmg.color;
     ctx.globalAlpha = Math.max(0, alpha);
-    ctx.shadowColor = '#000000';
-    ctx.shadowBlur = 4;
+    ctx.strokeText(dmg.text, dmg.x, dmg.y);
     ctx.fillText(dmg.text, dmg.x, dmg.y);
   }
   ctx.restore();

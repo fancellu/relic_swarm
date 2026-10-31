@@ -34,7 +34,7 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 | Action | Keyboard | Gamepad | Mobile / Touch |
 | :--- | :--- | :--- | :--- |
 | **Move** | `W` `A` `S` `D` or Arrow Keys | Left Analog Stick / D-Pad | Virtual Analog Joystick (Bottom-Left) |
-| **Sprint** | `Shift` / `Ctrl` | `Button B` / `RT` / `LT` / `X` | Virtual Sprint Button (Bottom-Right) |
+| **Sprint** | `Shift` / `Ctrl` | `Button A` / `Button B` / `RT` / `LT` | Virtual Sprint Button (Bottom-Right) |
 | **Confirm / Select** | `Enter` / `Space` | Button `A` (Button 0) | Tap Button / Card |
 | **Cancel / Back** | `Escape` / `Backspace` | Button `B` (Button 1) | Tap Close / Back Button |
 | **Toggle Inventory & Sell** | `Tab` / `I` | Button `Y` (Button 3) | Floating Sell Button (Bottom-Right) |

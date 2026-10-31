@@ -96,7 +96,7 @@ export const CONFIG = {
     group: 'Rules',
   },
   maxEnemies: {
-    value: 250,
+    value: 180,
     type: 'number',
     label: 'Max Active Enemies',
     group: 'Rules',

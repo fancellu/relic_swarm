@@ -127,6 +127,7 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
     const spawnCount = (2 + Math.floor(sim.runTimer / 30)) * (sim.inObeliskZone ? 1.3 : 1);
 
     for (let s = 0; s < spawnCount; s++) {
+      if (sim.enemies.length >= maxEnemiesLimit) break;
       const angle = Math.random() * Math.PI * 2;
       const spawnDist = 450 + Math.random() * 200;
       const ex = sim.x + Math.cos(angle) * spawnDist;
@@ -279,7 +280,8 @@ export function updateEnemies(
         spawnParticles(enemy.x, enemy.y, 6, '#10b981', 80);
       }
 
-      const currentWorldChests = sim.drops.filter((d) => d.type === 'chest').length;
+      let currentWorldChests = 0;
+      for (let d = 0; d < sim.drops.length; d++) { if (sim.drops[d].type === 'chest') currentWorldChests++; }
 
       if (enemy.isBoss) {
         sim.bossDefeated = true;
@@ -508,7 +510,7 @@ export function updateEnemies(
         : 'skeleton';
     const enemyRenderer = spriteRenderers?.[rendererKey];
     if (enemyRenderer) {
-      enemy.animState = enemyRenderer.getNextState(enemy.animState, dt);
+      enemyRenderer.advanceInPlace(enemy.animState, dt);
     }
   }
 

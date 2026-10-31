@@ -36,9 +36,10 @@ relicswarm/
 
 ## 2. Hard Engineering Invariants (MUST ALWAYS PRESERVE)
 
-### 2.1 Gamepad Pause Restriction
-- Gamepad pause is bound **strictly to Button 9 (Options / Start)**.
-- **NEVER** bind stick clicks (L3 / R3, buttons 10/11) or auxiliary buttons to pause. Intense stick motion during survival combat causes accidental clicks.
+### 2.1 Gamepad Input Invariants
+- **Pause Restriction**: Gamepad pause is bound **strictly to Button 9 (Options / Start)**.
+  - **NEVER** bind stick clicks (L3 / R3, buttons 10/11) or auxiliary buttons to pause. Intense stick motion during survival combat causes accidental clicks.
+- **Dash / Sprint Parity**: Gamepad sprint/dash is bound to **both Button A (0) and Button B (1)**, as well as Triggers (`LT` / `RT`), giving players ergonomic thumb flexibility during combat.
 
 ### 2.2 Modal Navigation Parity
 Every modal overlay (Sanctum Shop, Start/Hero Select, Level-Up Draft, Inventory/Sell Sheet, Game Over, Victory, Pause Menu) **must support full navigation across all three input schemes**:
@@ -68,6 +69,38 @@ LocalStorage keys must maintain backward compatibility:
 ### 2.6 React 19 Typing Standards
 - React 19 `@types/react` requires initial arguments on `useRef` calls (e.g., `useRef<T>(undefined)` instead of `useRef<T>()`).
 - Always verify type integrity using `npx tsc --noEmit` or `npm run build`.
+
+### 2.7 Canvas 2D GPU Stall Prevention (High-Refresh Displays)
+1. **Zero `ctx.filter` in Game Loop**:
+   - **NEVER use `ctx.filter`** (e.g. `hue-rotate`, `saturate`, `brightness`) for status effects or auras.
+   - On Windows ANGLE Direct3D 11 backends in Chromium/Edge, `ctx.filter` forces offscreen GPU render target allocations that trigger severe driver synchronization stalls on modern high-refresh (144Hz+) Nvidia RTX cards.
+   - Use custom particle emitters, status rings, or pre-rendered sprite assets instead.
+2. **Zero `ctx.shadowBlur` in Per-Entity Loops**:
+   - **NEVER use `ctx.shadowBlur`** on text (floating combat damage numbers) or rapid projectiles (pellets, discs, missiles, chain lightning).
+   - Chromium's Skia executes expensive multi-pass gaussian blurs per character glyph and per circle.
+   - Use crisp pixel-art stroke outlines (`ctx.lineWidth = 3; ctx.strokeText() + ctx.fillText()`) which render in a single hardware quad.
+3. **Batch Canvas State**:
+   - Never call `ctx.save()` / `ctx.restore()` per-particle or per-grid-line in inner loops; batch state changes around outer loops.
+
+### 2.8 Zero-Allocation Simulation Loop & Hard Entity Caps
+1. **Decouple React State Dispatches from Frame Loops (60–144 Hz)**:
+   - **NEVER call React state setters unconditionally every frame**.
+   - Throttle `timer` updates in `setGameState` to 1 Hz (`Math.floor(sim.runTimer) !== state.timer`).
+   - Throttle stamina updates to integer changes and 100ms intervals; throttle HP updates to integer changes.
+   - Throttle objective banners and overdrive displays to actual value/state changes.
+2. **Hard Entity Caps**:
+   - Maintain strict ceilings across all entity pools:
+     - `maxEnemies`: **180** (break immediately in wave spawns when limit is reached).
+     - `MAX_PARTICLES`: **250** (reject or prune oldest).
+     - `MAX_DAMAGE_NUMBERS`: **50** (shift oldest).
+     - `MAX_PROJECTILES`: **120** (prune oldest non-critical).
+     - `MAX_DROPS`: **160** with spatial cluster merging (>90 drops) to avoid drop rendering bloat while preserving 100% of player XP/gold.
+3. **Spatial Grid Partitioning**:
+   - Always index active mobs into `spatialGrid` once per frame and use `spatialGrid.forEachNearby()` for range and projectile checks rather than $O(N \times M)$ global linear scans.
+4. **Advance Animations In-Place**:
+   - Use `renderer.advanceInPlace(state, dt)` to mutate animation timers without allocating `{...state}` objects (eliminates 15,000+ objects/sec).
+5. **Cache `derivedStats` on `sim.derivedStats`**:
+   - Recompute only on equipment/level/buff events, never on every frame or render pass.
 
 ---
 
@@ -104,6 +137,11 @@ stateDiagram-v2
     GAME_OVER --> START: Return / Bank Gold
     VICTORY --> START: Return / Bank Gold
 ```
+
+### 4.1 Endless Mode & Intermission Rules
+1. **Infinite Non-Evolved Tempering**: Non-evolved / non-fused weapons can increase levels without limit at the Wandering Merchant.
+2. **Carry-Over Level Cap**: Carried-over weapons between endless stages are capped at $\text{Stage} \times 5$ (e.g. Stage 2 caps at L10) with a 70% gold refund for excess levels to preserve challenge.
+3. **Synchronous Intermission Pause**: Intermission modals (`StageClearModal`) must synchronously halt the simulation loop using refs (`isStageClearOpenRef.current = true`) to prevent mobs, drops, and timers from updating in the background.
 
 ---
 

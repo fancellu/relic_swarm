@@ -20,7 +20,8 @@ import {calculateDerivedStats, updatePlayerMovement} from './entities/Player';
 import {updateProjectiles} from './entities/Projectiles';
 import {updateEnemies, updateEnemySpawner} from './entities/Spawner';
 import {updateWeaponCasting} from './entities/Weapons';
-import {addDrop, ChestRewardData, EquippedItem, ExtractedEssence, SimulationState} from './types/entities';
+import {spatialGrid} from './core/spatial';
+import {addDrop, ChestRewardData, EquippedItem, ExtractedEssence, MAX_DAMAGE_NUMBERS, MAX_PARTICLES, SimulationState} from './types/entities';
 import {HEROES, ITEM_DEFS, ItemDef} from './types/items';
 import {
   getStoredGold,
@@ -261,23 +262,40 @@ export default function App() {
   }, []);
   const spawnDamageNumber = useCallback((x: number, y: number, text: string, color = '#facc15') => {
     const sim = simRef.current;
+    if (sim.damageNumbers.length >= MAX_DAMAGE_NUMBERS) {
+      sim.damageNumbers.shift();
+    }
     sim.damageNumbers.push({id: sim.nextDmgId++, x: x + Math.random() * 20 - 10, y: y + Math.random() * 10 - 5, text, color, life: 0.65, maxLife: 0.65});
   }, []);
   const spawnParticles = useCallback((x: number, y: number, count = 8, color = '#e11d48', speed = 120) => {
     const sim = simRef.current;
-    for (let i = 0; i < count; i++) {
+    const currentCount = sim.particles.length;
+    if (currentCount >= MAX_PARTICLES) return;
+    const allowed = Math.min(count, MAX_PARTICLES - currentCount);
+    for (let i = 0; i < allowed; i++) {
       const angle = Math.random() * Math.PI * 2;
       const particleSpeed = speed * (0.4 + Math.random() * 0.8);
       sim.particles.push({x, y, vx: Math.cos(angle) * particleSpeed, vy: Math.sin(angle) * particleSpeed, life: 0.3 + Math.random() * 0.3, maxLife: 0.6, size: 3 + Math.random() * 4, color, alpha: 1});
     }
   }, []);
+  const lastStaminaUpdateTimeRef = useRef(0);
+  const handleStaminaChange = useCallback((stamina: number) => {
+    const now = performance.now();
+    if (now - lastStaminaUpdateTimeRef.current >= 100 || stamina <= 0 || stamina >= 100) {
+      lastStaminaUpdateTimeRef.current = now;
+      setCurrentStamina((prev) => (prev === stamina ? prev : stamina));
+    }
+  }, []);
+  const handleHpChange = useCallback((hp: number) => {
+    setCurrentHp((prev) => (prev === hp ? prev : hp));
+  }, []);
   const entityCallbacks = useCallback(() => ({
-    onGoldChange: (gold: number) => setRunGold(gold),
-    onHpChange: (hp: number) => setCurrentHp(hp),
+    onGoldChange: (gold: number) => setRunGold((prev) => (prev === gold ? prev : gold)),
+    onHpChange: handleHpChange,
     onStatsUpdate: syncStats,
     onWeaponsChange: (weapons: EquippedItem[]) => setEquippedWeapons(weapons),
     onPassivesChange: (passives: EquippedItem[]) => setEquippedPassives(passives),
-  }), [syncStats]);
+  }), [handleHpChange, syncStats]);
 
   const savePersistentData = useCallback((gold: number, meta: Record<string, number>) => {
     setPersistentGold(gold);
@@ -330,6 +348,7 @@ export default function App() {
     sim.maxStamina = stats.maxStamina;
     sim.stamina = stats.maxStamina;
     sim.speed = stats.speed;
+    sim.derivedStats = stats;
     levelManager.reset();
     sim.stage = 1;
     sim.totalRunTimer = 0;
@@ -376,6 +395,7 @@ export default function App() {
   }, []);
   const selectUpgrade = useCallback((item: ItemDef) => {
     applyUpgradeSelection(simRef.current, item, metaLevelsRef.current, spawnParticles, spawnDamageNumber, entityCallbacks());
+    simRef.current.derivedStats = calculateDerivedStats(simRef.current, metaLevelsRef.current);
     syncEquipment();
     setIsLevelUpOpen(false);
     setChestReward(null);
@@ -384,6 +404,7 @@ export default function App() {
     const reward = chestReward;
     if (!reward) return;
     applyChestReward(simRef.current, reward, metaLevelsRef.current, spawnParticles, spawnDamageNumber, entityCallbacks());
+    simRef.current.derivedStats = calculateDerivedStats(simRef.current, metaLevelsRef.current);
     syncEquipment();
     setChestReward(null);
   }, [chestReward, entityCallbacks, spawnDamageNumber, spawnParticles, syncEquipment]);
@@ -399,6 +420,7 @@ export default function App() {
   }, []);
   const sellItem = useCallback((itemId: string) => {
     sellEquippedItem(simRef.current, itemId, metaLevelsRef.current, entityCallbacks());
+    simRef.current.derivedStats = calculateDerivedStats(simRef.current, metaLevelsRef.current);
     syncEquipment();
     if (isLevelUpOpen) setChoices(generateDraftChoices(simRef.current));
   }, [entityCallbacks, isLevelUpOpen, syncEquipment]);
@@ -437,6 +459,7 @@ export default function App() {
     sim.maxHp = updatedStats.maxHp;
     sim.maxStamina = updatedStats.maxStamina;
     sim.speed = updatedStats.speed;
+    sim.derivedStats = updatedStats;
     syncStats(updatedStats.maxHp, updatedStats.maxStamina);
   }, [spawnDamageNumber, spawnParticles, syncStats]);
   const buyForceUpgrade = useCallback(() => {
@@ -898,10 +921,12 @@ export default function App() {
     }
 
     const sim = simRef.current;
-    const stats = calculateDerivedStats(sim, metaLevelsRef.current);
+    if (!sim.derivedStats) sim.derivedStats = calculateDerivedStats(sim, metaLevelsRef.current);
+    const stats = sim.derivedStats;
     sim.runTimer += dt;
     sim.totalRunTimer = (sim.totalRunTimer || 0) + dt;
     sim.auraVisualAngle += dt * 3;
+    spatialGrid.build(sim.enemies);
     updatePlayerMovement(
       sim,
       inputRef.current.actions,
@@ -909,17 +934,17 @@ export default function App() {
       keyboardSprintRef.current,
       gpX,
       gpY,
-      Boolean(gamepad?.buttons[1]?.pressed || gamepad?.buttons[6]?.pressed || gamepad?.buttons[7]?.pressed),
+      Boolean(gamepad?.buttons[0]?.pressed || gamepad?.buttons[1]?.pressed || gamepad?.buttons[2]?.pressed || gamepad?.buttons[6]?.pressed || gamepad?.buttons[7]?.pressed),
       stats,
       dt,
-      setCurrentStamina,
-      setCurrentHp,
+      handleStaminaChange,
+      handleHpChange,
     );
     sim.screenShake = Math.max(0, sim.screenShake - dt * 30);
     const heroRenderer = spriteRenderersRef.current[sim.hero.spriteKey];
-    sim.heroAnim = heroRenderer.getNextState(sim.heroAnim, dt);
+    if (heroRenderer) heroRenderer.advanceInPlace(sim.heroAnim, dt);
     updateWeaponCasting(sim, stats, dt, spawnDamageNumber, spawnParticles);
-    updateProjectiles(sim, dt, spawnDamageNumber, spawnParticles, (damage) => setCurrentHp(Math.round(sim.hp)));
+    updateProjectiles(sim, dt, spawnDamageNumber, spawnParticles, (damage) => handleHpChange(Math.round(sim.hp)));
     updateEnemySpawner(sim, dt);
     let bossDefeated = false;
     const died = updateEnemies(
@@ -971,7 +996,7 @@ export default function App() {
         triggerLevelUp();
       },
       () => setChestReward(generateChestReward(sim)),
-      setCurrentHp,
+      handleHpChange,
       setRunGold,
       (score) => setGameState((state) => ({...state, score: state.score + score})),
       (xp, nextXp) => {
@@ -1092,20 +1117,25 @@ export default function App() {
       }
     }
 
-    // Synchronize Overdrive Display
-    setOverdriveDisplay(Math.ceil(sim.overdriveTimer || 0));
+    // Synchronize Overdrive Display (only on integer change)
+    const curOverdrive = Math.ceil(sim.overdriveTimer || 0);
+    setOverdriveDisplay((prev) => (prev === curOverdrive ? prev : curOverdrive));
 
-    // Synchronize Active Objective Banner
+    // Synchronize Active Objective Banner (only when value changes)
+    let nextObjective: {type: 'OBELISK' | 'BLOOD_TRIAL' | 'MERCHANT'; progress: number} | null = null;
     if (sim.cursedArena && sim.cursedArena.active) {
-      setActiveObjective({type: 'BLOOD_TRIAL', progress: Math.ceil(sim.cursedArena.duration)});
+      nextObjective = {type: 'BLOOD_TRIAL', progress: Math.ceil(sim.cursedArena.duration)};
     } else if (sim.obelisk) {
-      setActiveObjective({type: 'OBELISK', progress: Math.round(sim.obelisk.charge)});
+      nextObjective = {type: 'OBELISK', progress: Math.round(sim.obelisk.charge)};
     } else if (sim.merchant) {
       const dist = Math.round(Math.hypot(sim.x - sim.merchant.x, sim.y - sim.merchant.y));
-      setActiveObjective({type: 'MERCHANT', progress: dist});
-    } else {
-      setActiveObjective(null);
+      nextObjective = {type: 'MERCHANT', progress: dist};
     }
+    setActiveObjective((prev) => {
+      if (!prev && !nextObjective) return null;
+      if (prev && nextObjective && prev.type === nextObjective.type && prev.progress === nextObjective.progress) return prev;
+      return nextObjective;
+    });
 
     for (let i = sim.particles.length - 1; i >= 0; i--) {
       const particle = sim.particles[i];
@@ -1121,7 +1151,10 @@ export default function App() {
       damage.y -= 30 * dt;
       if (damage.life <= 0) sim.damageNumbers.splice(i, 1);
     }
-    setGameState((state) => ({...state, timer: Math.floor(sim.runTimer)}));
+    const currentTimerSec = Math.floor(sim.runTimer);
+    if (gameStateRef.current.timer !== currentTimerSec) {
+      setGameState((state) => (state.timer === currentTimerSec ? state : {...state, timer: currentTimerSec}));
+    }
   }, [
     bankRunGold,
     buyCatalyst,
@@ -1169,7 +1202,7 @@ export default function App() {
         renderGame(
           context,
           simRef.current,
-          calculateDerivedStats(simRef.current, metaLevelsRef.current),
+          simRef.current.derivedStats || calculateDerivedStats(simRef.current, metaLevelsRef.current),
           assets as Record<string, HTMLImageElement>,
           spriteRenderersRef.current,
           canvasWidth,

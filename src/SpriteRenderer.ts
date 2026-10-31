@@ -21,6 +21,32 @@ export class SpriteRenderer {
   }
 
   /**
+   * Advances the animation state in-place based on delta time with zero allocation.
+   */
+  advanceInPlace(
+    state: SpriteAnimationState,
+    deltaTime: number,
+  ): void {
+    const config = this.configs[state.currentAction];
+    if (!config) return;
+
+    state.timer += deltaTime;
+    const frameDuration = 1 / Math.max(1, config.fps);
+
+    if (state.timer >= frameDuration) {
+      const framesToAdvance = Math.floor(state.timer / frameDuration);
+      state.timer %= frameDuration;
+      const nextFrame = state.currentFrame + framesToAdvance;
+
+      if (config.loop === false) {
+        state.currentFrame = Math.min(config.totalFrames - 1, nextFrame);
+      } else {
+        state.currentFrame = nextFrame % config.totalFrames;
+      }
+    }
+  }
+
+  /**
    * Advances the animation state based on delta time.
    */
   getNextState(

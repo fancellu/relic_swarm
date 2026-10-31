@@ -256,11 +256,7 @@ export function renderGame(
     ctx.rotate(sim.auraVisualAngle * (isSanctuary ? 1.5 : isEclipse ? 2.0 : 1));
     ctx.globalAlpha = isSanctuary ? 0.8 : isEclipse ? 0.85 : 0.65;
     if (auraImg && auraImg.complete && auraImg.naturalWidth > 0) {
-      if (isEclipse) {
-        try {
-          ctx.filter = 'hue-rotate(-45deg) saturate(200%) brightness(1.2)';
-        } catch (e) {}
-      }
+
       ctx.drawImage(auraImg, -auraRad, -auraRad, auraRad * 2, auraRad * 2);
     }
     ctx.restore();
@@ -451,34 +447,16 @@ export function renderGame(
 
     const drawSize = enemy.isBoss ? 160 : enemy.isElite ? 80 : 54;
     if (renderer) {
-      if (enemy.poisonTimer > 0) {
-        ctx.save();
-        try {
-          ctx.filter = 'hue-rotate(85deg) saturate(280%) brightness(1.15)';
-        } catch (e) {}
-        renderer.draw(
-          ctx,
-          enemy.animState,
-          enemy.x,
-          enemy.y,
-          drawSize,
-          drawSize,
-          assets,
-          enemy.facingLeft,
-        );
-        ctx.restore();
-      } else {
-        renderer.draw(
-          ctx,
-          enemy.animState,
-          enemy.x,
-          enemy.y,
-          drawSize,
-          drawSize,
-          assets,
-          enemy.facingLeft,
-        );
-      }
+      renderer.draw(
+        ctx,
+        enemy.animState,
+        enemy.x,
+        enemy.y,
+        drawSize,
+        drawSize,
+        assets,
+        enemy.facingLeft,
+      );
     }
 
     // Enemy Health Bar
@@ -547,11 +525,6 @@ export function renderGame(
       ctx.save();
       ctx.translate(proj.x, proj.y);
       ctx.rotate(spin);
-      if (proj.type === 'chakram') {
-        try {
-          ctx.filter = 'hue-rotate(160deg) brightness(1.2)';
-        } catch (e) {}
-      }
       drawAsset(
         ctx,
         assets['proj_spinning_dagger'],
@@ -591,8 +564,6 @@ export function renderGame(
     } else if (proj.type === 'ice') {
       ctx.save();
       ctx.fillStyle = '#06b6d4';
-      ctx.shadowColor = '#06b6d4';
-      ctx.shadowBlur = 8;
       ctx.beginPath();
       ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
       ctx.fill();
@@ -600,8 +571,6 @@ export function renderGame(
     } else if (proj.type === 'beetle') {
       ctx.save();
       ctx.fillStyle = '#10b981';
-      ctx.shadowColor = '#10b981';
-      ctx.shadowBlur = 6;
       ctx.beginPath();
       ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
       ctx.fill();
@@ -612,8 +581,6 @@ export function renderGame(
       ctx.translate(proj.x, proj.y);
       ctx.rotate(spin);
       ctx.fillStyle = '#facc15';
-      ctx.shadowColor = '#eab308';
-      ctx.shadowBlur = 8;
       ctx.beginPath();
       ctx.arc(0, 0, Math.max(0, proj.radius), 0, Math.PI * 2);
       ctx.fill();
@@ -627,8 +594,6 @@ export function renderGame(
     } else if (proj.type === 'shotgun_pellet') {
       ctx.save();
       ctx.fillStyle = proj.color;
-      ctx.shadowColor = '#f59e0b';
-      ctx.shadowBlur = 7;
       ctx.beginPath();
       ctx.arc(proj.x, proj.y, Math.max(0, proj.radius), 0, Math.PI * 2);
       ctx.fill();
@@ -639,8 +604,6 @@ export function renderGame(
       ctx.translate(proj.x, proj.y);
       ctx.rotate(angle);
       ctx.fillStyle = proj.color;
-      ctx.shadowColor = '#7c3aed';
-      ctx.shadowBlur = 10;
       ctx.beginPath();
       ctx.moveTo(proj.radius * 1.5, 0);
       ctx.lineTo(-proj.radius, -proj.radius * 0.75);
@@ -652,8 +615,6 @@ export function renderGame(
     } else if (proj.type === 'chain_lightning' && proj.chainEndX !== undefined && proj.chainEndY !== undefined) {
       ctx.save();
       ctx.strokeStyle = proj.color;
-      ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 12;
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.moveTo(proj.x, proj.y);
@@ -665,12 +626,9 @@ export function renderGame(
       ctx.restore();
     } else if (proj.isEnemy) {
       ctx.fillStyle = proj.color;
-      ctx.shadowColor = proj.color;
-      ctx.shadowBlur = 10;
       ctx.beginPath();
       ctx.arc(proj.x, proj.y, Math.max(0, proj.radius), 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
     }
   });
 
