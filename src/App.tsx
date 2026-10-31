@@ -225,7 +225,6 @@ export default function App() {
   const lastGpXRef = useRef(false);
   const lastGpYRef = useRef(false);
   const lastGpPauseRef = useRef(false);
-  const lastKeyboardCancelRef = useRef(false);
   const runBankedRef = useRef(false);
 
   useEffect(() => {
@@ -333,7 +332,6 @@ export default function App() {
     endScreenFocusIndexRef.current = 0;
     setEndScreenFocusIndex(0);
     navCooldownRef.current = 0.4;
-    lastKeyboardCancelRef.current = true;
     lastGpCancelRef.current = true;
     lastGpConfirmRef.current = true;
     gameStateRef.current = {...gameStateRef.current, status: 'START'};
@@ -588,7 +586,6 @@ export default function App() {
     navCooldownRef.current = 0.5;
     lastGpConfirmRef.current = true;
     lastGpCancelRef.current = true;
-    lastKeyboardCancelRef.current = true;
     stageClearFocusIndexRef.current = 0;
     setStageClearFocusIndex(0);
 
@@ -624,7 +621,6 @@ export default function App() {
     navCooldownRef.current = 0.5;
     lastGpConfirmRef.current = true;
     lastGpCancelRef.current = true;
-    lastKeyboardCancelRef.current = true;
     gameStateRef.current = {...gameStateRef.current, status: 'VICTORY'};
     setGameState((state) => ({...state, status: 'VICTORY'}));
   }, [bankRunGold]);
@@ -992,7 +988,6 @@ export default function App() {
         navCooldownRef.current = 0.5;
         lastGpConfirmRef.current = true;
         lastGpCancelRef.current = true;
-        lastKeyboardCancelRef.current = true;
       },
       () => setCurrentHp(Math.round(sim.hp)),
     );
@@ -1213,12 +1208,6 @@ export default function App() {
   useEffect(() => {
     let raf = 0;
     const frame = (time: number) => {
-      const cancelPressed = inputRef.current.actions.cancel;
-      if (cancelPressed && !lastKeyboardCancelRef.current) {
-        if (gameStateRef.current.status === 'PLAYING') setIsPauseOpen((value) => !value);
-        else if (gameStateRef.current.status === 'START') void exitChat({});
-      }
-      lastKeyboardCancelRef.current = cancelPressed;
       stepperRef.current?.(time, (dt) => updateRef.current(dt));
       const context = canvasRef.current?.getContext('2d');
       if (context) {
@@ -1275,6 +1264,10 @@ export default function App() {
           return;
         }
         if (!isSanctumOpen && !isHowToPlayOpen) {
+          if (event.key === 'Escape') {
+            void exitChat({});
+            return;
+          }
           if (event.key === 's' || event.key === 'S') {
             event.preventDefault();
             openSanctum();
