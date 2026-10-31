@@ -18,7 +18,7 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 
 - **Fluid Horde Combat**: High-density swarms rendered at a fixed 60 FPS with damage-scaled screen shake, micro hit-stop freeze frames, and responsive crowd-clearing feedback.
 - **Dynamic Arsenal Selling & Relic Forging (Mid-Run Pivoting)**: Don't get trapped in a dead-end build. Open your inventory or draft modal at any time to sell gear for an instant **70% gold refund**, or permanently **Extract Essence** from maxed Level 5 items to keep 20% of their power while freeing build slots.
-- **Wandering Black Market**: Every 3 minutes, a smuggler merchant cart arrives offering combat Overdrives, weapon temperings, and instant fusion catalysts for unbanked gold.
+- **Wandering Black Market**: A wandering smuggler merchant cart arrives offering combat Overdrives, weapon temperings, and instant fusion catalysts for unbanked gold (permits 1 purchase per visit before relocating 1–2 minutes later).
 - **5 Distinct Champions**: Choose from Arcanist Vael, Knight Commander Roland, Pyromancer Ignis, Plague Alchemist Mortis, and Barbarian Thorgar — each featuring unique baseline stats, starting weapons, and passive affinities.
 - **Weapons, Evolutions & Fusions**:
   - **11 Base Weapons**: Magic Missiles, Orbiting Daggers, Flame Blast, Thunder Strike, Radiant Aura, Venom Spores, Glacial Shards, Gilded Chakram, Scattershot, Homing Missiles, and the Chain Lightning Gun.

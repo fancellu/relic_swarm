@@ -112,7 +112,7 @@ function createSimulation(heroIndex = 0): SimulationState {
     inObeliskZone: false,
     cursedArena: null,
     merchant: null,
-    nextMerchantSpawnTime: 180,
+    nextMerchantSpawnTime: 120,
     overdriveTimer: 0,
     fusionCatalystAvailable: false,
     extractedEssences: [],
@@ -440,8 +440,23 @@ export default function App() {
     },
     [entityCallbacks, isLevelUpOpen, spawnDamageNumber, spawnParticles, syncEquipment],
   );
+  const dismissMerchant = useCallback(() => {
+    const sim = simRef.current;
+    if (sim.merchant) {
+      spawnParticles(sim.merchant.x, sim.merchant.y, 45, '#a855f7', 260);
+      spawnParticles(sim.merchant.x, sim.merchant.y, 25, '#fbbf24', 200);
+      spawnDamageNumber(sim.merchant.x, sim.merchant.y - 20, 'DEAL STRUCK! (Relocating...)', '#fbbf24');
+      sim.merchant = null;
+    }
+    // Return somewhere else 1-2 minutes later (60 to 120 seconds)
+    sim.nextMerchantSpawnTime = sim.runTimer + 60 + Math.random() * 60;
+    setIsMerchantOpen(false);
+    merchantCooldownRef.current = true;
+    navCooldownRef.current = 0.3;
+  }, [spawnDamageNumber, spawnParticles]);
   const buyOverdrive = useCallback(() => {
     const sim = simRef.current;
+    if (!sim.merchant) return;
     if (sim.gold < 100) {
       gameAudio.playErrorBuzz();
       return;
@@ -461,9 +476,12 @@ export default function App() {
     sim.speed = updatedStats.speed;
     sim.derivedStats = updatedStats;
     syncStats(updatedStats.maxHp, updatedStats.maxStamina);
-  }, [spawnDamageNumber, spawnParticles, syncStats]);
+
+    dismissMerchant();
+  }, [dismissMerchant, spawnDamageNumber, spawnParticles, syncStats]);
   const buyForceUpgrade = useCallback(() => {
     const sim = simRef.current;
+    if (!sim.merchant) return;
     if (sim.gold < 175) {
       gameAudio.playErrorBuzz();
       return;
@@ -501,9 +519,12 @@ export default function App() {
     sim.maxStamina = updatedStats.maxStamina;
     sim.speed = updatedStats.speed;
     syncStats(updatedStats.maxHp, updatedStats.maxStamina);
-  }, [spawnDamageNumber, spawnParticles, syncEquipment, syncStats]);
+
+    dismissMerchant();
+  }, [dismissMerchant, spawnDamageNumber, spawnParticles, syncEquipment, syncStats]);
   const buyCatalyst = useCallback(() => {
     const sim = simRef.current;
+    if (!sim.merchant) return;
     if (sim.gold < 250) {
       gameAudio.playErrorBuzz();
       return;
@@ -545,7 +566,9 @@ export default function App() {
     sim.maxStamina = updatedStats.maxStamina;
     sim.speed = updatedStats.speed;
     syncStats(updatedStats.maxHp, updatedStats.maxStamina);
-  }, [spawnDamageNumber, spawnParticles, syncEquipment, syncStats]);
+
+    dismissMerchant();
+  }, [dismissMerchant, spawnDamageNumber, spawnParticles, syncEquipment, syncStats]);
   const openInventory = useCallback(() => {
     inventoryFocusIndexRef.current = 0;
     setInventoryFocusIndex(0);

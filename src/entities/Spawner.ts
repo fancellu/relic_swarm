@@ -80,11 +80,12 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
     }
   }
 
-  // Wandering Black Market Merchant Cart (every 3 minutes: 180s, 360s, 540s, 720s)
-  if (!sim.merchant && sim.runTimer >= (sim.nextMerchantSpawnTime || 180)) {
-    sim.nextMerchantSpawnTime = (sim.nextMerchantSpawnTime || 180) + 180;
+  // Wandering Black Market Merchant Cart
+  if (!sim.merchant && sim.runTimer >= (sim.nextMerchantSpawnTime || 120)) {
+    // Hold next spawn far in future while cart is active; will be rescheduled on single purchase
+    sim.nextMerchantSpawnTime = sim.runTimer + 999999;
     const angle = Math.random() * Math.PI * 2;
-    const spawnDist = 260 + Math.random() * 80;
+    const spawnDist = 320 + Math.random() * 120;
     sim.merchant = {
       id: sim.nextEnemyId++,
       x: sim.x + Math.cos(angle) * spawnDist,

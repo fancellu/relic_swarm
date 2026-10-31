@@ -421,11 +421,11 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                       <span>Wandering Black Market</span>
                     </div>
                     <span className="text-[9px] bg-amber-950 text-amber-300 px-1.5 py-0.5 rounded border border-amber-800/60 font-mono">
-                      Every 3 Mins
+                      1 Purchase / Visit
                     </span>
                   </div>
                   <div className="text-[10px] text-slate-300 leading-normal">
-                    A stationary smuggler cart spawns near the hero. Touch it to spend <span className="text-amber-300 font-bold">unbanked run gold</span> on high-impact contraband:
+                    A stationary smuggler cart spawns near the hero. Permits <span className="text-amber-300 font-bold">one purchase per visit</span> before packing up and relocating somewhere else 1–2 minutes later:
                   </div>
                   <div className="text-[10px] text-amber-300/90 bg-amber-950/30 p-1.5 rounded border border-amber-900/30 leading-tight">
                     • <span className="text-white font-bold">60s Overdrive (100g):</span> +40% Might, +25% CDR, +20% Speed.<br />

@@ -68,7 +68,7 @@ export const MerchantModal: React.FC<MerchantModalProps> = ({
         </div>
 
         <p className="text-xs text-slate-300">
-          Spend <span className="text-amber-300 font-bold">current unbanked run gold</span> on high-stakes black market contraband to overdrive your build before the next swarm.
+          Spend <span className="text-amber-300 font-bold">current unbanked run gold</span> on contraband. The smuggler permits only <span className="text-amber-300 font-bold">one purchase per visit</span> before packing up and relocating somewhere else in the arena (1–2 mins).
         </p>
 
         {/* 3 Contraband Offerings */}

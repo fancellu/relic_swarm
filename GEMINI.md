@@ -142,6 +142,7 @@ stateDiagram-v2
 1. **Infinite Non-Evolved Tempering**: Non-evolved / non-fused weapons can increase levels without limit at the Wandering Merchant.
 2. **Carry-Over Level Cap**: Carried-over weapons between endless stages are capped at $\text{Stage} \times 5$ (e.g. Stage 2 caps at L10) with a 70% gold refund for excess levels to preserve challenge.
 3. **Synchronous Intermission Pause**: Intermission modals (`StageClearModal`) must synchronously halt the simulation loop using refs (`isStageClearOpenRef.current = true`) to prevent mobs, drops, and timers from updating in the background.
+4. **Single Transaction & Relocation**: Each visit to the Wandering Black Market allows strictly one purchase before the cart despawns and relocates elsewhere in the arena 1–2 minutes later.
 
 ---
 

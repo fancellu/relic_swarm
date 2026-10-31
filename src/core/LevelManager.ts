@@ -136,7 +136,7 @@ export class LevelManager {
     sim.inObeliskZone = false;
     sim.cursedArena = null;
     sim.merchant = null;
-    sim.nextMerchantSpawnTime = 180;
+    sim.nextMerchantSpawnTime = 120;
 
     // 4. Reset stage timers and boss flags
     sim.runTimer = 0;
