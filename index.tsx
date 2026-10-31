@@ -1,12 +1,16 @@
 import {createRoot} from 'react-dom/client';
 import './index.css';
 import App from './src/App';
-import { Analytics } from '@vercel/analytics/react'
+import { inject } from "@vercel/analytics"
+
+
 
 // Inject the playground preview flag BEFORE the application initializes
 (window as any).__PLAYGROUND_PREVIEW__ = true;
 
 const root = createRoot(document.getElementById('root')!);
+
+inject()
 
 root.render(
   <div
@@ -16,7 +20,6 @@ root.render(
       height: '100vh',
       overflow: 'hidden',
     }}>
-      <Analytics />
     <App />
   </div>,
 );
