@@ -2,6 +2,7 @@ import {getConfig} from '../constants';
 import {EnemyEntity, HeroData, SimulationState} from '../types/entities';
 import {HEROES} from '../types/items';
 import {META_UPGRADES} from '../types/meta';
+import {stageManager} from '../core/Stage';
 
 export interface DerivedStats {
   maxHp: number;
@@ -179,6 +180,9 @@ export function updatePlayerMovement(
 
   sim.x += sim.vx * dt;
   sim.y += sim.vy * dt;
+
+  // Solid Scenery Obstacle Collision & Frictionless Sliding
+  stageManager.resolveCircleCollision(sim, 18);
 
   // Cursed Arena Trap Clamping (600x600 barrier walls)
   if (sim.cursedArena && sim.cursedArena.active) {

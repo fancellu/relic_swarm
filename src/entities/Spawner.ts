@@ -4,6 +4,7 @@ import {gameAudio} from '../../utils/helper';
 import {addDrop, EnemyEntity, SimulationState} from '../types/entities';
 import {MAX_WORLD_CHESTS} from '../types/meta';
 import {DerivedStats} from './Player';
+import {stageManager} from '../core/Stage';
 
 export function createEnemy(
   id: number,
@@ -68,10 +69,16 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
       sim.obeliskSpawnTimer = 0;
       const angle = Math.random() * Math.PI * 2;
       const spawnDist = 520 + Math.random() * 120;
+      let ox = sim.x + Math.cos(angle) * spawnDist;
+      let oy = sim.y + Math.sin(angle) * spawnDist;
+      if (!stageManager.isWalkable(ox, oy, 80)) {
+        ox = (ox + sim.x) / 2;
+        oy = (oy + sim.y) / 2;
+      }
       sim.obelisk = {
         id: sim.nextEnemyId++,
-        x: sim.x + Math.cos(angle) * spawnDist,
-        y: sim.y + Math.sin(angle) * spawnDist,
+        x: ox,
+        y: oy,
         radius: 150,
         charge: 0,
         maxCharge: 100,
@@ -86,10 +93,16 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
     sim.nextMerchantSpawnTime = sim.runTimer + 999999;
     const angle = Math.random() * Math.PI * 2;
     const spawnDist = 320 + Math.random() * 120;
+    let mx = sim.x + Math.cos(angle) * spawnDist;
+    let my = sim.y + Math.sin(angle) * spawnDist;
+    if (!stageManager.isWalkable(mx, my, 45)) {
+      mx = (mx + sim.x) / 2;
+      my = (my + sim.y) / 2;
+    }
     sim.merchant = {
       id: sim.nextEnemyId++,
-      x: sim.x + Math.cos(angle) * spawnDist,
-      y: sim.y + Math.sin(angle) * spawnDist,
+      x: mx,
+      y: my,
       radius: 38,
       visited: false,
       hasOverdrive: true,
@@ -174,21 +187,21 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
         color = '#f59e0b';
       }
 
-      sim.enemies.push(
-        createEnemy(
-          sim.nextEnemyId++,
-          type,
-          ex,
-          ey,
-          hp,
-          speed,
-          damage,
-          size,
-          color,
-          isElite,
-          false,
-        ),
+      const newEnemy = createEnemy(
+        sim.nextEnemyId++,
+        type,
+        ex,
+        ey,
+        hp,
+        speed,
+        damage,
+        size,
+        color,
+        isElite,
+        false,
       );
+      stageManager.resolveCircleCollision(newEnemy, newEnemy.size);
+      sim.enemies.push(newEnemy);
     }
   }
 }
@@ -432,6 +445,9 @@ export function updateEnemies(
 
     enemy.x += enemy.vx * dt;
     enemy.y += enemy.vy * dt;
+
+    // Solid Scenery Obstacle Collision & Tangential Slide Navigation
+    stageManager.resolveCircleCollision(enemy, enemy.size);
 
     // Enemy Ranged Attacks
     if (enemy.type === 'sorcerer') {

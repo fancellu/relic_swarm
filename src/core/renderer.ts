@@ -4,6 +4,7 @@ import {DerivedStats} from '../entities/Player';
 import {SimulationState} from '../types/entities';
 import {drawArenaFloor, drawDamageNumbers, drawParticles, getScreenShakeOffset} from './engine';
 import {levelManager} from './LevelManager';
+import {stageManager} from './Stage';
 
 export function renderGame(
   ctx: CanvasRenderingContext2D,
@@ -34,7 +35,13 @@ export function renderGame(
     stageMods.borderAccentColor,
   );
 
-  // 1b. Render Corrupted Obelisk (Zone & Monolith)
+  // 1a. Themed Ground Decals & Mosaic Inlays
+  stageManager.renderFloorDecals(ctx, sim.camera, canvasWidth, canvasHeight);
+
+  // 1b. Themed Scenery Obstacles (Pillars, Crypts, Trees, Walls)
+  stageManager.renderObstacles(ctx, sim.camera, canvasWidth, canvasHeight);
+
+  // 1c. Render Corrupted Obelisk (Zone & Monolith)
   if (sim.obelisk) {
     const ob = sim.obelisk;
     ctx.save();
@@ -806,4 +813,7 @@ export function renderGame(
       ctx.restore();
     }
   }
+
+  // 12. Ambient Weather & Atmospheric Particles (Snow, Embers, Spores, Dust)
+  stageManager.updateAndRenderAmbience(ctx, canvasWidth, canvasHeight, 1 / 60);
 }

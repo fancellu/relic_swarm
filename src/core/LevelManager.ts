@@ -1,5 +1,6 @@
 import {EquippedItem, SimulationState} from '../types/entities';
 import {ITEM_DEFS} from '../types/items';
+import {stageManager} from './Stage';
 
 export interface StageTheme {
   name: string;
@@ -33,6 +34,7 @@ export class LevelManager {
 
   public reset(): void {
     this.stage = 1;
+    stageManager.generate(1);
   }
 
   public getStage(): number {
@@ -41,6 +43,7 @@ export class LevelManager {
 
   public setStage(stage: number): void {
     this.stage = Math.max(1, stage);
+    stageManager.generate(this.stage);
   }
 
   public getModifiers(customStage?: number): LevelModifiers {
@@ -79,6 +82,7 @@ export class LevelManager {
   } {
     this.stage += 1;
     sim.stage = this.stage;
+    stageManager.generate(this.stage);
 
     // 1. Identify the weapon to carry over (fallback to first equipped or hero starting weapon)
     const carriedWeapon: EquippedItem =

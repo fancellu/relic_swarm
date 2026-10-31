@@ -3,6 +3,7 @@ import {MAX_PROJECTILES, SimulationState} from '../types/entities';
 import {spatialGrid} from '../core/spatial';
 import {applyEnemySlow} from './Player';
 import {applyEnemyPoison} from './Weapons';
+import {stageManager} from '../core/Stage';
 
 export function updateProjectiles(
   sim: SimulationState,
@@ -238,17 +239,31 @@ export function updateProjectiles(
       proj.y += proj.vy * dt;
 
       if (proj.isEnemy) {
-        const dist = Math.hypot(sim.x - proj.x, sim.y - proj.y);
-        if (dist < proj.radius + 20 && sim.invulnTimer <= 0 && sim.aegisShieldTimer <= 0) {
-          sim.hp -= proj.damage;
-          sim.invulnTimer = 0.5;
-          sim.screenShake = 12;
-          gameAudio.playMeleePunch();
-          spawnDamageNumber(sim.x, sim.y, `-${Math.round(proj.damage)}`, '#ef4444');
-          onPlayerHit(proj.damage);
+        // Tactical cover: enemy orbs dissipate against solid terrain
+        if (!stageManager.isWalkable(proj.x, proj.y, proj.radius)) {
           proj.duration = 0;
+          spawnParticles(proj.x, proj.y, 6, proj.color, 80);
+        } else {
+          const dist = Math.hypot(sim.x - proj.x, sim.y - proj.y);
+          if (dist < proj.radius + 20 && sim.invulnTimer <= 0 && sim.aegisShieldTimer <= 0) {
+            sim.hp -= proj.damage;
+            sim.invulnTimer = 0.5;
+            sim.screenShake = 12;
+            gameAudio.playMeleePunch();
+            spawnDamageNumber(sim.x, sim.y, `-${Math.round(proj.damage)}`, '#ef4444');
+            onPlayerHit(proj.damage);
+            proj.duration = 0;
+          }
         }
       } else {
+        // Physical player projectiles explode against solid obstacles
+        if (
+          (proj.type === 'missile' || proj.type === 'shotgun_pellet' || proj.type === 'flame') &&
+          !stageManager.isWalkable(proj.x, proj.y, proj.radius)
+        ) {
+          proj.duration = 0;
+          spawnParticles(proj.x, proj.y, 6, proj.color, 90);
+        }
         spatialGrid.forEachNearby(proj.x, proj.y, proj.radius + 50, (enemy) => {
           if (proj.duration <= 0 || proj.hitList.includes(enemy.id)) return;
 

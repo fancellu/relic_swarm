@@ -26,12 +26,13 @@ We need more passives.
 
 We need more ultimates.
 
-## Landscape
+## Landscape (Completed)
 
-Add some more variation to the landscape.
-Walls?
-Trees?
-Buildings?
+- [x] Distinct scenery per stage via `Stage` architecture (`src/core/Stage.ts`).
+- [x] Walls, buildings (cathedral crypts, bone walls, ruins), trees (snow pines, gnarled dead oaks), and pillars.
+- [x] Impassable solid colliders with continuous tangential sliding for player and enemy swarms.
+- [x] Tactical cover: enemy sorcerer orbs hit solid obstacles and dissipate.
+- [x] Distinct ground decals (mosaics, blood pools, ice cracks, grave moss, celestial constellations) and ambient weather particles (snow, embers, spores, dust).
 
 ## Visuals
 
