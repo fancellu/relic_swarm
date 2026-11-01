@@ -94,8 +94,8 @@ export const HEROES: HeroData[] = [
     armorBonus: 0,
     regenBonus: 1.0,
     color: '#22c55e',
-    idleSheet: 'assets/images/hero_voidstalker_idle.png',
-    spriteKey: 'hero_voidstalker',
+    idleSheet: 'assets/images/hero_mortis_idle.png',
+    spriteKey: 'hero_mortis',
   },
   {
     id: 'thorgar',

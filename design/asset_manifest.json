@@ -212,6 +212,26 @@
     "resolution": null
   },
   {
+    "id": "hero_mortis",
+    "name": "Plague Alchemist Mortis",
+    "art_style": "pixelated",
+    "category": null,
+    "media_type": "spritesheet",
+    "description": "Plague Alchemist Mortis",
+    "aspect_ratio": "1:1",
+    "usage": "Playable character class specializing in toxic venom vapors, decay aura, and area denial",
+    "chroma_key": true,
+    "prompt": "Plague alchemist hooded doctor in emerald toxic leather robes and beak mask, wielding venom vials and pestilence staff, glowing green chemical fumes, crisp pixel art, clean distinct silhouette, zero commercial icons, new design, completely independent styling",
+    "actions": [
+      "IDLE",
+      "RUN",
+      "ATTACK",
+      "HURT",
+      "DEATH"
+    ],
+    "resolution": null
+  },
+  {
     "id": "enemy_shadow_hound",
     "name": "Shadow Hound",
     "art_style": "pixelated",

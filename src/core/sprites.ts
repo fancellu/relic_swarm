@@ -5,6 +5,7 @@ export interface GameSpriteRenderers {
   hero_barbarian: SpriteRenderer;
   hero_pyromancer: SpriteRenderer;
   hero_voidstalker: SpriteRenderer;
+  hero_mortis: SpriteRenderer;
   skeleton: SpriteRenderer;
   hound: SpriteRenderer;
   bat: SpriteRenderer;
@@ -57,6 +58,13 @@ export function initSpriteRenderers(): GameSpriteRenderers {
       ATTACK: makeConfig('hero_voidstalker_attack', 16, 16),
       HURT: makeConfig('hero_voidstalker_hurt', 16, 10, 512, 512, false),
       DEATH: makeConfig('hero_voidstalker_death', 16, 10, 512, 512, false),
+    }),
+    hero_mortis: new SpriteRenderer({
+      IDLE: makeConfig('hero_mortis_idle', 4, 6),
+      RUN: makeConfig('hero_mortis_run', 16, 16),
+      ATTACK: makeConfig('hero_mortis_attack', 16, 16),
+      HURT: makeConfig('hero_mortis_hurt', 16, 10, 512, 512, false),
+      DEATH: makeConfig('hero_mortis_death', 16, 10, 512, 512, false),
     }),
     skeleton: new SpriteRenderer({
       IDLE: makeConfig('enemy_skeleton_idle', 4, 6),

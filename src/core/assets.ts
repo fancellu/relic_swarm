@@ -47,6 +47,12 @@ export const ASSETS_MANIFEST: Record<string, string> = {
   hero_voidstalker_hurt: 'assets/images/hero_voidstalker_hurt.png',
   hero_voidstalker_death: 'assets/images/hero_voidstalker_death.png',
 
+  hero_mortis_idle: 'assets/images/hero_mortis_idle.png',
+  hero_mortis_run: 'assets/images/hero_mortis_run.png',
+  hero_mortis_attack: 'assets/images/hero_mortis_attack.png',
+  hero_mortis_hurt: 'assets/images/hero_mortis_hurt.png',
+  hero_mortis_death: 'assets/images/hero_mortis_death.png',
+
   enemy_skeleton_idle: 'assets/images/enemy_skeleton_idle.png',
   enemy_skeleton_run: 'assets/images/enemy_skeleton_run.png',
   enemy_skeleton_attack: 'assets/images/enemy_skeleton_attack.png',
