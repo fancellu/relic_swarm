@@ -130,3 +130,73 @@ In games where sound effects share PSG channels with the music engine, combat so
 - **Channel Hierarchy Assignment**:
   - Route continuous rapid SFX (gunshots, steps) to Pulse 1 or Noise.
   - Keep the primary musical hook on **Pulse 2** or **Triangle**, ensuring the core melodic identity remains unbroken even during dense combat.
+
+---
+
+## 6. The Stinger / BGM Volume Disparity Trap
+
+### **Id**
+stinger-volume-disparity
+
+### **Severity**
+HIGH
+
+### **Description**
+One-shot synthesized WAV stingers (victory fanfares, level-up jingles, death dirges) play dramatically louder than in-game background music, startling players and causing ear discomfort.
+
+### **Symptoms**
+- Players complain that stingers or fanfare jingles are "deafening" or "ear-splitting" compared to BGM.
+- In-game balance is broken even though individual channels look balanced in isolation.
+
+### **Why It Happens**
+Background music players typically apply attenuation (e.g., target gain $0.15$), while SFX engines route through master SFX buses (e.g., $0.6$). Playing a full-scale ($0\text{ dBFS}$) WAV stinger with default buffer gain ($0.85$–$1.0$) outputs at $0.51$–$0.60$—over **300% to 400% louder** than the background music.
+
+### **Solution**
+1. **Calibrate Buffer Gain**: Scale stinger playback gain so that $\text{Stinger Gain} \times \text{SFX Master Gain} \approx \text{BGM Target Gain}$.
+2. **Mix Headroom**: Synthesize WAV stingers with target peaks around $0.70$ (RMS $\approx 0.24$) rather than normalizing to $1.0$.
+
+---
+
+## 7. Stinger Overlap & Polyphonic Stacking
+
+### **Id**
+stinger-polyphonic-stacking
+
+### **Severity**
+HIGH
+
+### **Description**
+Rapid successive game events (such as collecting multiple chests, gems, or leveling up twice in rapid succession) trigger multiple one-shot stinger instances simultaneously, multiplying volume and creating dissonant phase clashes.
+
+### **Symptoms**
+- Harsh doubled or tripled audio when triggering repeated rewards.
+- Multiple 8-second musical tracks playing out-of-sync over each other.
+
+### **Why It Happens**
+`AudioBufferSourceNode` is a one-shot object without built-in concurrency controls. Multiple calls to `playSoundFile()` or `playVictoryFanfare()` spawn independent nodes that mix additively.
+
+### **Solution**
+Maintain a single active stinger reference in the audio controller:
+- Before starting a new stinger node, call `.stop()` and `.disconnect()` on any active node.
+- Clear the reference on the `ended` event.
+
+---
+
+## 8. Fanfare Scope Creep
+
+### **Id**
+fanfare-scope-creep
+
+### **Severity**
+MEDIUM
+
+### **Description**
+Binding long (4–8 bar, 5–10 second) celebratory fanfares to routine in-combat events (chest pickups, weapon crafting, elite kills) constantly hijacks player attention and disrupts combat flow.
+
+### **Symptoms**
+- Repetitive, fatigue-inducing musical stingers interrupt combat pacing.
+- The true end-game victory loses emotional impact because the fanfare has already been heard dozens of times during the run.
+
+### **Solution**
+- **Routine in-game rewards**: Use short, ascending procedural chimes ($0.2\text{s}$–$0.3\text{s}$) with gentle volume.
+- **Full fanfares**: Reserve strictly for terminal run states (`VICTORY` / `GAME_OVER`).

@@ -102,6 +102,18 @@ LocalStorage keys must maintain backward compatibility:
 5. **Cache `derivedStats` on `sim.derivedStats`**:
    - Recompute only on equipment/level/buff events, never on every frame or render pass.
 
+### 2.9 Audio & Stinger Invariants (Gain Parity, Single Concurrency, Event Scoping)
+1. **Gain Parity with Background Music**:
+   - The logical BGM target gain is `0.15` (`BackgroundMusic.tsx`).
+   - SFX methods routing through the `sfxMaster` gain bus (`0.6`) must calibrate one-shot audio buffer gains (e.g. `volume = 0.25`) so that effective gain ($0.25 \times 0.6 = 0.15$) exactly matches BGM loudness.
+   - Synthesize one-shot WAV stingers with moderate channel headroom (peak $\approx 0.70$, $\text{RMS} \approx 0.24$) rather than brickwall $0\text{ dBFS}$ ($1.0$) clipping.
+2. **Mutual Exclusion on Stingers (Zero Polyphonic Stacking)**:
+   - Only **one** one-shot musical stinger may play at any given time.
+   - Maintain a dedicated `currentStingerSource` reference on `GameAudio`. Initiating any new stinger must immediately stop and disconnect the active stinger before starting the new buffer.
+3. **Strict Event Scoping for Multi-Bar Fanfares**:
+   - Full thematic fanfares (`playVictoryFanfare()`, 4–8 bars) are reserved **strictly and exclusively** for run completion (`gameState.status === 'VICTORY'`).
+   - In-game rewards, chest pickups, wandering merchant fusions, and trial completions must use brief, non-interruptive feedback chimes (`playPowerupChime()`).
+
 ---
 
 ## 3. Game Loop & Performance Guidelines
