@@ -405,5 +405,33 @@
     "prompt": "16-bit retro arcade pixel art fragmentation grenade with segmented dark olive green casing, brass neck collar, striker lever and pin, and fiery orange/yellow sparks emitting from the fuse",
     "actions": null,
     "resolution": null
+  },
+  {
+    "id": "bgm_blood_catacombs",
+    "name": "Blood Catacombs BGM",
+    "art_style": "pixelated",
+    "category": null,
+    "media_type": "music",
+    "description": "Stage 2 Blood Catacombs high-energy chiptune battle theme",
+    "aspect_ratio": "1:1",
+    "usage": "Stage 2 gameplay background music",
+    "chroma_key": false,
+    "prompt": "144 BPM, 30s seamless loop, NES 2A03 4-channel chiptune, driving staccato walking bass, fast 32nd demiarpeggios, minor key adrenaline battle groove",
+    "actions": null,
+    "resolution": null
+  },
+  {
+    "id": "bgm_glacial_abyss",
+    "name": "Glacial Abyss BGM",
+    "art_style": "pixelated",
+    "category": null,
+    "media_type": "music",
+    "description": "Stage 3+ Glacial Abyss crystalline chiptune battle theme",
+    "aspect_ratio": "1:1",
+    "usage": "Stage 3+ gameplay background music",
+    "chroma_key": false,
+    "prompt": "144 BPM, 30s seamless loop, NES 2A03 4-channel chiptune, 12.5% duty piercing icy leads, cryogenic arpeggios, driving breakbeat noise drums",
+    "actions": null,
+    "resolution": null
   }
 ]

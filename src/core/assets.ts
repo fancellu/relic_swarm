@@ -1,5 +1,19 @@
 export const BACKGROUND_MUSIC_URL = 'assets/audio/bgm_survivor_theme.mp3';
 
+export const STAGE_MUSIC_URLS: Record<number, string> = {
+  1: 'assets/audio/bgm_survivor_theme.mp3',
+  2: 'assets/audio/bgm_blood_catacombs.wav',
+  3: 'assets/audio/bgm_glacial_abyss.wav',
+};
+
+export function getStageMusicUrl(stage: number): string {
+  const s = Math.max(1, stage || 1);
+  if (STAGE_MUSIC_URLS[s]) return STAGE_MUSIC_URLS[s];
+  // Alternating cycle for higher endless stages (> 3)
+  const cycleIndex = ((s - 1) % 3) + 1;
+  return STAGE_MUSIC_URLS[cycleIndex] || BACKGROUND_MUSIC_URL;
+}
+
 export const ASSETS_MANIFEST: Record<string, string> = {
   // Spritesheets
   hero_spellblade_idle: 'assets/images/hero_spellblade_idle.png',

@@ -10,7 +10,7 @@ import {
   useIsMobile,
 } from '../utils/helper';
 import {usePlayground, usePlaygroundGameLifecycle, useRpc} from '../utils/usePlayground';
-import {BACKGROUND_MUSIC_URL, ASSETS_MANIFEST} from './core/assets';
+import {BACKGROUND_MUSIC_URL, getStageMusicUrl, ASSETS_MANIFEST} from './core/assets';
 import {renderGame} from './core/renderer';
 import {initSpriteRenderers} from './core/sprites';
 import {applyChestReward, generateChestReward} from './entities/Chests';
@@ -178,6 +178,7 @@ export default function App() {
   const [activeObjective, setActiveObjective] = useState<{type: 'OBELISK' | 'BLOOD_TRIAL' | 'MERCHANT'; progress: number} | null>(null);
 
   const [runGold, setRunGold] = useState(0);
+  const [currentStage, setCurrentStage] = useState(1);
   const [overdriveDisplay, setOverdriveDisplay] = useState(0);
   const [extractedEssences, setExtractedEssences] = useState<ExtractedEssence[]>([]);
   const [killCount, setKillCount] = useState(0);
@@ -353,6 +354,7 @@ export default function App() {
     sim.derivedStats = stats;
     levelManager.reset();
     sim.stage = 1;
+    setCurrentStage(1);
     sim.totalRunTimer = 0;
     simRef.current = sim;
     runBankedRef.current = false;
@@ -644,6 +646,7 @@ export default function App() {
     const {refundGold, carriedWeaponLevel, reducedLevels, nextStage} = levelManager.advanceToNextStage(sim, weaponId);
 
     syncEquipment();
+    setCurrentStage(nextStage);
     setAvailableBans((b) => b + 1);
     setAvailableRerolls((r) => r + 1);
     setRunGold(sim.gold);
@@ -1726,7 +1729,7 @@ export default function App() {
           Summoning Relics & Swarms...
         </div>
       )}
-      <BackgroundMusic url={BACKGROUND_MUSIC_URL} isPlaying={musicPlaying} isMuted={musicMuted} />
+      <BackgroundMusic url={getStageMusicUrl(currentStage)} isPlaying={musicPlaying} isMuted={musicMuted} />
       <HUD
         currentHp={currentHp}
         maxHpDisplay={maxHpDisplay}
