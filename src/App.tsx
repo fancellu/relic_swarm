@@ -14,7 +14,7 @@ import {BACKGROUND_MUSIC_URL, ASSETS_MANIFEST} from './core/assets';
 import {renderGame} from './core/renderer';
 import {initSpriteRenderers} from './core/sprites';
 import {applyChestReward, generateChestReward} from './entities/Chests';
-import {applyUpgradeSelection, extractItemEssence, generateDraftChoices, sellEquippedItem} from './entities/Draft';
+import {applyUpgradeSelection, extractItemEssence, generateDraftChoices, getAvailableFusion, sellEquippedItem} from './entities/Draft';
 import {updateDrops} from './entities/Drops';
 import {calculateDerivedStats, updatePlayerMovement} from './entities/Player';
 import {updateProjectiles} from './entities/Projectiles';
@@ -566,6 +566,11 @@ export default function App() {
   const buyCatalyst = useCallback(() => {
     const sim = simRef.current;
     if (!sim.merchant) return;
+    const availableFusion = getAvailableFusion(sim.weapons, sim.bannedItemIds);
+    if (!availableFusion) {
+      gameAudio.playErrorBuzz();
+      return;
+    }
     if (sim.gold < 250) {
       gameAudio.playErrorBuzz();
       return;
@@ -576,30 +581,11 @@ export default function App() {
     sim.screenShake = 16;
     spawnParticles(sim.x, sim.y, 50, '#c084fc', 280);
 
-    const wepIds = sim.weapons.map((w) => w.id);
-    let fusedDef: ItemDef | null = null;
-    if (wepIds.includes('magic_missile') && wepIds.includes('spinning_dagger')) {
-      fusedDef = ITEM_DEFS.arcane_phantom_vortex;
-    } else if (wepIds.includes('flame_blast') && wepIds.includes('thunder_strike')) {
-      fusedDef = ITEM_DEFS.cataclysmic_nova;
-    } else if (wepIds.includes('radiant_aura') && wepIds.includes('venom_spores')) {
-      fusedDef = ITEM_DEFS.toxic_sanctuary;
-    } else if (wepIds.includes('frost_shard') && wepIds.includes('thunder_strike')) {
-      fusedDef = ITEM_DEFS.shatterstorm;
-    } else if (wepIds.includes('frost_shard') && wepIds.includes('spinning_dagger')) {
-      fusedDef = ITEM_DEFS.frostbite_chakrams;
-    } else if (wepIds.includes('scattershot') && wepIds.includes('homing_missiles')) {
-      fusedDef = ITEM_DEFS.stormfront_barrage;
-    }
-
-    if (fusedDef && fusedDef.consumedWeapons) {
-      sim.weapons = sim.weapons.filter((w) => !fusedDef!.consumedWeapons!.includes(w.id));
-      sim.weapons.push({id: fusedDef.id, level: 1});
-      spawnDamageNumber(sim.x, sim.y, `FUSION SYNTHESIZED: ${fusedDef.name}!`, '#facc15');
+    if (availableFusion.consumedWeapons) {
+      sim.weapons = sim.weapons.filter((w) => !availableFusion.consumedWeapons!.includes(w.id));
+      sim.weapons.push({id: availableFusion.id, level: 1});
+      spawnDamageNumber(sim.x, sim.y, `FUSION SYNTHESIZED: ${availableFusion.name}!`, '#facc15');
       syncEquipment();
-    } else {
-      sim.fusionCatalystAvailable = true;
-      spawnDamageNumber(sim.x, sim.y, 'FUSION CATALYST ARMED! (Next Draft Fuses)', '#c084fc');
     }
 
     const updatedStats = calculateDerivedStats(sim, metaLevelsRef.current);
@@ -610,6 +596,27 @@ export default function App() {
 
     dismissMerchant();
   }, [dismissMerchant, spawnDamageNumber, spawnParticles, syncEquipment, syncStats]);
+
+  const buySmugglerCache = useCallback(() => {
+    const sim = simRef.current;
+    if (!sim.merchant) return;
+    const SMUGGLER_CACHE_COST = 200;
+    if (sim.gold < SMUGGLER_CACHE_COST) {
+      gameAudio.playErrorBuzz();
+      return;
+    }
+    sim.gold -= SMUGGLER_CACHE_COST;
+    setRunGold(sim.gold);
+    gameAudio.playPowerupChime();
+    sim.screenShake = 10;
+    spawnParticles(sim.x, sim.y, 40, '#38bdf8', 220);
+    spawnDamageNumber(sim.x, sim.y, '+2 BANS & +2 REROLLS!', '#38bdf8');
+
+    setAvailableBans((b) => b + 2);
+    setAvailableRerolls((r) => r + 2);
+
+    dismissMerchant();
+  }, [dismissMerchant, spawnDamageNumber, spawnParticles]);
   const openInventory = useCallback(() => {
     inventoryFocusIndexRef.current = 0;
     setInventoryFocusIndex(0);
@@ -926,7 +933,11 @@ export default function App() {
         const idx = merchantFocusIndexRef.current;
         if (idx === 0) buyOverdrive();
         else if (idx === 1) buyForceUpgrade();
-        else if (idx === 2) buyCatalyst();
+        else if (idx === 2) {
+          const fusion = getAvailableFusion(simRef.current.weapons, simRef.current.bannedItemIds);
+          if (fusion) buyCatalyst();
+          else buySmugglerCache();
+        }
         else {
           setIsMerchantOpen(false);
           merchantCooldownRef.current = true;
@@ -1529,7 +1540,9 @@ export default function App() {
         }
         if (event.key === '3') {
           event.preventDefault();
-          buyCatalyst();
+          const fusion = getAvailableFusion(simRef.current.weapons, simRef.current.bannedItemIds);
+          if (fusion) buyCatalyst();
+          else buySmugglerCache();
           return;
         }
         const total = 4;
@@ -1550,7 +1563,11 @@ export default function App() {
           const idx = merchantFocusIndexRef.current;
           if (idx === 0) buyOverdrive();
           else if (idx === 1) buyForceUpgrade();
-          else if (idx === 2) buyCatalyst();
+          else if (idx === 2) {
+            const fusion = getAvailableFusion(simRef.current.weapons, simRef.current.bannedItemIds);
+            if (fusion) buyCatalyst();
+            else buySmugglerCache();
+          }
           else {
             setIsMerchantOpen(false);
             merchantCooldownRef.current = true;
@@ -1793,6 +1810,8 @@ export default function App() {
         onBuyOverdrive={buyOverdrive}
         onBuyForceUpgrade={buyForceUpgrade}
         onBuyCatalyst={buyCatalyst}
+        onBuySmugglerCache={buySmugglerCache}
+        availableFusion={getAvailableFusion(simRef.current.weapons, simRef.current.bannedItemIds)}
         overdriveRemaining={overdriveDisplay}
         catalystAvailable={Boolean(simRef.current.fusionCatalystAvailable)}
         merchantFocusIndex={merchantFocusIndex}

@@ -1,5 +1,6 @@
-import {Coins, Hammer, Sparkles, Store, X, Zap} from 'lucide-react';
+import {Coins, Dices, Hammer, Sparkles, Store, X, Zap} from 'lucide-react';
 import React from 'react';
+import {ItemDef} from '../types/items';
 import {MenuOverlay} from '../../utils/helper';
 
 export interface MerchantModalProps {
@@ -9,8 +10,10 @@ export interface MerchantModalProps {
   onBuyOverdrive: () => void;
   onBuyForceUpgrade: () => void;
   onBuyCatalyst: () => void;
+  onBuySmugglerCache: () => void;
+  availableFusion: ItemDef | null;
   overdriveRemaining: number;
-  catalystAvailable: boolean;
+  catalystAvailable?: boolean;
   merchantFocusIndex: number;
   onSelectIndex: (idx: number) => void;
   merchantItemsRef: React.RefObject<(HTMLButtonElement | null)[]>;
@@ -23,6 +26,8 @@ export const MerchantModal: React.FC<MerchantModalProps> = ({
   onBuyOverdrive,
   onBuyForceUpgrade,
   onBuyCatalyst,
+  onBuySmugglerCache,
+  availableFusion,
   overdriveRemaining,
   catalystAvailable,
   merchantFocusIndex,
@@ -34,10 +39,12 @@ export const MerchantModal: React.FC<MerchantModalProps> = ({
   const OVERDRIVE_COST = 100;
   const UPGRADE_COST = 175;
   const CATALYST_COST = 250;
+  const SMUGGLER_CACHE_COST = 200;
 
   const canAffordOverdrive = runGold >= OVERDRIVE_COST;
   const canAffordUpgrade = runGold >= UPGRADE_COST;
   const canAffordCatalyst = runGold >= CATALYST_COST;
+  const canAffordSmugglerCache = runGold >= SMUGGLER_CACHE_COST;
 
   return (
     <MenuOverlay tone="neutral" zIndex={60}>
@@ -152,47 +159,88 @@ export const MerchantModal: React.FC<MerchantModalProps> = ({
             </div>
           </button>
 
-          {/* Item 2: Arcane Fusion Catalyst */}
-          <button
-            ref={(el) => {
-              if (merchantItemsRef.current) merchantItemsRef.current[2] = el;
-            }}
-            onPointerEnter={() => onSelectIndex(2)}
-            onClick={onBuyCatalyst}
-            className={`w-full text-left p-3.5 rounded-xl border flex items-center justify-between gap-3 transition-all ${
-              merchantFocusIndex === 2
-                ? 'bg-amber-950/40 border-amber-400 ring-2 ring-amber-400/90 shadow-lg scale-[1.01]'
-                : 'bg-slate-950/80 border-slate-800 hover:border-slate-700'
-            }`}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-950/80 border border-purple-500/60 flex items-center justify-center shrink-0">
-                <Sparkles size={20} className="text-purple-400" />
-              </div>
-              <div>
-                <div className="font-bold text-xs text-slate-100 flex items-center gap-1.5">
-                  {merchantFocusIndex === 2 && <span className="text-amber-400 font-bold">▶</span>}
-                  <span>Arcane Fusion Catalyst</span>
-                  {catalystAvailable && (
+          {/* Item 2: Arcane Fusion Catalyst (if compatible pair available) OR Smuggler's Fortune Cache (if not) */}
+          {availableFusion ? (
+            <button
+              ref={(el) => {
+                if (merchantItemsRef.current) merchantItemsRef.current[2] = el;
+              }}
+              onPointerEnter={() => onSelectIndex(2)}
+              onClick={onBuyCatalyst}
+              className={`w-full text-left p-3.5 rounded-xl border flex items-center justify-between gap-3 transition-all ${
+                merchantFocusIndex === 2
+                  ? 'bg-amber-950/40 border-amber-400 ring-2 ring-amber-400/90 shadow-lg scale-[1.01]'
+                  : 'bg-slate-950/80 border-slate-800 hover:border-slate-700'
+              }`}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-950/80 border border-purple-500/60 flex items-center justify-center shrink-0">
+                  <Sparkles size={20} className="text-purple-400" />
+                </div>
+                <div>
+                  <div className="font-bold text-xs text-slate-100 flex items-center gap-1.5">
+                    {merchantFocusIndex === 2 && <span className="text-amber-400 font-bold">▶</span>}
+                    <span>Arcane Fusion Catalyst</span>
                     <span className="bg-purple-950 text-purple-300 border border-purple-500/60 px-1.5 py-0.2 rounded text-[9px] font-bold">
-                      READY
+                      {availableFusion.name.toUpperCase()}
                     </span>
-                  )}
-                </div>
-                <div className="text-[10px] text-slate-400 mt-0.5">
-                  Single-use Catalyst: Synthesizes a weapon fusion without requiring Level 5! Fuses any compatible pair immediately.
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">
+                    Synthesizes <span className="text-amber-300 font-bold">{availableFusion.name}</span> immediately from your loadout (bypasses Level 5 requirement)!
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className={`px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 ${
-              canAffordCatalyst
-                ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
-                : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-            }`}>
-              <Coins size={12} />
-              <span>{CATALYST_COST}g</span>
-            </div>
-          </button>
+              <div
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 ${
+                  canAffordCatalyst
+                    ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
+                    : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                }`}>
+                <Coins size={12} />
+                <span>{CATALYST_COST}g</span>
+              </div>
+            </button>
+          ) : (
+            <button
+              ref={(el) => {
+                if (merchantItemsRef.current) merchantItemsRef.current[2] = el;
+              }}
+              onPointerEnter={() => onSelectIndex(2)}
+              onClick={onBuySmugglerCache}
+              className={`w-full text-left p-3.5 rounded-xl border flex items-center justify-between gap-3 transition-all ${
+                merchantFocusIndex === 2
+                  ? 'bg-amber-950/40 border-amber-400 ring-2 ring-amber-400/90 shadow-lg scale-[1.01]'
+                  : 'bg-slate-950/80 border-slate-800 hover:border-slate-700'
+              }`}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-indigo-950/80 border border-indigo-500/60 flex items-center justify-center shrink-0">
+                  <Dices size={20} className="text-indigo-400" />
+                </div>
+                <div>
+                  <div className="font-bold text-xs text-slate-100 flex items-center gap-1.5">
+                    {merchantFocusIndex === 2 && <span className="text-amber-400 font-bold">▶</span>}
+                    <span>Smuggler's Fortune Cache</span>
+                    <span className="bg-indigo-950 text-indigo-300 border border-indigo-500/60 px-1.5 py-0.2 rounded text-[9px] font-bold">
+                      FATE DICE
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">
+                    Contraband fate dice: Instantly grants <span className="text-rose-400 font-bold">+2 Arsenal Bans</span> & <span className="text-indigo-300 font-bold">+2 Draft Rerolls</span>!
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 ${
+                  canAffordSmugglerCache
+                    ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
+                    : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                }`}>
+                <Coins size={12} />
+                <span>{SMUGGLER_CACHE_COST}g</span>
+              </div>
+            </button>
+          )}
         </div>
 
         {/* Done / Leave Button */}

@@ -125,7 +125,8 @@ When a weapon or passive achieves its maximum rank (Level 5 or Awakened form), y
 A Smuggler Merchant Cart arrives every 3 minutes (180s, 360s, 540s...) near the player. Step into the cart's proximity circle to open the bazaar:
 - **Overdrive Infusion (100g)**: 60-second combat surge granting +40% Might, +25% Cooldown Reduction, and +20% Movement Speed with golden ember trail effects.
 - **Blacksmith's Tempering (175g)**: Upgrades an equipped non-evolved weapon by +1 Level without limit (prioritizing lowest level), or grants +50 Max HP and a complete restore if all current weapons are fully evolved/fused.
-- **Arcane Fusion Catalyst (250g)**: Instantly fuses any currently compatible weapon pair in your loadout, or primes a wildcard catalyst token that guarantees an immediate fusion on your next level-up draft.
+- **Arcane Fusion Catalyst (250g)**: Offered strictly when you hold a compatible weapon pair. Instantly synthesizes that fusion immediately without requiring Level 5!
+- **Smuggler's Fortune Cache (200g)**: Offered when no fusion pair is currently held. Contraband fate dice that immediately grant +2 Arsenal Bans & +2 Draft Rerolls for the run.
 
 ## 🏛️ Arena Objectives & Spatial Mechanics
 

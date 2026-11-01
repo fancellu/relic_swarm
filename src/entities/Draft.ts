@@ -3,6 +3,26 @@ import {EquippedItem, SimulationState} from '../types/entities';
 import {ITEM_DEFS, ItemDef} from '../types/items';
 import {calculateDerivedStats, DerivedStats} from './Player';
 
+export function getAvailableFusion(
+  weapons: EquippedItem[],
+  bannedIds?: string[],
+): ItemDef | null {
+  const wepIds = weapons.map((w) => w.id);
+  const fusionDefs = Object.values(ITEM_DEFS).filter(
+    (item) => item.isFusion && item.consumedWeapons && item.consumedWeapons.length >= 2,
+  );
+
+  for (const def of fusionDefs) {
+    if (bannedIds && bannedIds.includes(def.id)) continue;
+    // Check if player has all consumedWeapons for this fusion
+    const hasAll = def.consumedWeapons!.every((id) => wepIds.includes(id));
+    if (hasAll && !wepIds.includes(def.id)) {
+      return def;
+    }
+  }
+  return null;
+}
+
 export function generateDraftChoices(sim: SimulationState): ItemDef[] {
   const pool: ItemDef[] = [];
 
