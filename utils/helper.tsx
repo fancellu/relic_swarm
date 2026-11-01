@@ -362,6 +362,8 @@ class GameAudio {
   private sfxMaster: GainNode | null = null;
   private muted = false; // SFX muted
   private volume = 0.6; // master volume, 0..1
+  private bufferCache = new Map<string, AudioBuffer>();
+  private currentStingerSource: AudioBufferSourceNode | null = null;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -369,6 +371,76 @@ class GameAudio {
         const customEvent = e as CustomEvent<{muted: boolean}>;
         this.setMuted(customEvent.detail.muted);
       });
+      this.preloadSound('assets/audio/fanfare_victory.wav');
+      this.preloadSound('assets/audio/fanfare_defeat.wav');
+    }
+  }
+
+  /**
+   * Preload an audio asset into the Web Audio buffer cache.
+   */
+  preloadSound(url: string) {
+    if (typeof window === 'undefined') return;
+    fetch(url)
+      .then((res) => (res.ok ? res.arrayBuffer() : null))
+      .then(async (arrayBuf) => {
+        if (!arrayBuf) return;
+        const ctx = this.ensure();
+        if (ctx) {
+          const buffer = await ctx.decodeAudioData(arrayBuf);
+          this.bufferCache.set(url, buffer);
+        }
+      })
+      .catch(() => {});
+  }
+
+  /**
+   * Play an audio file through the Web Audio node graph.
+   * Returns true if successfully started, false otherwise.
+   */
+  async playSoundFile(url: string, volume = 0.25): Promise<boolean> {
+    if (this.muted) return true;
+    const ctx = this.ensure();
+    if (!ctx) return false;
+    if (ctx.state === 'suspended') void ctx.resume().catch(() => {});
+
+    try {
+      let buffer = this.bufferCache.get(url);
+      if (!buffer) {
+        const resp = await fetch(url);
+        if (!resp.ok) return false;
+        const arrayBuf = await resp.arrayBuffer();
+        buffer = await ctx.decodeAudioData(arrayBuf);
+        this.bufferCache.set(url, buffer);
+      }
+
+      // Stop and disconnect any currently playing stinger to prevent stacking
+      if (this.currentStingerSource) {
+        try {
+          this.currentStingerSource.stop();
+          this.currentStingerSource.disconnect();
+        } catch {}
+        this.currentStingerSource = null;
+      }
+
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(volume, ctx.currentTime);
+      source.connect(gain);
+      gain.connect(this.sfxMaster || this.master || ctx.destination);
+
+      this.currentStingerSource = source;
+      source.onended = () => {
+        if (this.currentStingerSource === source) {
+          this.currentStingerSource = null;
+        }
+      };
+
+      source.start();
+      return true;
+    } catch {
+      return false;
     }
   }
 
@@ -667,6 +739,14 @@ class GameAudio {
   }
 
   playVictoryFanfare() {
+    void this.playSoundFile('assets/audio/fanfare_victory.wav', 0.25).then((played) => {
+      if (!played) {
+        this.playProceduralVictoryFanfare();
+      }
+    });
+  }
+
+  private playProceduralVictoryFanfare() {
     const b = this.begin();
     if (!b) return;
     const v = this.vary();
@@ -682,6 +762,14 @@ class GameAudio {
   }
 
   playDefeatMotif() {
+    void this.playSoundFile('assets/audio/fanfare_defeat.wav', 0.25).then((played) => {
+      if (!played) {
+        this.playProceduralDefeatMotif();
+      }
+    });
+  }
+
+  private playProceduralDefeatMotif() {
     const b = this.begin();
     if (!b) return;
     const v = this.vary();

@@ -10,7 +10,13 @@ import {
   useIsMobile,
 } from '../utils/helper';
 import {usePlayground, usePlaygroundGameLifecycle, useRpc} from '../utils/usePlayground';
-import {BACKGROUND_MUSIC_URL, getStageMusicUrl, ASSETS_MANIFEST} from './core/assets';
+import {
+  BACKGROUND_MUSIC_URL,
+  getStageMusicUrl,
+  BGM_BOSS_TITAN_URL,
+  BGM_SANCTUM_SHOP_URL,
+  ASSETS_MANIFEST,
+} from './core/assets';
 import {renderGame} from './core/renderer';
 import {initSpriteRenderers} from './core/sprites';
 import {applyChestReward, generateChestReward} from './entities/Chests';
@@ -176,6 +182,8 @@ export default function App() {
   const [pauseMenuFocusIndex, setPauseMenuFocusIndex] = useState(0);
   const [endScreenFocusIndex, setEndScreenFocusIndex] = useState(0);
   const [activeObjective, setActiveObjective] = useState<{type: 'OBELISK' | 'BLOOD_TRIAL' | 'MERCHANT'; progress: number} | null>(null);
+  const [isBossActive, setIsBossActive] = useState(false);
+  const isBossActiveRef = useRef(false);
 
   const [runGold, setRunGold] = useState(0);
   const [currentStage, setCurrentStage] = useState(1);
@@ -334,6 +342,8 @@ export default function App() {
     setOverdriveDisplay(0);
     setExtractedEssences([]);
     merchantCooldownRef.current = false;
+    isBossActiveRef.current = false;
+    setIsBossActive(false);
     endScreenFocusIndexRef.current = 0;
     setEndScreenFocusIndex(0);
     navCooldownRef.current = 0.4;
@@ -366,6 +376,8 @@ export default function App() {
     setOverdriveDisplay(0);
     setExtractedEssences([]);
     merchantCooldownRef.current = false;
+    isBossActiveRef.current = false;
+    setIsBossActive(false);
     setKillCount(0);
     sim.bannedItemIds = [];
     setEquippedWeapons([...sim.weapons]);
@@ -579,7 +591,7 @@ export default function App() {
     }
     sim.gold -= 250;
     setRunGold(sim.gold);
-    gameAudio.playVictoryFanfare();
+    gameAudio.playPowerupChime();
     sim.screenShake = 16;
     spawnParticles(sim.x, sim.y, 50, '#c084fc', 280);
 
@@ -645,6 +657,8 @@ export default function App() {
     const weaponId = selectedCarryWeaponIdRef.current || sim.weapons[0]?.id || sim.hero.startingWeapon;
     const {refundGold, carriedWeaponLevel, reducedLevels, nextStage} = levelManager.advanceToNextStage(sim, weaponId);
 
+    isBossActiveRef.current = false;
+    setIsBossActive(false);
     syncEquipment();
     setCurrentStage(nextStage);
     setAvailableBans((b) => b + 1);
@@ -1042,6 +1056,8 @@ export default function App() {
       (score) => setGameState((state) => ({...state, score: state.score + score})),
       () => {
         bossDefeated = true;
+        isBossActiveRef.current = false;
+        setIsBossActive(false);
         const currentWeapons = simRef.current.weapons;
         const defaultWep = currentWeapons[0]?.id || simRef.current.hero.startingWeapon;
         setSelectedCarryWeaponId(defaultWep);
@@ -1057,6 +1073,8 @@ export default function App() {
       () => setCurrentHp(Math.round(sim.hp)),
     );
     if (died) {
+      isBossActiveRef.current = false;
+      setIsBossActive(false);
       bankRunGold();
       endScreenFocusIndexRef.current = 0;
       setEndScreenFocusIndex(0);
@@ -1067,6 +1085,11 @@ export default function App() {
     }
     if (bossDefeated) {
       return;
+    }
+    const hasActiveBoss = sim.enemies.some((e) => e.isBoss);
+    if (hasActiveBoss !== isBossActiveRef.current) {
+      isBossActiveRef.current = hasActiveBoss;
+      setIsBossActive(hasActiveBoss);
     }
     updateDrops(
       sim,
@@ -1100,7 +1123,7 @@ export default function App() {
         }
 
         if (sim.obelisk.charge >= 100) {
-          gameAudio.playVictoryFanfare();
+          gameAudio.playPowerupChime();
           sim.screenShake = 18;
           spawnDamageNumber(sim.obelisk.x, sim.obelisk.y, 'OBELISK PURIFIED!', '#f43f5e');
           spawnParticles(sim.obelisk.x, sim.obelisk.y, 50, '#ec4899', 320);
@@ -1151,7 +1174,7 @@ export default function App() {
     if (sim.cursedArena && sim.cursedArena.active) {
       sim.cursedArena.duration -= dt;
       if (sim.cursedArena.duration <= 0) {
-        gameAudio.playVictoryFanfare();
+        gameAudio.playPowerupChime();
         sim.screenShake = 15;
         spawnDamageNumber(sim.x, sim.y, 'TRIAL SURVIVED!', '#f59e0b');
         spawnParticles(sim.cursedArena.x, sim.cursedArena.y, 45, '#ef4444', 260);
@@ -1721,7 +1744,17 @@ export default function App() {
   const stats = calculateDerivedStats(simRef.current, metaLevels);
   // Pausing playback does not change the player's persistent music-muted preference.
   // Closing the pause menu therefore restores BGM only when it was previously enabled.
-  const musicPlaying = gameState.status === 'PLAYING' && !isPauseOpen && !musicMuted;
+  const isShopActive = isSanctumOpen || (isMerchantOpen && gameState.status === 'PLAYING');
+  let activeMusicUrl = getStageMusicUrl(currentStage);
+  let musicPlaying = false;
+
+  if (isShopActive) {
+    activeMusicUrl = BGM_SANCTUM_SHOP_URL;
+    musicPlaying = !musicMuted;
+  } else if (gameState.status === 'PLAYING') {
+    activeMusicUrl = isBossActive ? BGM_BOSS_TITAN_URL : getStageMusicUrl(currentStage);
+    musicPlaying = !isPauseOpen && !musicMuted;
+  }
   return (
     <div className="fixed inset-0 overflow-hidden touch-none flex flex-col items-center justify-center bg-[#07050e] text-white font-sans select-none">
       {!assetsReady && (
@@ -1729,7 +1762,7 @@ export default function App() {
           Summoning Relics & Swarms...
         </div>
       )}
-      <BackgroundMusic url={getStageMusicUrl(currentStage)} isPlaying={musicPlaying} isMuted={musicMuted} />
+      <BackgroundMusic url={activeMusicUrl} isPlaying={musicPlaying} isMuted={musicMuted} />
       <HUD
         currentHp={currentHp}
         maxHpDisplay={maxHpDisplay}

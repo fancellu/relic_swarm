@@ -4,13 +4,20 @@ export const STAGE_MUSIC_URLS: Record<number, string> = {
   1: 'assets/audio/bgm_survivor_theme.mp3',
   2: 'assets/audio/bgm_blood_catacombs.wav',
   3: 'assets/audio/bgm_glacial_abyss.wav',
+  4: 'assets/audio/bgm_blighted_necropolis.wav',
+  5: 'assets/audio/bgm_astral_void.wav',
 };
+
+export const BGM_BOSS_TITAN_URL = 'assets/audio/bgm_boss_titan.wav';
+export const BGM_SANCTUM_SHOP_URL = 'assets/audio/bgm_sanctum_shop.wav';
+export const FANFARE_VICTORY_URL = 'assets/audio/fanfare_victory.wav';
+export const FANFARE_DEFEAT_URL = 'assets/audio/fanfare_defeat.wav';
 
 export function getStageMusicUrl(stage: number): string {
   const s = Math.max(1, stage || 1);
   if (STAGE_MUSIC_URLS[s]) return STAGE_MUSIC_URLS[s];
-  // Alternating cycle for higher endless stages (> 3)
-  const cycleIndex = ((s - 1) % 3) + 1;
+  // Alternating cycle for higher endless stages (> 5)
+  const cycleIndex = ((s - 1) % 5) + 1;
   return STAGE_MUSIC_URLS[cycleIndex] || BACKGROUND_MUSIC_URL;
 }
 

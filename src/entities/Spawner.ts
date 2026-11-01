@@ -299,7 +299,7 @@ export function updateEnemies(
 
       if (enemy.isBoss) {
         sim.bossDefeated = true;
-        gameAudio.playVictoryFanfare();
+        gameAudio.playPowerupChime();
         const victoryBonus = 350;
         sim.gold += victoryBonus;
         spawnDamageNumber(sim.x, sim.y, `VICTORY BONUS +${victoryBonus}g!`, '#facc15');

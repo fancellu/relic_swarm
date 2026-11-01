@@ -70,7 +70,7 @@ export function updateDrops(
         }
 
         if (drop.openingTimer >= 0.45) {
-          gameAudio.playVictoryFanfare();
+          gameAudio.playPowerupChime();
           sim.screenShake = 8;
           spawnParticles(drop.x, drop.y, 25, '#facc15', 180);
 
