@@ -160,6 +160,7 @@ export default function App() {
   const [choices, setChoices] = useState<ItemDef[]>([]);
   const [selectedChoiceIndex, setSelectedChoiceIndex] = useState(0);
   const [availableRerolls, setAvailableRerolls] = useState(0);
+  const [availableBans, setAvailableBans] = useState(0);
   const [sanctumFocusIndex, setSanctumFocusIndex] = useState(0);
   const [inventoryFocusIndex, setInventoryFocusIndex] = useState(0);
   const [merchantFocusIndex, setMerchantFocusIndex] = useState(0);
@@ -196,11 +197,13 @@ export default function App() {
   const choicesRef = useRef(choices);
   const selectedChoiceIndexRef = useRef(selectedChoiceIndex);
   const availableRerollsRef = useRef(availableRerolls);
+  const availableBansRef = useRef(availableBans);
   equippedWeaponsRef.current = equippedWeapons;
   equippedPassivesRef.current = equippedPassives;
   choicesRef.current = choices;
   selectedChoiceIndexRef.current = selectedChoiceIndex;
   availableRerollsRef.current = availableRerolls;
+  availableBansRef.current = availableBans;
 
   const sanctumItemsRef = useRef<(HTMLDivElement | HTMLButtonElement | null)[]>([]);
   const inventoryItemsRef = useRef<(HTMLDivElement | HTMLButtonElement | null)[]>([]);
@@ -224,6 +227,7 @@ export default function App() {
   const lastGpCancelRef = useRef(false);
   const lastGpXRef = useRef(false);
   const lastGpYRef = useRef(false);
+  const lastGpLbRef = useRef(false);
   const lastGpPauseRef = useRef(false);
   const runBankedRef = useRef(false);
 
@@ -361,6 +365,7 @@ export default function App() {
     setExtractedEssences([]);
     merchantCooldownRef.current = false;
     setKillCount(0);
+    sim.bannedItemIds = [];
     setEquippedWeapons([...sim.weapons]);
     setEquippedPassives([...sim.passives]);
     setCurrentHp(sim.hp);
@@ -370,6 +375,7 @@ export default function App() {
     setXpDisplay(0);
     setNextLevelXpDisplay(sim.nextXp);
     setAvailableRerolls(3 + (metaLevelsRef.current.rerolls || 0));
+    setAvailableBans(2 + (metaLevelsRef.current.bans || 0));
     setChoices([]);
     setChestReward(null);
     setIsSanctumOpen(false);
@@ -416,6 +422,43 @@ export default function App() {
     setSelectedChoiceIndex(0);
     gameAudio.playCrispClick();
   }, []);
+  const banItem = useCallback(
+    (item: ItemDef, choiceIndex: number) => {
+      if (availableBansRef.current <= 0 || item.isConsumable) {
+        gameAudio.playErrorBuzz();
+        return;
+      }
+      setAvailableBans((value) => value - 1);
+      if (!simRef.current.bannedItemIds) {
+        simRef.current.bannedItemIds = [];
+      }
+      if (!simRef.current.bannedItemIds.includes(item.id)) {
+        simRef.current.bannedItemIds.push(item.id);
+      }
+      gameAudio.playSwordClash();
+      spawnDamageNumber(
+        simRef.current.x,
+        simRef.current.y,
+        `${item.name.toUpperCase()} BANISHED!`,
+        '#f43f5e',
+      );
+      spawnParticles(simRef.current.x, simRef.current.y, 25, '#f43f5e', 140);
+
+      // In-place replacement
+      const currentChoices = [...choicesRef.current];
+      const freshChoices = generateDraftChoices(simRef.current);
+      const replacement = freshChoices.find(
+        (c) => c.id !== item.id && !currentChoices.some((curr) => curr.id === c.id),
+      );
+      if (replacement) {
+        currentChoices[choiceIndex] = replacement;
+        setChoices(currentChoices);
+      } else {
+        setChoices(generateDraftChoices(simRef.current));
+      }
+    },
+    [spawnDamageNumber, spawnParticles],
+  );
   const sellItem = useCallback((itemId: string) => {
     sellEquippedItem(simRef.current, itemId, metaLevelsRef.current, entityCallbacks());
     simRef.current.derivedStats = calculateDerivedStats(simRef.current, metaLevelsRef.current);
@@ -594,6 +637,8 @@ export default function App() {
     const {refundGold, carriedWeaponLevel, reducedLevels, nextStage} = levelManager.advanceToNextStage(sim, weaponId);
 
     syncEquipment();
+    setAvailableBans((b) => b + 1);
+    setAvailableRerolls((r) => r + 1);
     setRunGold(sim.gold);
     setCurrentHp(sim.hp);
     setMaxHpDisplay(sim.maxHp);
@@ -679,17 +724,20 @@ export default function App() {
       navRight = gpX > 0.45 || Boolean(gamepad.buttons[5]?.pressed);
     }
     const rightStickY = Math.abs(gamepad?.axes[3] || 0) > 0.2 ? (gamepad?.axes[3] || 0) : 0;
+    const lbPressed = Boolean(gamepad?.buttons[4]?.pressed);
 
     const confirmJustPressed = confirm && !lastGpConfirmRef.current;
     const cancelJustPressed = cancel && !lastGpCancelRef.current;
     const xJustPressed = xPressed && !lastGpXRef.current;
     const yJustPressed = yPressed && !lastGpYRef.current;
+    const lbJustPressed = lbPressed && !lastGpLbRef.current;
     const pauseJustPressed = pausePressed && !lastGpPauseRef.current;
 
     lastGpConfirmRef.current = confirm;
     lastGpCancelRef.current = cancel;
     lastGpXRef.current = xPressed;
     lastGpYRef.current = yPressed;
+    lastGpLbRef.current = lbPressed;
     lastGpPauseRef.current = pausePressed;
 
     navCooldownRef.current -= dt;
@@ -785,6 +833,9 @@ export default function App() {
         selectUpgrade(choicesRef.current[selectedChoiceIndexRef.current]);
       } else if (yJustPressed) {
         reroll();
+      } else if (cancelJustPressed || lbJustPressed) {
+        const cur = choicesRef.current[selectedChoiceIndexRef.current];
+        if (cur) banItem(cur, selectedChoiceIndexRef.current);
       } else if (xJustPressed) {
         openInventory();
       }
@@ -1345,6 +1396,11 @@ export default function App() {
           reroll();
           return;
         }
+        if (event.key === 'b' || event.key === 'B') {
+          const cur = choicesRef.current[selectedChoiceIndexRef.current];
+          if (cur) banItem(cur, selectedChoiceIndexRef.current);
+          return;
+        }
       }
       if (isInventoryOpen) {
         if (
@@ -1757,6 +1813,8 @@ export default function App() {
         equippedPassives={equippedPassives}
         availableRerolls={availableRerolls}
         onReroll={reroll}
+        availableBans={availableBans}
+        onBan={banItem}
         onOpenInventory={openInventory}
       />
       <ChestModal chestReward={chestReward} onClaim={claimChestReward} />
@@ -1773,6 +1831,7 @@ export default function App() {
         equippedPassives={equippedPassives}
         weaponDamageDealt={simRef.current.weaponDamageDealt}
         extractedEssences={extractedEssences}
+        bannedItemIds={simRef.current.bannedItemIds}
         pauseMenuFocusIndex={pauseMenuFocusIndex}
         onSelectMenuIndex={(index) => {
           pauseMenuFocusIndexRef.current = index;

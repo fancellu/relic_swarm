@@ -45,8 +45,8 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({isOpen, onClose, 
               <span>Draft & Menu Navigation</span>
             </div>
             <div>• Direct Select: Press <span className="text-sky-300 font-bold">[1], [2], [3]</span> to immediately pick an upgrade.</div>
-            <div>• Arrow Navigation: W/S or Up/Down + <span className="text-sky-300 font-bold">Enter / Space</span>.</div>
-            <div>• Gamepad: D-pad / Left Stick Up/Down to navigate, <span className="text-sky-300 font-bold">Button A / Cross</span> to confirm. Press Y to Reroll!</div>
+            <div>• Arrow Navigation: W/S or Up/Down + <span className="text-sky-300 font-bold">Enter / Space</span>. Press <span className="text-rose-400 font-bold">[B]</span> to Ban, <span className="text-indigo-300 font-bold">[R]</span> to Reroll!</div>
+            <div>• Gamepad: D-pad / Left Stick Up/Down to navigate, <span className="text-sky-300 font-bold">Button A / Cross</span> to confirm. Press <span className="text-rose-400 font-bold">B / LB</span> to Ban, <span className="text-indigo-300 font-bold">Y</span> to Reroll!</div>
           </div>
 
           <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">

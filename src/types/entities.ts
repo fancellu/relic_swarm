@@ -290,5 +290,6 @@ export interface SimulationState {
   overdriveTimer: number;
   fusionCatalystAvailable: boolean;
   extractedEssences: ExtractedEssence[];
+  bannedItemIds?: string[];
   derivedStats?: DerivedStats;
 }

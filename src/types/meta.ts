@@ -82,6 +82,16 @@ export const META_UPGRADES: Record<string, MetaUpgrade> = {
     bonusPerLevel: 1,
     unit: ' roll',
   },
+  bans: {
+    id: 'bans',
+    name: 'Banishment Rites',
+    desc: 'Grants Free Item Bans per Run',
+    maxLevel: 3,
+    costBase: 150,
+    costStep: 200,
+    bonusPerLevel: 1,
+    unit: ' ban',
+  },
 };
 
 export const GOLD_STORAGE_KEY = 'relic_swarm_sanctum_gold';
@@ -110,6 +120,7 @@ export function getStoredMeta(): Record<string, number> {
           magnet: 0,
           greed: 0,
           rerolls: 0,
+          bans: 0,
         };
   } catch {
     return {
@@ -120,6 +131,7 @@ export function getStoredMeta(): Record<string, number> {
       magnet: 0,
       greed: 0,
       rerolls: 0,
+      bans: 0,
     };
   }
 }

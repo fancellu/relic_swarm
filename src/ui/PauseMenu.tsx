@@ -1,5 +1,6 @@
 import {
   Activity,
+  Ban,
   Compass,
   DollarSign,
   Heart,
@@ -45,6 +46,7 @@ export interface PauseMenuProps {
   onOpenInventory: () => void;
   activeObjective?: {type: 'OBELISK' | 'BLOOD_TRIAL' | 'MERCHANT'; progress: number} | null;
   extractedEssences?: ExtractedEssence[];
+  bannedItemIds?: string[];
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -69,6 +71,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
   onOpenInventory,
   activeObjective,
   extractedEssences,
+  bannedItemIds,
   scrollContainerRef,
 }) => {
   if (!isOpen) return null;
@@ -355,6 +358,34 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Banished Arsenal Items */}
+            {bannedItemIds && bannedItemIds.length > 0 && (
+              <div className="bg-rose-950/30 p-3.5 rounded-xl border border-rose-900/50 flex flex-col gap-2">
+                <div className="font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1.5 text-xs">
+                  <Ban size={14} className="text-rose-400" />
+                  <span>Banished Arsenal ({bannedItemIds.length} Items Excluded this Run)</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {bannedItemIds.map((id) => {
+                    const item = ITEM_DEFS[id];
+                    if (!item) return null;
+                    return (
+                      <div
+                        key={id}
+                        className="bg-slate-900/90 px-2.5 py-1.5 rounded-lg border border-rose-800/60 flex items-center gap-2">
+                        <img
+                          src={item.icon}
+                          alt={item.name}
+                          className="w-5 h-5 object-contain shrink-0 grayscale opacity-75"
+                        />
+                        <span className="font-bold text-xs text-rose-200 line-through">{item.name}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

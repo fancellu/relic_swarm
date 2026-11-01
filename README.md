@@ -110,6 +110,14 @@ Relic Swarm introduces a fluid, flexible run economy designed to let players piv
 ### 🔄 Dynamic Selling (70% Gold Refund)
 Open your Inventory anytime via `Tab` / `I` / `Gamepad Y` to sell any weapon or passive for an instant 70% gold refund, allowing rapid adaptation against shifting wave archetypes or boss phases.
 
+### 🚫 Arsenal Banishment (Targeted In-Place Bans)
+Shape your build without unwanted bloat. During any level-up draft, you can banish an unwanted offered weapon or passive directly:
+- **In-Place Replacement**: Banishing a card replaces only that specific card with a fresh unbanned choice, leaving your other two draft options intact.
+- **Run-Long Exclusion**: Banished items never reappear in level-ups, chest treasures, or merchant shops for the remainder of the run.
+- **Controls**: Click the card's **Ban** button, press **[B]** on keyboard, or press **[B / LB]** on gamepad.
+- **Sanctum Meta Upgrade**: Start with 2 free base bans per run; upgrade **Banishment Rites** in the Sanctum Shop for up to 5 bans per run (+1 ban granted per stage cleared in endless mode).
+- **Grimoire Review**: View all active run bans with strikethrough badges in the Tactical Pause menu.
+
 ### ⚗️ Relic Forging (Essence Extraction)
 When a weapon or passive achieves its maximum rank (Level 5 or Awakened form), you can choose to **Extract Essence** (0g refund) instead of selling it. Sacrificing the item frees its slot while permanently imprinting 20% of its core attribute or elemental affinity directly onto your champion for the remainder of the run.
 

@@ -16,7 +16,8 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
     if (
       wepIds.includes('magic_missile') &&
       wepIds.includes('spinning_dagger') &&
-      !sim.weapons.some((w) => w.id === 'arcane_phantom_vortex')
+      !sim.weapons.some((w) => w.id === 'arcane_phantom_vortex') &&
+      !sim.bannedItemIds?.includes('arcane_phantom_vortex')
     ) {
       pool.push(ITEM_DEFS.arcane_phantom_vortex);
     }
@@ -25,7 +26,8 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
     if (
       wepIds.includes('flame_blast') &&
       wepIds.includes('thunder_strike') &&
-      !sim.weapons.some((w) => w.id === 'cataclysmic_nova')
+      !sim.weapons.some((w) => w.id === 'cataclysmic_nova') &&
+      !sim.bannedItemIds?.includes('cataclysmic_nova')
     ) {
       pool.push(ITEM_DEFS.cataclysmic_nova);
     }
@@ -34,7 +36,8 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
     if (
       wepIds.includes('radiant_aura') &&
       wepIds.includes('venom_spores') &&
-      !sim.weapons.some((w) => w.id === 'toxic_sanctuary')
+      !sim.weapons.some((w) => w.id === 'toxic_sanctuary') &&
+      !sim.bannedItemIds?.includes('toxic_sanctuary')
     ) {
       pool.push(ITEM_DEFS.toxic_sanctuary);
     }
@@ -43,7 +46,8 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
     if (
       wepIds.includes('frost_shard') &&
       wepIds.includes('thunder_strike') &&
-      !sim.weapons.some((w) => w.id === 'shatterstorm')
+      !sim.weapons.some((w) => w.id === 'shatterstorm') &&
+      !sim.bannedItemIds?.includes('shatterstorm')
     ) {
       pool.push(ITEM_DEFS.shatterstorm);
     }
@@ -52,7 +56,8 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
     if (
       wepIds.includes('frost_shard') &&
       wepIds.includes('spinning_dagger') &&
-      !sim.weapons.some((w) => w.id === 'frostbite_chakrams')
+      !sim.weapons.some((w) => w.id === 'frostbite_chakrams') &&
+      !sim.bannedItemIds?.includes('frostbite_chakrams')
     ) {
       pool.push(ITEM_DEFS.frostbite_chakrams);
     }
@@ -61,7 +66,8 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
     if (
       wepIds.includes('scattershot') &&
       wepIds.includes('homing_missiles') &&
-      !sim.weapons.some((w) => w.id === 'stormfront_barrage')
+      !sim.weapons.some((w) => w.id === 'stormfront_barrage') &&
+      !sim.bannedItemIds?.includes('stormfront_barrage')
     ) {
       pool.push(ITEM_DEFS.stormfront_barrage);
     }
@@ -70,7 +76,8 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
     if (
       wepIds.includes('gravity_well') &&
       wepIds.includes('frost_shard') &&
-      !sim.weapons.some((w) => w.id === 'cryo_singularity')
+      !sim.weapons.some((w) => w.id === 'cryo_singularity') &&
+      !sim.bannedItemIds?.includes('cryo_singularity')
     ) {
       pool.push(ITEM_DEFS.cryo_singularity);
     }
@@ -78,6 +85,9 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
 
   // Check Weapon + Passive Evolutions
   Object.values(ITEM_DEFS).forEach((item) => {
+    if (sim.bannedItemIds && sim.bannedItemIds.includes(item.id)) {
+      return;
+    }
     if (item.isEvolution && !item.isFusion) {
       if (item.id === 'chrono_missiles') {
         const wand = sim.weapons.find((w) => w.id === 'magic_missile');
