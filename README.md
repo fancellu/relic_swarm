@@ -11,8 +11,9 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 <https://relic-swarm.vercel.app/> &nbsp;
 ![](https://vercelbadge.vercel.app/api/fancellu/relic_swarm)
 
-![alt text](image-1.png)
+[![Relic Swarm Gameplay](image-1.png)](https://relic-swarm.vercel.app/)
 
+*Experience relentless gothic survival combat featuring real-time build pivoting, damage-scaled screen shake, and automated spellcasting.*
 
 ## 🌟 Key Features
 
@@ -49,13 +50,13 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 
 ## 🧙 Champions
 
-| Champion | Archetype | Starting Weapon | Starting Passive | Key Stat Bonus |
-| :--- | :--- | :--- | :--- | :--- |
-| **Arcanist Vael** | Balanced Caster | Magic Missile | Might Talisman | +15% Spell Area & +10% Cooldown Reduction |
-| **Knight Commander Roland** | Heavy Vanguard | Orbiting Daggers | Vitality Charm | +50 Base Max HP & +2 Damage Resistance |
-| **Pyromancer Ignis** | Burst DPS | Flame Blast | Might Talisman | +25% Global Damage & +20% Blast Area |
-| **Plague Alchemist Mortis** | Agile Harvester | Venom Spores | Toxic Vial | +20% Move Speed, +1 HP/s Regen & Toxic Mastery |
-| **Barbarian Thorgar** | Dread Berserker | Gilded Chakram | Vitality Charm | +60 Base Max HP, +30% Might & Heavy Armor |
+| Portrait | Champion | Archetype | Starting Weapon | Starting Passive | Key Stat Bonus |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| <img src="assets/images/portrait_hero_vael.png" width="48" height="48" alt="Arcanist Vael" /> | **Arcanist Vael** | Balanced Caster | <img src="assets/images/icon_wand_weapon.png" width="20" height="20" valign="middle" /> Magic Missile | <img src="assets/images/icon_might_talisman.png" width="20" height="20" valign="middle" /> Might Talisman | +15% Spell Area & +10% Cooldown Reduction |
+| <img src="assets/images/portrait_hero_roland.png" width="48" height="48" alt="Knight Commander Roland" /> | **Knight Commander Roland** | Heavy Vanguard | <img src="assets/images/icon_daggers_weapon.png" width="20" height="20" valign="middle" /> Orbiting Daggers | <img src="assets/images/item_health_potion.png" width="20" height="20" valign="middle" /> Vitality Charm | +50 Base Max HP & +2 Damage Resistance |
+| <img src="assets/images/portrait_hero_ignis.png" width="48" height="48" alt="Pyromancer Ignis" /> | **Pyromancer Ignis** | Burst DPS | <img src="assets/images/icon_flame_staff.png" width="20" height="20" valign="middle" /> Flame Blast | <img src="assets/images/icon_might_talisman.png" width="20" height="20" valign="middle" /> Might Talisman | +25% Global Damage & +20% Blast Area |
+| <img src="assets/images/portrait_hero_mortis.png" width="48" height="48" alt="Plague Alchemist Mortis" /> | **Plague Alchemist Mortis** | Agile Harvester | <img src="assets/images/item_xp_gem_purple.png" width="20" height="20" valign="middle" /> Venom Spores | <img src="assets/images/item_xp_gem_purple.png" width="20" height="20" valign="middle" /> Toxic Vial | +20% Move Speed, +1 HP/s Regen & Toxic Mastery |
+| <img src="assets/images/portrait_hero_thorgar.png" width="48" height="48" alt="Barbarian Thorgar" /> | **Barbarian Thorgar** | Dread Berserker | <img src="assets/images/item_gold_coin.png" width="20" height="20" valign="middle" /> Gilded Chakram | <img src="assets/images/item_health_potion.png" width="20" height="20" valign="middle" /> Vitality Charm | +60 Base Max HP, +30% Might & Heavy Armor |
 
 ---
 
@@ -65,44 +66,44 @@ Players have **4 Weapon Slots** and **4 Passive Slots**.
 
 ### Base Weapons (Infinite Leveling, Level 5+ Evolution Threshold)
 Base weapons have no level cap and scale endlessly through draft picks and Blacksmith's Tempering; reaching **Level 5** unlocks Awakened Evolutions and Weapon Fusions.
-- **Magic Missile**: Rapid homing arcane bolts seeking nearest enemies.
-- **Flame Blast**: Explosive plasma bolts creating lingering scorching fire pools.
-- **Orbiting Daggers**: Steel razor blades continuously spinning around the hero.
-- **Thunder Strike**: High-voltage vertical lightning bolts striking clustered foes.
-- **Radiant Aura**: Sacred glowing ring dealing continuous ticking AOE damage.
-- **Venom Spores**: Toxic cloud eruptions inflicting stacking Poison DoT.
-- **Glacial Shards**: Piercing frost spikes inflicting movement slow.
-- **Gilded Chakram**: Heavy golden disc ricocheting between enemies. Base damage scales with unbanked run gold (+1% damage per 50 run gold held).
-- **Scattershot**: Fires a wide, short-range burst of arcane pellets at the nearest enemy; gains additional pellets with each level. Does knockback.
-- **Homing Missiles**: Launches heavy tracking missiles that seek enemies, retarget when a foe dies, and gain missiles and pierce as they level.
-- **Chain Lightning Gun**: Zaps the nearest enemy, with a level-scaling chance to chain through nearby foes; higher levels add bounces and a split bolt.
-- **Gravity Well**: High-mass gravitational singularities that drag enemies and ground drops to their center while inflicting continuous crushing ticks, before detonating in a screen-shaking implosion.
-- **Grenade Launcher**: Lobs fragmentation grenades in high 3D parabolic arcs over front-line mobs, casting a dynamic ground shadow and detonating on impact with radial splash falloff and heavy outward knockback impulse.
+- <img src="assets/images/icon_wand_weapon.png" width="20" height="20" valign="middle" /> **Magic Missile**: Rapid homing arcane bolts seeking nearest enemies.
+- <img src="assets/images/icon_flame_staff.png" width="20" height="20" valign="middle" /> **Flame Blast**: Explosive plasma bolts creating lingering scorching fire pools.
+- <img src="assets/images/icon_daggers_weapon.png" width="20" height="20" valign="middle" /> **Orbiting Daggers**: Steel razor blades continuously spinning around the hero.
+- <img src="assets/images/proj_thunder_strike.png" width="20" height="20" valign="middle" /> **Thunder Strike**: High-voltage vertical lightning bolts striking clustered foes.
+- <img src="assets/images/effect_radiant_aura.png" width="20" height="20" valign="middle" /> **Radiant Aura**: Sacred glowing ring dealing continuous ticking AOE damage.
+- <img src="assets/images/item_xp_gem_purple.png" width="20" height="20" valign="middle" /> **Venom Spores**: Toxic cloud eruptions inflicting stacking Poison DoT.
+- <img src="assets/images/item_xp_gem_blue.png" width="20" height="20" valign="middle" /> **Glacial Shards**: Piercing frost spikes inflicting movement slow.
+- <img src="assets/images/item_gold_coin.png" width="20" height="20" valign="middle" /> **Gilded Chakram**: Heavy golden disc ricocheting between enemies. Base damage scales with unbanked run gold (+1% damage per 50 run gold held).
+- <img src="assets/images/proj_flame_blast.png" width="20" height="20" valign="middle" /> **Scattershot**: Fires a wide, short-range burst of arcane pellets at the nearest enemy; gains additional pellets with each level. Does knockback.
+- <img src="assets/images/proj_magic_missile.png" width="20" height="20" valign="middle" /> **Homing Missiles**: Launches heavy tracking missiles that seek enemies, retarget when a foe dies, and gain missiles and pierce as they level.
+- <img src="assets/images/proj_thunder_strike.png" width="20" height="20" valign="middle" /> **Chain Lightning Gun**: Zaps the nearest enemy, with a level-scaling chance to chain through nearby foes; higher levels add bounces and a split bolt.
+- <img src="assets/images/item_magnet_rune.png" width="20" height="20" valign="middle" /> **Gravity Well**: High-mass gravitational singularities that drag enemies and ground drops to their center while inflicting continuous crushing ticks, before detonating in a screen-shaking implosion.
+- <img src="assets/images/proj_grenade.png" width="20" height="20" valign="middle" /> **Grenade Launcher**: Lobs fragmentation grenades in high 3D parabolic arcs over front-line mobs, casting a dynamic ground shadow and detonating on impact with radial splash falloff and heavy outward knockback impulse.
 
 ### Legendary Weapon Fusions (Level 5 + Level 5)
-- **Arcane Phantom Vortex**: *Magic Missile L5* + *Orbiting Daggers L5* $\to$ 8 astral blades firing rapid homing energy beams.
-- **Cataclysmic Supernova**: *Flame Blast L5* + *Thunder Strike L5* $\to$ Screen-wide infernos combined with celestial lightning storms.
-- **Plague Sanctuary**: *Radiant Aura L5* + *Venom Spores L5* $\to$ Massive aura slowing enemies by 40% and dealing 24 poison DPS.
-- **Shatterstorm**: *Glacial Shards L5* + *Thunder Strike L5* $\to$ Piercing ice lances freezing targets, followed by lightning shattering slowed/frozen foes.
-- **Frostbite Chakrams**: *Glacial Shards L5* + *Orbiting Daggers L5* $\to$ Expanding and contracting ring of 8 cryogenic chakrams trailing freezing slipstreams.
-- **Stormfront Barrage**: *Scattershot L5* + *Homing Missiles L5* $\to$ A wide fan of micro-missiles that curves back into nearby enemies.
-- **Cryo Singularity**: *Gravity Well L5* + *Glacial Shards L5* $\to$ Absolute-zero singularity pulling enemies inward and freezing them in stasis before shattering into piercing ice shrapnel.
-- **Napalm Siege Mortar**: *Grenade Launcher L5* + *Flame Blast L5* $\to$ Lobs alchemical mortar shells creating cataclysmic fire blasts and massive lingering napalm infernos that slow and burn.
+- <img src="assets/images/icon_daggers_weapon.png" width="20" height="20" valign="middle" /> **Arcane Phantom Vortex**: *Magic Missile L5* + *Orbiting Daggers L5* $\to$ 8 astral blades firing rapid homing energy beams.
+- <img src="assets/images/icon_flame_staff.png" width="20" height="20" valign="middle" /> **Cataclysmic Supernova**: *Flame Blast L5* + *Thunder Strike L5* $\to$ Screen-wide infernos combined with celestial lightning storms.
+- <img src="assets/images/effect_radiant_aura.png" width="20" height="20" valign="middle" /> **Plague Sanctuary**: *Radiant Aura L5* + *Venom Spores L5* $\to$ Massive aura slowing enemies by 40% and dealing 24 poison DPS.
+- <img src="assets/images/proj_thunder_strike.png" width="20" height="20" valign="middle" /> **Shatterstorm**: *Glacial Shards L5* + *Thunder Strike L5* $\to$ Piercing ice lances freezing targets, followed by lightning shattering slowed/frozen foes.
+- <img src="assets/images/icon_daggers_weapon.png" width="20" height="20" valign="middle" /> **Frostbite Chakrams**: *Glacial Shards L5* + *Orbiting Daggers L5* $\to$ Expanding and contracting ring of 8 cryogenic chakrams trailing freezing slipstreams.
+- <img src="assets/images/proj_magic_missile.png" width="20" height="20" valign="middle" /> **Stormfront Barrage**: *Scattershot L5* + *Homing Missiles L5* $\to$ A wide fan of micro-missiles that curves back into nearby enemies.
+- <img src="assets/images/item_xp_gem_blue.png" width="20" height="20" valign="middle" /> **Cryo Singularity**: *Gravity Well L5* + *Glacial Shards L5* $\to$ Absolute-zero singularity pulling enemies inward and freezing them in stasis before shattering into piercing ice shrapnel.
+- <img src="assets/images/proj_grenade.png" width="20" height="20" valign="middle" /> **Napalm Siege Mortar**: *Grenade Launcher L5* + *Flame Blast L5* $\to$ Lobs alchemical mortar shells creating cataclysmic fire blasts and massive lingering napalm infernos that slow and burn.
 
 ### Awakened Evolutions (Max Weapon + Matched Passive via Boss Chest)
-- **Chrono Missiles**: *Magic Missile* + *Swift Boots* $\to$ Continuous stream of hyper-velocity laser bolts.
-- **Hellfire Nova**: *Flame Blast* + *Might Talisman* $\to$ Arena-wide cascading supernovae.
-- **Mjolnir's Conduit**: *Thunder Strike* + *Swift Boots* $\to$ Lightning strikes drop electrified conduit pylons arcing continuous high-voltage laser beams.
-- **Solar Eclipse**: *Radiant Aura* + *Vitality Charm* $\to$ Pulsing corona aura unleashing a gravitational shockwave repelling enemies and vacuuming XP.
-- **Necrotic Blight**: *Venom Spores* + *Toxic Vial* $\to$ Massive corrosive spores; afflicted enemies that die explode into homing plague beetles.
-- **Phantom Storm**: *Orbiting Daggers* + *Might Talisman* $\to$ 8 ethereal hyper-speed scythes.
-- **Absolute Zero**: *Glacial Shards* + *Frost Amulet* $\to$ Cryogenic storms freezing and shattering enemies.
-- **Midas' Wrath**: *Gilded Chakram* + *Greed Coin* $\to$ Twin golden sawblades shedding radiant gold coins on impact, doubling greed scaling (+2% damage per 50 unbanked run gold).
-- **Starfall Scattergun**: *Scattershot* + *Might Talisman* $\to$ A dense, piercing blast of star-metal pellets.
-- **Swarm Seekers**: *Homing Missiles* + *Attraction Rune* $\to$ A piercing flock of aggressive tracking missiles.
-- **Tesla Tempest**: *Chain Lightning Gun* + *Swift Boots* $\to$ Lightning that reliably leaps and forks through the horde.
-- **Event Horizon**: *Gravity Well* + *Attraction Rune* $\to$ Supermassive black hole dragging enemies and vacuuming all arena loot straight into your pouch, concluding with an antimatter supernova!
-- **MIRV Cluster Mortar**: *Grenade Launcher* + *Might Talisman* $\to$ Heavy bunker-buster ordnance that splinters on impact into cascading cluster bomblets blanket-bombing swarms!
+- <img src="assets/images/icon_wand_weapon.png" width="20" height="20" valign="middle" /> **Chrono Missiles**: *Magic Missile* + *Swift Boots* $\to$ Continuous stream of hyper-velocity laser bolts.
+- <img src="assets/images/icon_flame_staff.png" width="20" height="20" valign="middle" /> **Hellfire Nova**: *Flame Blast* + *Might Talisman* $\to$ Arena-wide cascading supernovae.
+- <img src="assets/images/proj_thunder_strike.png" width="20" height="20" valign="middle" /> **Mjolnir's Conduit**: *Thunder Strike* + *Swift Boots* $\to$ Lightning strikes drop electrified conduit pylons arcing continuous high-voltage laser beams.
+- <img src="assets/images/effect_radiant_aura.png" width="20" height="20" valign="middle" /> **Solar Eclipse**: *Radiant Aura* + *Vitality Charm* $\to$ Pulsing corona aura unleashing a gravitational shockwave repelling enemies and vacuuming XP.
+- <img src="assets/images/item_xp_gem_purple.png" width="20" height="20" valign="middle" /> **Necrotic Blight**: *Venom Spores* + *Toxic Vial* $\to$ Massive corrosive spores; afflicted enemies that die explode into homing plague beetles.
+- <img src="assets/images/icon_daggers_weapon.png" width="20" height="20" valign="middle" /> **Phantom Storm**: *Orbiting Daggers* + *Might Talisman* $\to$ 8 ethereal hyper-speed scythes.
+- <img src="assets/images/item_xp_gem_blue.png" width="20" height="20" valign="middle" /> **Absolute Zero**: *Glacial Shards* + *Frost Amulet* $\to$ Cryogenic storms freezing and shattering enemies.
+- <img src="assets/images/item_gold_coin.png" width="20" height="20" valign="middle" /> **Midas' Wrath**: *Gilded Chakram* + *Greed Coin* $\to$ Twin golden sawblades shedding radiant gold coins on impact, doubling greed scaling (+2% damage per 50 unbanked run gold).
+- <img src="assets/images/proj_flame_blast.png" width="20" height="20" valign="middle" /> **Starfall Scattergun**: *Scattershot* + *Might Talisman* $\to$ A dense, piercing blast of star-metal pellets.
+- <img src="assets/images/proj_magic_missile.png" width="20" height="20" valign="middle" /> **Swarm Seekers**: *Homing Missiles* + *Attraction Rune* $\to$ A piercing flock of aggressive tracking missiles.
+- <img src="assets/images/proj_thunder_strike.png" width="20" height="20" valign="middle" /> **Tesla Tempest**: *Chain Lightning Gun* + *Swift Boots* $\to$ Lightning that reliably leaps and forks through the horde.
+- <img src="assets/images/item_magnet_rune.png" width="20" height="20" valign="middle" /> **Event Horizon**: *Gravity Well* + *Attraction Rune* $\to$ Supermassive black hole dragging enemies and vacuuming all arena loot straight into your pouch, concluding with an antimatter supernova!
+- <img src="assets/images/proj_grenade.png" width="20" height="20" valign="middle" /> **MIRV Cluster Mortar**: *Grenade Launcher* + *Might Talisman* $\to$ Heavy bunker-buster ordnance that splinters on impact into cascading cluster bomblets blanket-bombing swarms!
 
 ---
 
@@ -126,10 +127,21 @@ When a weapon or passive achieves its maximum rank (Level 5 or Awakened form), y
 
 ### 🎪 Wandering Black Market Bazaar
 A Smuggler Merchant Cart arrives every 3 minutes (180s, 360s, 540s...) near the player. Step into the cart's proximity circle to open the bazaar:
-- **Overdrive Infusion (100g)**: 60-second combat surge granting +40% Might, +25% Cooldown Reduction, and +20% Movement Speed with golden ember trail effects.
-- **Blacksmith's Tempering (175g)**: Upgrades an equipped non-evolved weapon by +1 Level without limit (prioritizing lowest level), or grants +50 Max HP and a complete restore if all current weapons are fully evolved/fused.
-- **Arcane Fusion Catalyst (250g)**: Offered strictly when you hold a compatible weapon pair. Instantly synthesizes that fusion immediately without requiring Level 5!
-- **Smuggler's Fortune Cache (200g)**: Offered when no fusion pair is currently held. Contraband fate dice that immediately grant +2 Arsenal Bans & +2 Draft Rerolls for the run.
+- <img src="assets/images/icon_might_talisman.png" width="18" height="18" valign="middle" /> **Overdrive Infusion (100g)**: 60-second combat surge granting +40% Might, +25% Cooldown Reduction, and +20% Movement Speed with golden ember trail effects.
+- <img src="assets/images/item_gold_coin.png" width="18" height="18" valign="middle" /> **Blacksmith's Tempering (175g)**: Upgrades an equipped non-evolved weapon by +1 Level without limit (prioritizing lowest level), or grants +50 Max HP and a complete restore if all current weapons are fully evolved/fused.
+- <img src="assets/images/icon_daggers_weapon.png" width="18" height="18" valign="middle" /> **Arcane Fusion Catalyst (250g)**: Offered strictly when you hold a compatible weapon pair. Instantly synthesizes that fusion immediately without requiring Level 5!
+- <img src="assets/images/item_treasure_chest.png" width="18" height="18" valign="middle" /> **Smuggler's Fortune Cache (200g)**: Offered when no fusion pair is currently held. Contraband fate dice that immediately grant +2 Arsenal Bans & +2 Draft Rerolls for the run.
+
+### 💎 Ground Drops & Arena Relics
+
+| Icon | Item | Category | In-Game Effect |
+| :---: | :--- | :--- | :--- |
+| <img src="assets/images/item_xp_gem_blue.png" width="28" height="28" alt="Blue XP Gem" /> | **Blue XP Gem** | Experience | Common experience crystal dropped by standard horde monsters (+10 XP). |
+| <img src="assets/images/item_xp_gem_purple.png" width="28" height="28" alt="Purple XP Gem" /> | **Purple XP Gem** | Experience | Concentrated experience crystal dropped by Elites and trial completions (+50 XP). |
+| <img src="assets/images/item_gold_coin.png" width="28" height="28" alt="Gold Coin" /> | **Gold Coin** | Currency | Minted gold dropped by enemies. Fuels mid-run merchant upgrades and permanent Sanctum meta-progression. |
+| <img src="assets/images/item_health_potion.png" width="28" height="28" alt="Health Potion" /> | **Health Potion** | Consumable | Emergency restorative elixir. Instantly restores 40% Max HP and grants +25 HP/sec rapid regen for 5 seconds. |
+| <img src="assets/images/item_magnet_rune.png" width="28" height="28" alt="Attraction Magnet Rune" /> | **Magnet Rune** | World Pickup | High-tier relic pickup. Instantly vacuums all uncollected XP gems and gold coins across the entire arena directly to your champion. |
+| <img src="assets/images/item_treasure_chest.png" width="28" height="28" alt="Treasure Chest" /> | **Treasure Chest** | Reward Cache | Dropped by Elites and Realm Bosses. Cracks open to reveal multi-card level drafts, gold surges, and Awakened Weapon Evolutions! |
 
 ## 🏛️ Arena Objectives & Spatial Mechanics
 
@@ -157,7 +169,7 @@ Combat in Relic Swarm moves beyond passive circle-kiting with interactive dynami
 Runs in Relic Swarm no longer abruptly terminate upon defeating the Abyssal Titan:
 - **Stage Clear Intermission**: Defeating the Titan boss completes the current realm and presents the **Stage Clear Intermission** modal (`StageClearModal`).
 - **Weapon Carry-Over & Stage Level Cap**: The player selects **1 equipped weapon** from their current loadout (preserving its level, Awakened Evolution, or Fusion state) to anchor their build in the next realm. To keep the challenge balanced and fun, carried non-evolved weapons are capped at $\text{Stage} \times 5$ (e.g. Stage 2 caps at Level 10, Stage 3 at Level 15). Unchosen weapons, passives, and excess levels automatically liquidate for **70% gold value** directly into your carried gold pouch.
-- **Stage Scaling**: Each subsequent realm increases **Enemy HP by +10% (compound)**, **Enemy Damage by +10% (compound)**, and **Hero Movement Speed by +10% (additive)**. The Abyssal Titan escalates with higher radial bullet-hell orb densities ($min(16, 8 + (S - 1) 	imes 2)$).
+- **Stage Scaling**: Each subsequent realm increases **Enemy HP by +10% (compound)**, **Enemy Damage by +10% (compound)**, and **Hero Movement Speed by +10% (additive)**. The Abyssal Titan escalates with higher radial bullet-hell orb densities ($min(16, 8 + (S - 1) \times 2)$).
 - **Dynamic Themed Arenas**: Canvas 2D arena floor, grid lines, and perimeter borders transition through 5 distinct themes:
   1. *Gothic Sanctum* (Deep violet / crimson border)
   2. *Blood Catacombs* (Charcoal / blazing orange border)
@@ -166,19 +178,26 @@ Runs in Relic Swarm no longer abruptly terminate upon defeating the Abyssal Tita
   5. *Astral Void* (Deep void / radiant cosmic purple border)
 - **Flexible Playstyles**: Players can choose to **Descend to Stage S+1** to push their build further, or **Claim Victory & Bank Gold** to retire safely and secure their Sanctum riches.
 
+### 👑 Realm Boss Encounter
+
+| Realm Boss | Archetype | Unique Threat | Clear Reward |
+| :---: | :--- | :--- | :--- |
+| <img src="assets/images/portrait_boss_titan.png" width="56" height="56" alt="Abyssal Titan" /> | **Abyssal Titan** | Colossal Behemoth | Radial bullet-hell orb barrages ($min(16, 8 + (S-1) \times 2)$), high HP pool, screen-wide stomp shockwaves | Guaranteed Legendary Treasure Chest, +350g Victory Bonus & Stage Descent Intermission |
+
 ---
 
 ## 🏛️ Sanctum Meta-Shop
 
 Gold collected from defeated foes and chests is banked into your permanent vault upon run conclusion:
 
-- **Stamina Infusion**: +10% Max Health per rank (Max 5)
-- **Might of the Sanctum**: +6% Global Damage per rank (Max 5)
-- **Haste Footwork**: +5% Move Speed & Sprint Recovery per rank (Max 5)
-- **Arcane Flow (CDR)**: +4% Cooldown Reduction per rank (Max 5)
-- **Aetheric Magnetism**: +15% Gem & Gold Magnet Radius per rank (Max 5)
-- **Golden Fortune**: +12% Gold Drop Value per rank (Max 5)
-- **Fate Rerolls**: +1 Free Draft Reroll per run (Max 3)
+- <img src="assets/images/item_health_potion.png" width="18" height="18" valign="middle" /> **Stamina Infusion**: +10% Max Health per rank (Max 5)
+- <img src="assets/images/icon_might_talisman.png" width="18" height="18" valign="middle" /> **Might of the Sanctum**: +6% Global Damage per rank (Max 5)
+- <img src="assets/images/icon_speed_boots.png" width="18" height="18" valign="middle" /> **Haste Footwork**: +5% Move Speed & Sprint Recovery per rank (Max 5)
+- <img src="assets/images/icon_wand_weapon.png" width="18" height="18" valign="middle" /> **Arcane Flow (CDR)**: +4% Cooldown Reduction per rank (Max 5)
+- <img src="assets/images/item_magnet_rune.png" width="18" height="18" valign="middle" /> **Aetheric Magnetism**: +15% Gem & Gold Magnet Radius per rank (Max 5)
+- <img src="assets/images/item_gold_coin.png" width="18" height="18" valign="middle" /> **Golden Fortune**: +12% Gold Drop Value per rank (Max 5)
+- <img src="assets/images/item_xp_gem_purple.png" width="18" height="18" valign="middle" /> **Fate Rerolls**: +1 Free Draft Reroll per run (Max 3)
+- <img src="assets/images/item_treasure_chest.png" width="18" height="18" valign="middle" /> **Banishment Rites**: +1 Card Ban per run (Max 3)
 
 ---
 

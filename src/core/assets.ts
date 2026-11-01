@@ -84,4 +84,12 @@ export const ASSETS_MANIFEST: Record<string, string> = {
   proj_spinning_dagger: 'assets/images/proj_spinning_dagger.png',
   proj_thunder_strike: 'assets/images/proj_thunder_strike.png',
   proj_grenade: 'assets/images/proj_grenade.png',
+
+  // Champion & Boss Portraits
+  portrait_hero_vael: 'assets/images/portrait_hero_vael.png',
+  portrait_hero_roland: 'assets/images/portrait_hero_roland.png',
+  portrait_hero_ignis: 'assets/images/portrait_hero_ignis.png',
+  portrait_hero_mortis: 'assets/images/portrait_hero_mortis.png',
+  portrait_hero_thorgar: 'assets/images/portrait_hero_thorgar.png',
+  portrait_boss_titan: 'assets/images/portrait_boss_titan.png',
 };
