@@ -33,4 +33,4 @@ Do not allocate unnecessary arrays, closures, or objects in per-frame `update()`
 
 ## Commit & Pull Request Guidelines
 
-Follow conventional commit formats where applicable (`feat:`, `fix:`, `refactor:`, `docs:`, etc.).
+Do not create git commits or stage changes unless explicitly instructed by the user; leave committing to the user. When asked to commit, follow conventional commit formats where applicable (`feat:`, `fix:`, `refactor:`, `docs:`, etc.).
