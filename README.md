@@ -77,6 +77,7 @@ Base weapons have no level cap and scale endlessly through draft picks and Black
 - **Homing Missiles**: Launches heavy tracking missiles that seek enemies, retarget when a foe dies, and gain missiles and pierce as they level.
 - **Chain Lightning Gun**: Zaps the nearest enemy, with a level-scaling chance to chain through nearby foes; higher levels add bounces and a split bolt.
 - **Gravity Well**: High-mass gravitational singularities that drag enemies and ground drops to their center while inflicting continuous crushing ticks, before detonating in a screen-shaking implosion.
+- **Grenade Launcher**: Lobs fragmentation grenades in high 3D parabolic arcs over front-line mobs, casting a dynamic ground shadow and detonating on impact with radial splash falloff and heavy outward knockback impulse.
 
 ### Legendary Weapon Fusions (Level 5 + Level 5)
 - **Arcane Phantom Vortex**: *Magic Missile L5* + *Orbiting Daggers L5* $\to$ 8 astral blades firing rapid homing energy beams.
@@ -86,6 +87,7 @@ Base weapons have no level cap and scale endlessly through draft picks and Black
 - **Frostbite Chakrams**: *Glacial Shards L5* + *Orbiting Daggers L5* $\to$ Expanding and contracting ring of 8 cryogenic chakrams trailing freezing slipstreams.
 - **Stormfront Barrage**: *Scattershot L5* + *Homing Missiles L5* $\to$ A wide fan of micro-missiles that curves back into nearby enemies.
 - **Cryo Singularity**: *Gravity Well L5* + *Glacial Shards L5* $\to$ Absolute-zero singularity pulling enemies inward and freezing them in stasis before shattering into piercing ice shrapnel.
+- **Napalm Siege Mortar**: *Grenade Launcher L5* + *Flame Blast L5* $\to$ Lobs alchemical mortar shells creating cataclysmic fire blasts and massive lingering napalm infernos that slow and burn.
 
 ### Awakened Evolutions (Max Weapon + Matched Passive via Boss Chest)
 - **Chrono Missiles**: *Magic Missile* + *Swift Boots* $\to$ Continuous stream of hyper-velocity laser bolts.
@@ -100,6 +102,7 @@ Base weapons have no level cap and scale endlessly through draft picks and Black
 - **Swarm Seekers**: *Homing Missiles* + *Attraction Rune* $\to$ A piercing flock of aggressive tracking missiles.
 - **Tesla Tempest**: *Chain Lightning Gun* + *Swift Boots* $\to$ Lightning that reliably leaps and forks through the horde.
 - **Event Horizon**: *Gravity Well* + *Attraction Rune* $\to$ Supermassive black hole dragging enemies and vacuuming all arena loot straight into your pouch, concluding with an antimatter supernova!
+- **MIRV Cluster Mortar**: *Grenade Launcher* + *Might Talisman* $\to$ Heavy bunker-buster ordnance that splinters on impact into cascading cluster bomblets blanket-bombing swarms!
 
 ---
 

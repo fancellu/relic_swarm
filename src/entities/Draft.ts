@@ -101,6 +101,16 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
     ) {
       pool.push(ITEM_DEFS.cryo_singularity);
     }
+
+    // 8. Napalm Siege Mortar (Grenade Launcher + Flame Blast)
+    if (
+      wepIds.includes('grenade_launcher') &&
+      wepIds.includes('flame_blast') &&
+      !sim.weapons.some((w) => w.id === 'napalm_mortar') &&
+      !sim.bannedItemIds?.includes('napalm_mortar')
+    ) {
+      pool.push(ITEM_DEFS.napalm_mortar);
+    }
   }
 
   // Check Weapon + Passive Evolutions
@@ -179,6 +189,12 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
         const well = sim.weapons.find((w) => w.id === 'gravity_well');
         const magnet = sim.passives.find((p) => p.id === 'magnet_rune');
         if (well && well.level >= 5 && magnet && !sim.weapons.some((w) => w.id === item.id)) {
+          pool.push(item);
+        }
+      } else if (item.id === 'cluster_mirv') {
+        const grenade = sim.weapons.find((w) => w.id === 'grenade_launcher');
+        const might = sim.passives.find((p) => p.id === 'might_talisman');
+        if (grenade && grenade.level >= 5 && might && !sim.weapons.some((w) => w.id === item.id)) {
           pool.push(item);
         }
       }
@@ -331,6 +347,9 @@ export function applyUpgradeSelection(
       sim.weapons.push({id: item.id, level: 1});
     } else if (item.id === 'event_horizon') {
       sim.weapons = sim.weapons.filter((w) => w.id !== 'gravity_well');
+      sim.weapons.push({id: item.id, level: 1});
+    } else if (item.id === 'cluster_mirv') {
+      sim.weapons = sim.weapons.filter((w) => w.id !== 'grenade_launcher');
       sim.weapons.push({id: item.id, level: 1});
     }
     if (sim.fusionCatalystAvailable && item.isFusion) {

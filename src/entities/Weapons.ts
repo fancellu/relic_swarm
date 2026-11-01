@@ -833,5 +833,71 @@ export function updateWeaponCasting(
         }
       }
     }
+
+    // --- Grenade Launcher, MIRV Cluster Mortar & Napalm Siege Mortar ---
+    else if (wep.id === 'grenade_launcher' || wep.id === 'cluster_mirv' || wep.id === 'napalm_mortar') {
+      if (sim.weaponTimers[timerKey] >= actualCd && sim.enemies.length > 0) {
+        sim.weaponTimers[timerKey] = 0;
+        gameAudio.playArcadeLaser();
+
+        const isMirv = wep.id === 'cluster_mirv';
+        const isNapalm = wep.id === 'napalm_mortar';
+
+        // Count: Level 1-2: 1, Level 3-4: 2, Level 5+: 3; MIRV: 3, Napalm: 3
+        const count = isMirv || isNapalm ? 3 : wep.level >= 5 ? 3 : wep.level >= 3 ? 2 : 1;
+        const baseDmg = def.baseDamage || 52;
+        const damage = baseDmg * stats.mightMult * (1 + (wep.level - 1) * 0.22);
+        const splashRadius = (isNapalm ? 130 : isMirv ? 110 : 85 + wep.level * 10) * stats.areaMult;
+
+        const targets = getClosestEnemies(sim.x, sim.y, sim.enemies, Math.min(sim.enemies.length, count * 2));
+
+        for (let i = 0; i < count; i++) {
+          const target = targets[i % targets.length] || sim.enemies[Math.floor(Math.random() * sim.enemies.length)];
+          if (!target) break;
+
+          const spreadAngle = count > 1 ? (i - (count - 1) / 2) * 0.35 : 0;
+          const distToTarget = Math.hypot(target.x - sim.x, target.y - sim.y);
+          const baseAngle = Math.atan2(target.y - sim.y, target.x - sim.x);
+          const finalAngle = baseAngle + spreadAngle;
+
+          const clampedDist = Math.max(80, Math.min(distToTarget, 450));
+          const targetX = sim.x + Math.cos(finalAngle) * clampedDist;
+          const targetY = sim.y + Math.sin(finalAngle) * clampedDist;
+
+          const flightTime = 0.65 + clampedDist * 0.0006;
+          const peakHeight = Math.min(100, 50 + clampedDist * 0.12);
+
+          const color = isNapalm ? '#ea580c' : isMirv ? '#a855f7' : '#84cc16';
+
+          sim.projectiles.push({
+            id: sim.nextProjId++,
+            type: 'grenade',
+            sourceWeapon: wep.id,
+            x: sim.x,
+            y: sim.y,
+            vx: (targetX - sim.x) / flightTime,
+            vy: (targetY - sim.y) / flightTime,
+            damage,
+            radius: 14 * stats.areaMult,
+            splashRadius,
+            duration: flightTime,
+            maxDuration: flightTime,
+            pierce: 999,
+            hitList: [],
+            color,
+            arcStartX: sim.x,
+            arcStartY: sim.y,
+            arcTargetX: targetX,
+            arcTargetY: targetY,
+            arcPeakHeight: peakHeight,
+            rotation: Math.random() * Math.PI * 2,
+            spinSpeed: (Math.random() > 0.5 ? 1 : -1) * (10 + Math.random() * 6),
+            inflictsPoison: stats.toxicLevel > 0 && Math.random() < 0.35,
+          });
+
+          spawnParticles(sim.x, sim.y, 4, color, 80);
+        }
+      }
+    }
   });
 }

@@ -292,6 +292,18 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     evolutionPair: 'magnet_rune',
     cost: 75,
   },
+  grenade_launcher: {
+    id: 'grenade_launcher',
+    name: 'Grenade Launcher',
+    type: 'WEAPON',
+    icon: 'assets/images/proj_grenade.png',
+    desc: 'Lobs heavy fragmentation grenades in high parabolic arcs over swarms, detonating on impact with radial falloff and kinetic knockback.',
+    maxLevel: 5,
+    baseDamage: 52,
+    cooldown: 1.75,
+    evolutionPair: 'might_talisman',
+    cost: 75,
+  },
 
   // Level 5 + Level 5 Weapon Fusions (Evolutions)
   arcane_phantom_vortex: {
@@ -396,6 +408,20 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     consumedWeapons: ['gravity_well', 'frost_shard'],
     cost: 235,
     inflictsSlow: true,
+  },
+  napalm_mortar: {
+    id: 'napalm_mortar',
+    name: 'Napalm Siege Mortar',
+    type: 'WEAPON',
+    icon: 'assets/images/proj_grenade.png',
+    desc: 'FUSION (Grenade Launcher L5 + Flame Blast L5): Lobs incendiary alchemical mortar shells creating cataclysmic fire blasts and massive lingering napalm infernos.',
+    maxLevel: 1,
+    baseDamage: 115,
+    cooldown: 1.55,
+    isEvolution: true,
+    isFusion: true,
+    consumedWeapons: ['grenade_launcher', 'flame_blast'],
+    cost: 235,
   },
 
   // Awakened Weapon + Passive Evolutions
@@ -542,6 +568,18 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     maxLevel: 1,
     baseDamage: 90,
     cooldown: 2.8,
+    isEvolution: true,
+    cost: 190,
+  },
+  cluster_mirv: {
+    id: 'cluster_mirv',
+    name: 'MIRV Cluster Mortar',
+    type: 'WEAPON',
+    icon: 'assets/images/proj_grenade.png',
+    desc: 'Awakened (Grenade Launcher + Might Talisman): Heavy bunker-buster ordnance that splinters on impact into cascading cluster bomblets blanket-bombing the battlefield!',
+    maxLevel: 1,
+    baseDamage: 88,
+    cooldown: 1.45,
     isEvolution: true,
     cost: 190,
   },

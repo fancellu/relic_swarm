@@ -8,7 +8,7 @@ Here are some feature ideas to make it more fun, grouped by where they'd slot in
 
 ## Combat / Weapons
 1. [x] **Gravity Well (new weapon)** — pulls enemies into a point then detonates. Would synergize with the existing magnet/vacuum mechanics. *(Implemented with Awakened Evolution **Event Horizon** + Fusion **Cryo Singularity**)*
-2. **Grenade / arcing explosive launcher** — fits the shotgun knockback direction; splash damage with falloff, bounces off nothing, arcs naturally.
+2. [x] **Grenade / arcing explosive launcher** — fits the shotgun knockback direction; splash damage with falloff, bounces off nothing, arcs naturally. *(Implemented with Awakened Evolution **MIRV Cluster Mortar** + Fusion **Napalm Siege Mortar**)*
 3. **New weapon fusions** — e.g. *Swarm Seekers + Stormfront Barrage → Swarm Storm*, or *Gilded Chakram + Arcane Phantom Vortex → Golden Vortex*. Fusions are cheap to add since the machinery exists.
 4. **New evolutions** — e.g. *Magic Missile + Swift Boots → Quantum Blink*, *Flame Blast + Frost Amulet → Cryo Inferno*, *Homing Missiles + Might Talisman → Maelstrom*.
 

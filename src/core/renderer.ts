@@ -705,6 +705,52 @@ export function renderGame(
       ctx.fill();
 
       ctx.restore();
+    } else if (proj.type === 'grenade') {
+      const progress = Math.min(1, Math.max(0, 1 - proj.duration / proj.maxDuration));
+      const peakHeight = proj.arcPeakHeight || 60;
+      const altitude = 4 * peakHeight * progress * (1 - progress);
+
+      // 1. Ground Shadow (telegraphs impact landing position on terrain)
+      ctx.save();
+      const shadowScale = Math.max(0.4, 1 - (altitude / peakHeight) * 0.45);
+      const rx = (proj.radius * 0.85) * shadowScale;
+      const ry = (proj.radius * 0.45) * shadowScale;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.32)';
+      ctx.beginPath();
+      ctx.ellipse(proj.x, proj.y, rx, ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // 2. Elevated Grenade Sprite (drawn at y - altitude, rotated)
+      const renderY = proj.y - altitude;
+      const grenadeSize = proj.isCluster ? proj.radius * 2.2 : proj.radius * 2.8;
+
+      ctx.save();
+      ctx.translate(proj.x, renderY);
+      ctx.rotate(proj.rotation || 0);
+
+      drawAsset(
+        ctx,
+        assets['proj_grenade'],
+        -grenadeSize / 2,
+        -grenadeSize / 2,
+        grenadeSize,
+        grenadeSize,
+        (fCtx) => {
+          // Fallback geometric pixel grenade if asset is still loading
+          fCtx.fillStyle = proj.color;
+          fCtx.beginPath();
+          fCtx.arc(0, 0, Math.max(0, proj.radius), 0, Math.PI * 2);
+          fCtx.fill();
+          fCtx.fillStyle = '#ca8a04';
+          fCtx.fillRect(-proj.radius * 0.3, -proj.radius * 1.1, proj.radius * 0.6, proj.radius * 0.4);
+          fCtx.fillStyle = '#f97316';
+          fCtx.beginPath();
+          fCtx.arc(0, -proj.radius * 1.2, 3, 0, Math.PI * 2);
+          fCtx.fill();
+        },
+      );
+      ctx.restore();
     } else if (proj.isEnemy) {
       ctx.fillStyle = proj.color;
       ctx.beginPath();

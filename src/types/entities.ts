@@ -75,7 +75,8 @@ export interface ProjectileEntity {
     | 'shotgun_pellet'
     | 'homing_missile'
     | 'chain_lightning'
-    | 'gravity_well';
+    | 'gravity_well'
+    | 'grenade';
   sourceWeapon?: string;
   x: number;
   y: number;
@@ -98,6 +99,15 @@ export interface ProjectileEntity {
   targetId?: number;
   chainEndX?: number;
   chainEndY?: number;
+  // Parabolic Arc Lob Properties
+  arcStartX?: number;
+  arcStartY?: number;
+  arcTargetX?: number;
+  arcTargetY?: number;
+  arcPeakHeight?: number;
+  rotation?: number;
+  spinSpeed?: number;
+  isCluster?: boolean;
 }
 
 export interface DerivedStats {

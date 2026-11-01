@@ -17,7 +17,7 @@ export function updateProjectiles(
     let removeIdx = -1;
     for (let p = 0; p < sim.projectiles.length; p++) {
       const type = sim.projectiles[p].type;
-      if (type !== 'dagger' && type !== 'vortex' && type !== 'chakram' && type !== 'gravity_well') {
+      if (type !== 'dagger' && type !== 'vortex' && type !== 'chakram' && type !== 'gravity_well' && type !== 'grenade') {
         removeIdx = p;
         break;
       }
@@ -279,6 +279,19 @@ export function updateProjectiles(
         const randR = proj.radius * 0.75;
         spawnParticles(proj.x + Math.cos(randAngle) * randR, proj.y + Math.sin(randAngle) * randR, 1, proj.color, 45);
       }
+    } else if (proj.type === 'grenade') {
+      // Parabolic flight: update ground coordinates & rotation
+      const progress = Math.min(1, Math.max(0, 1 - proj.duration / proj.maxDuration));
+      if (proj.arcStartX !== undefined && proj.arcTargetX !== undefined) {
+        proj.x = proj.arcStartX + (proj.arcTargetX - proj.arcStartX) * progress;
+        proj.y = proj.arcStartY! + (proj.arcTargetY! - proj.arcStartY!) * progress;
+      }
+      proj.rotation = (proj.rotation || 0) + (proj.spinSpeed || 10) * dt;
+
+      // Trailing fuse sparks
+      if (Math.random() < 0.25) {
+        spawnParticles(proj.x, proj.y, 1, '#f97316', 25);
+      }
     } else {
       // Homing projectiles retarget automatically when their current prey dies.
       if (proj.type === 'beetle' || proj.type === 'homing_missile') {
@@ -481,6 +494,123 @@ export function updateProjectiles(
             }
           }
         });
+      }
+
+      if (proj.type === 'grenade') {
+        gameAudio.playChiptuneExplosion();
+        const isNapalm = proj.sourceWeapon === 'napalm_mortar';
+        const isMirv = proj.sourceWeapon === 'cluster_mirv';
+        sim.screenShake = isNapalm ? 14 : isMirv ? 12 : 9;
+
+        const blastRadius = proj.splashRadius || 85;
+        const coreRadius = blastRadius * 0.35;
+
+        spawnDamageNumber(
+          proj.x,
+          proj.y,
+          isNapalm ? 'NAPALM BLAST!' : isMirv && !proj.isCluster ? 'CLUSTER DETONATION!' : 'BLAST!',
+          proj.color,
+        );
+        spawnParticles(proj.x, proj.y, isNapalm ? 30 : 20, proj.color, 180);
+        spawnParticles(proj.x, proj.y, 10, '#facc15', 120);
+
+        spatialGrid.forEachNearby(proj.x, proj.y, blastRadius + 50, (enemy) => {
+          const bdx = enemy.x - proj.x;
+          const bdy = enemy.y - proj.y;
+          const bdist = Math.hypot(bdx, bdy);
+          if (bdist <= blastRadius + enemy.size) {
+            let falloff = 1;
+            if (bdist > coreRadius) {
+              falloff = Math.max(0.35, 1 - ((bdist - coreRadius) / (blastRadius - coreRadius)) * 0.65);
+            }
+            const hitDmg = proj.damage * falloff;
+            enemy.hp -= hitDmg;
+            if (proj.sourceWeapon) {
+              sim.weaponDamageDealt[proj.sourceWeapon] =
+                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + hitDmg;
+            }
+            spawnDamageNumber(enemy.x, enemy.y, Math.round(hitDmg).toString(), proj.color);
+
+            // High kinetic radial knockback
+            if (bdist > 1) {
+              const baseKnock = enemy.isBoss ? 12 : enemy.isElite ? 28 : 65;
+              const knockback = baseKnock * falloff;
+              enemy.x += (bdx / bdist) * knockback;
+              enemy.y += (bdy / bdist) * knockback;
+            }
+
+            if (proj.inflictsPoison) applyEnemyPoison(enemy, hitDmg * 0.5);
+            if (isNapalm) {
+              enemy.burnTimer = 4.0;
+              enemy.burnDps = Math.max(enemy.burnDps, hitDmg * 0.45);
+              applyEnemySlow(enemy, 0.35, 3.0);
+            }
+          }
+        });
+
+        // Napalm Mortar: Coat ground in 3 lingering napalm pools
+        if (isNapalm) {
+          for (let p = 0; p < 3; p++) {
+            const poolAngle = (p * Math.PI * 2) / 3 + Math.random() * 0.5;
+            const poolDist = p === 0 ? 0 : 35 + Math.random() * 25;
+            const poolX = proj.x + Math.cos(poolAngle) * poolDist;
+            const poolY = proj.y + Math.sin(poolAngle) * poolDist;
+            sim.projectiles.push({
+              id: sim.nextProjId++,
+              type: 'flame_pool',
+              sourceWeapon: 'napalm_mortar',
+              x: poolX,
+              y: poolY,
+              vx: 0,
+              vy: 0,
+              damage: proj.damage * 0.5,
+              radius: 45,
+              duration: 3.5,
+              maxDuration: 3.5,
+              pierce: 999,
+              hitList: [],
+              color: '#ea580c',
+            });
+          }
+        }
+
+        // MIRV Cluster Mortar: Spawn 4 cascading mini-bomblets
+        if (isMirv && !proj.isCluster) {
+          for (let c = 0; c < 4; c++) {
+            const clusterAngle = (c * Math.PI * 2) / 4 + (Math.random() * 0.4 - 0.2);
+            const clusterDist = 60 + Math.random() * 35;
+            const cTargetX = proj.x + Math.cos(clusterAngle) * clusterDist;
+            const cTargetY = proj.y + Math.sin(clusterAngle) * clusterDist;
+            const cDuration = 0.28 + Math.random() * 0.1;
+
+            sim.projectiles.push({
+              id: sim.nextProjId++,
+              type: 'grenade',
+              sourceWeapon: 'cluster_mirv',
+              x: proj.x,
+              y: proj.y,
+              vx: (cTargetX - proj.x) / cDuration,
+              vy: (cTargetY - proj.y) / cDuration,
+              damage: proj.damage * 0.55,
+              radius: 10,
+              splashRadius: blastRadius * 0.65,
+              duration: cDuration,
+              maxDuration: cDuration,
+              pierce: 999,
+              hitList: [],
+              color: '#c084fc',
+              arcStartX: proj.x,
+              arcStartY: proj.y,
+              arcTargetX: cTargetX,
+              arcTargetY: cTargetY,
+              arcPeakHeight: 35,
+              rotation: Math.random() * Math.PI * 2,
+              spinSpeed: (Math.random() > 0.5 ? 1 : -1) * 16,
+              isCluster: true,
+              inflictsPoison: proj.inflictsPoison,
+            });
+          }
+        }
       }
       sim.projectiles.splice(i, 1);
     }

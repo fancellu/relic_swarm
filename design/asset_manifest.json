@@ -391,5 +391,19 @@
     "prompt": "Square UI icon of a brass fire staff topped with blazing orange and red embers, pixel art style, Oblique 3/4 top-down view, zero commercial icons, new design, completely independent styling",
     "actions": null,
     "resolution": null
+  },
+  {
+    "id": "proj_grenade",
+    "name": "Fragmentation Grenade",
+    "art_style": "pixelated",
+    "category": null,
+    "media_type": "image_other",
+    "description": "Fragmentation Grenade",
+    "aspect_ratio": "1:1",
+    "usage": "Parabolic arcing explosive launcher projectile and UI card icon",
+    "chroma_key": true,
+    "prompt": "16-bit retro arcade pixel art fragmentation grenade with segmented dark olive green casing, brass neck collar, striker lever and pin, and fiery orange/yellow sparks emitting from the fuse",
+    "actions": null,
+    "resolution": null
   }
 ]

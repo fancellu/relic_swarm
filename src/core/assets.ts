@@ -62,4 +62,5 @@ export const ASSETS_MANIFEST: Record<string, string> = {
   proj_flame_blast: 'assets/images/proj_flame_blast.png',
   proj_spinning_dagger: 'assets/images/proj_spinning_dagger.png',
   proj_thunder_strike: 'assets/images/proj_thunder_strike.png',
+  proj_grenade: 'assets/images/proj_grenade.png',
 };
