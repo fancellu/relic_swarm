@@ -776,5 +776,62 @@ export function updateWeaponCasting(
         }
       }
     }
+
+    // --- Gravity Well, Event Horizon & Cryo Singularity ---
+    else if (wep.id === 'gravity_well' || wep.id === 'event_horizon' || wep.id === 'cryo_singularity') {
+      if (sim.weaponTimers[timerKey] >= actualCd && sim.enemies.length > 0) {
+        sim.weaponTimers[timerKey] = 0;
+        gameAudio.playArcadeLaser();
+
+        const isEventHorizon = wep.id === 'event_horizon';
+        const isCryo = wep.id === 'cryo_singularity';
+
+        // Count: Lv 1-2 = 1, Lv 3-4 = 2, Lv 5 / Evolved / Fusion = 3
+        const count = isEventHorizon || isCryo || wep.level >= 5 ? 3 : wep.level >= 3 ? 2 : 1;
+
+        // Damage
+        const baseDmg = def.baseDamage || 40;
+        const tickDmg = baseDmg * stats.mightMult * (1 + (wep.level - 1) * 0.2);
+
+        // Radius
+        const baseRadius = isEventHorizon ? 280 : isCryo ? 240 : 160 + wep.level * 20;
+        const pullRadius = baseRadius * stats.areaMult;
+
+        // Duration
+        const duration = isEventHorizon ? 3.2 : isCryo ? 2.8 : 2.2;
+
+        const targets = getClosestEnemies(sim.x, sim.y, sim.enemies, Math.min(sim.enemies.length, count * 2));
+
+        for (let i = 0; i < count; i++) {
+          const target = targets[i % targets.length] || sim.enemies[Math.floor(Math.random() * sim.enemies.length)];
+          if (!target) break;
+
+          const color = isCryo ? '#06b6d4' : isEventHorizon ? '#c084fc' : '#8b5cf6';
+
+          sim.projectiles.push({
+            id: sim.nextProjId++,
+            type: 'gravity_well',
+            sourceWeapon: wep.id,
+            x: target.x,
+            y: target.y,
+            vx: 0,
+            vy: 0,
+            damage: tickDmg,
+            radius: pullRadius,
+            splashRadius: pullRadius * 1.15,
+            duration: duration,
+            maxDuration: duration,
+            pierce: 999,
+            hitList: [],
+            hitTimes: {},
+            color: color,
+            inflictsSlow: isCryo || def.inflictsSlow,
+            inflictsPoison: stats.toxicLevel > 0 && Math.random() < 0.35,
+          });
+
+          spawnParticles(target.x, target.y, 10, color, 120);
+        }
+      }
+    }
   });
 }

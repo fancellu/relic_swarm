@@ -74,7 +74,8 @@ export interface ProjectileEntity {
     | 'beetle'
     | 'shotgun_pellet'
     | 'homing_missile'
-    | 'chain_lightning';
+    | 'chain_lightning'
+    | 'gravity_well';
   sourceWeapon?: string;
   x: number;
   y: number;

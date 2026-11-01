@@ -510,6 +510,14 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                     A wide fan of micro-missiles that curves back into the surrounding swarm.
                   </div>
                 </div>
+
+                <div className="bg-slate-900/80 p-2.5 rounded-xl border border-amber-900/40">
+                  <div className="font-bold text-amber-300">Cryo Singularity</div>
+                  <div className="text-slate-400 text-[10px]">Gravity Well (Lv 5) + Glacial Shards (Lv 5)</div>
+                  <div className="text-slate-300 text-[10px] mt-1">
+                    Absolute-zero singularity freezing trapped hordes before shattering into piercing ice shrapnel.
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -585,6 +593,12 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                   <div className="font-bold text-purple-300">Tesla Tempest</div>
                   <div className="text-slate-400 text-[10px]">Chain Lightning Gun (Lv 5) + Swift Boots</div>
                   <div className="text-slate-300 text-[10px] mt-1">Lightning leaps reliably, reaches farther, and forks through clustered enemies.</div>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
+                  <div className="font-bold text-purple-300">Event Horizon</div>
+                  <div className="text-slate-400 text-[10px]">Gravity Well (Lv 5) + Attraction Rune</div>
+                  <div className="text-slate-300 text-[10px] mt-1">Supermassive black hole drags swarms and vacuums all arena loot straight to you, ending in a supernova blast!</div>
                 </div>
               </div>
             </div>

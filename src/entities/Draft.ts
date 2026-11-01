@@ -65,6 +65,15 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
     ) {
       pool.push(ITEM_DEFS.stormfront_barrage);
     }
+
+    // 7. Cryo Singularity (Gravity Well + Glacial Shards)
+    if (
+      wepIds.includes('gravity_well') &&
+      wepIds.includes('frost_shard') &&
+      !sim.weapons.some((w) => w.id === 'cryo_singularity')
+    ) {
+      pool.push(ITEM_DEFS.cryo_singularity);
+    }
   }
 
   // Check Weapon + Passive Evolutions
@@ -134,6 +143,12 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
         const lightning = sim.weapons.find((w) => w.id === 'chain_lightning_gun');
         const boots = sim.passives.find((p) => p.id === 'swift_boots');
         if (lightning && lightning.level >= 5 && boots && !sim.weapons.some((w) => w.id === item.id)) {
+          pool.push(item);
+        }
+      } else if (item.id === 'event_horizon') {
+        const well = sim.weapons.find((w) => w.id === 'gravity_well');
+        const magnet = sim.passives.find((p) => p.id === 'magnet_rune');
+        if (well && well.level >= 5 && magnet && !sim.weapons.some((w) => w.id === item.id)) {
           pool.push(item);
         }
       }
@@ -283,6 +298,9 @@ export function applyUpgradeSelection(
       sim.weapons.push({id: item.id, level: 1});
     } else if (item.id === 'tesla_tempest') {
       sim.weapons = sim.weapons.filter((w) => w.id !== 'chain_lightning_gun');
+      sim.weapons.push({id: item.id, level: 1});
+    } else if (item.id === 'event_horizon') {
+      sim.weapons = sim.weapons.filter((w) => w.id !== 'gravity_well');
       sim.weapons.push({id: item.id, level: 1});
     }
     if (sim.fusionCatalystAvailable && item.isFusion) {

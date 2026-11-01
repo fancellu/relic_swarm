@@ -638,6 +638,73 @@ export function renderGame(
       ctx.lineTo(proj.chainEndX, proj.chainEndY);
       ctx.stroke();
       ctx.restore();
+    } else if (proj.type === 'gravity_well') {
+      ctx.save();
+      const collapseProgress = proj.duration < 0.25 ? Math.max(0.1, proj.duration / 0.25) : 1;
+      const effRadius = proj.radius * (0.35 + 0.65 * collapseProgress);
+      const coreRadius = Math.max(8, effRadius * 0.26);
+
+      // 1. Semi-transparent gravitational accretion haze
+      ctx.fillStyle =
+        proj.sourceWeapon === 'cryo_singularity'
+          ? 'rgba(6, 182, 212, 0.16)'
+          : proj.sourceWeapon === 'event_horizon'
+          ? 'rgba(192, 132, 252, 0.22)'
+          : 'rgba(139, 92, 246, 0.18)';
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, effRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 2. Event Horizon Boundary Ring
+      ctx.strokeStyle = proj.color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, effRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 3. Rotating Relativistic Inward Accretion Spiral Arms
+      const spin = sim.runTimer * 5.0 + proj.id;
+      ctx.strokeStyle = proj.color;
+      ctx.lineWidth = 2.5;
+      for (let s = 0; s < 3; s++) {
+        const spiralAngle = spin + (s * Math.PI * 2) / 3;
+        const startX = proj.x + Math.cos(spiralAngle) * effRadius * 0.88;
+        const startY = proj.y + Math.sin(spiralAngle) * effRadius * 0.88;
+        const cpX = proj.x + Math.cos(spiralAngle + 0.8) * effRadius * 0.45;
+        const cpY = proj.y + Math.sin(spiralAngle + 0.8) * effRadius * 0.45;
+        const endX = proj.x + Math.cos(spiralAngle + 1.6) * coreRadius;
+        const endY = proj.y + Math.sin(spiralAngle + 1.6) * coreRadius;
+
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.quadraticCurveTo(cpX, cpY, endX, endY);
+        ctx.stroke();
+      }
+
+      // 4. Solid Black Void Singularity Core
+      ctx.fillStyle = '#05050d';
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, coreRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 5. Bright Core Rim & Center Spark
+      ctx.strokeStyle =
+        proj.sourceWeapon === 'cryo_singularity'
+          ? '#67e8f9'
+          : proj.sourceWeapon === 'event_horizon'
+          ? '#f3e8ff'
+          : '#e9d5ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, coreRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = proj.sourceWeapon === 'cryo_singularity' ? '#a5f3fc' : '#ffffff';
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, Math.max(2, coreRadius * 0.25), 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
     } else if (proj.isEnemy) {
       ctx.fillStyle = proj.color;
       ctx.beginPath();

@@ -17,7 +17,7 @@ export function updateProjectiles(
     let removeIdx = -1;
     for (let p = 0; p < sim.projectiles.length; p++) {
       const type = sim.projectiles[p].type;
-      if (type !== 'dagger' && type !== 'vortex' && type !== 'chakram') {
+      if (type !== 'dagger' && type !== 'vortex' && type !== 'chakram' && type !== 'gravity_well') {
         removeIdx = p;
         break;
       }
@@ -212,6 +212,73 @@ export function updateProjectiles(
           }
         });
       }
+    } else if (proj.type === 'gravity_well') {
+      if (!proj.hitTimes) proj.hitTimes = {};
+      const isEventHorizon = proj.sourceWeapon === 'event_horizon';
+      const isCryo = proj.sourceWeapon === 'cryo_singularity';
+
+      // Pull enemies toward singularity center & apply periodic crushing DoT
+      spatialGrid.forEachNearby(proj.x, proj.y, proj.radius + 60, (enemy) => {
+        const dx = proj.x - enemy.x;
+        const dy = proj.y - enemy.y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist <= proj.radius + enemy.size) {
+          if (dist > 10) {
+            const pullFactor = (1 - dist / (proj.radius + enemy.size)) * 340 + 90;
+            const massRes = enemy.isBoss ? 0.3 : enemy.isElite ? 0.65 : 1.0;
+            const nx = dx / dist;
+            const ny = dy / dist;
+            enemy.x += nx * pullFactor * massRes * dt;
+            enemy.y += ny * pullFactor * massRes * dt;
+          }
+
+          const lastHit = proj.hitTimes![enemy.id] || 0;
+          if (sim.runTimer - lastHit >= 0.35) {
+            proj.hitTimes![enemy.id] = sim.runTimer;
+            enemy.hp -= proj.damage;
+            if (proj.sourceWeapon) {
+              sim.weaponDamageDealt[proj.sourceWeapon] =
+                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + proj.damage;
+            }
+            spawnDamageNumber(enemy.x, enemy.y, Math.round(proj.damage).toString(), proj.color);
+            if (Math.random() < 0.25) {
+              spawnParticles(enemy.x, enemy.y, 2, proj.color, 60);
+            }
+            if (proj.inflictsSlow || isCryo) {
+              applyEnemySlow(enemy, 0.65, 2.5);
+            }
+            if (proj.inflictsPoison) {
+              applyEnemyPoison(enemy, proj.damage * 0.5);
+            }
+          }
+        }
+      });
+
+      // Pull ground drops inward (or vacuum directly to player if Event Horizon)
+      for (let d = 0; d < sim.drops.length; d++) {
+        const drop = sim.drops[d];
+        if (drop.type === 'chest' || drop.type === 'blood_chalice') continue;
+        const ddx = proj.x - drop.x;
+        const ddy = proj.y - drop.y;
+        const ddist = Math.hypot(ddx, ddy);
+        if (ddist <= proj.radius) {
+          if (isEventHorizon) {
+            drop.attracted = true;
+          } else if (ddist > 12) {
+            const dropPull = 220 * dt;
+            drop.x += (ddx / ddist) * dropPull;
+            drop.y += (ddy / ddist) * dropPull;
+          }
+        }
+      }
+
+      // Ambient inward cosmic particles
+      if (Math.random() < 0.25) {
+        const randAngle = Math.random() * Math.PI * 2;
+        const randR = proj.radius * 0.75;
+        spawnParticles(proj.x + Math.cos(randAngle) * randR, proj.y + Math.sin(randAngle) * randR, 1, proj.color, 45);
+      }
     } else {
       // Homing projectiles retarget automatically when their current prey dies.
       if (proj.type === 'beetle' || proj.type === 'homing_missile') {
@@ -362,6 +429,59 @@ export function updateProjectiles(
     }
 
     if (proj.duration <= 0) {
+      if (proj.type === 'gravity_well') {
+        gameAudio.playChiptuneExplosion();
+        const isEventHorizon = proj.sourceWeapon === 'event_horizon';
+        const isCryo = proj.sourceWeapon === 'cryo_singularity';
+        sim.screenShake = isEventHorizon ? 16 : isCryo ? 13 : 10;
+        const blastRadius = proj.splashRadius || proj.radius * 1.15;
+        const burstDmg = proj.damage * (isEventHorizon ? 3.2 : isCryo ? 2.8 : 2.5);
+
+        spawnDamageNumber(
+          proj.x,
+          proj.y,
+          isEventHorizon
+            ? `SUPERNOVA ${Math.round(burstDmg)}!`
+            : isCryo
+            ? `CRYO SHATTER ${Math.round(burstDmg)}!`
+            : `IMPLOSION ${Math.round(burstDmg)}!`,
+          proj.color,
+        );
+        spawnParticles(proj.x, proj.y, isEventHorizon ? 35 : 24, proj.color, 240);
+
+        spatialGrid.forEachNearby(proj.x, proj.y, blastRadius + 50, (enemy) => {
+          const bdx = enemy.x - proj.x;
+          const bdy = enemy.y - proj.y;
+          const bdist = Math.hypot(bdx, bdy);
+          if (bdist <= blastRadius + enemy.size) {
+            enemy.hp -= burstDmg;
+            if (proj.sourceWeapon) {
+              sim.weaponDamageDealt[proj.sourceWeapon] =
+                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + burstDmg;
+            }
+            spawnDamageNumber(enemy.x, enemy.y, Math.round(burstDmg).toString(), proj.color);
+
+            // Radial knockback outward
+            if (bdist > 1) {
+              const knockback = enemy.isBoss ? 8 : enemy.isElite ? 22 : 45;
+              enemy.x += (bdx / bdist) * knockback;
+              enemy.y += (bdy / bdist) * knockback;
+            }
+
+            if (isCryo) {
+              applyEnemySlow(enemy, 0.8, 3.5);
+              // Thermal Shock if burning
+              if (enemy.burnTimer > 0) {
+                const shockBonus = burstDmg * 1.6 + enemy.burnDps * 2;
+                enemy.hp -= shockBonus;
+                spawnDamageNumber(enemy.x, enemy.y, `THERMAL SHOCK ${Math.round(shockBonus)}!`, '#38bdf8');
+                spawnParticles(enemy.x, enemy.y, 10, '#38bdf8', 130);
+                enemy.burnTimer = 0;
+              }
+            }
+          }
+        });
+      }
       sim.projectiles.splice(i, 1);
     }
   }

@@ -148,7 +148,7 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     isConsumable: true,
   },
 
-  // Base Weapons (Max Level 5)
+  // Base Weapons (Level 5+ Evolution Threshold, Infinite Leveling)
   magic_missile: {
     id: 'magic_missile',
     name: 'Magic Missile',
@@ -280,6 +280,18 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     cooldown: 1.35,
     cost: 75,
   },
+  gravity_well: {
+    id: 'gravity_well',
+    name: 'Gravity Well',
+    type: 'WEAPON',
+    icon: 'assets/images/item_magnet_rune.png',
+    desc: 'Conjures high-gravity singularities pulling enemies and drops to their core before collapsing in an explosive cosmic implosion.',
+    maxLevel: 5,
+    baseDamage: 40,
+    cooldown: 3.2,
+    evolutionPair: 'magnet_rune',
+    cost: 75,
+  },
 
   // Level 5 + Level 5 Weapon Fusions (Evolutions)
   arcane_phantom_vortex: {
@@ -369,6 +381,21 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     isFusion: true,
     consumedWeapons: ['scattershot', 'homing_missiles'],
     cost: 230,
+  },
+  cryo_singularity: {
+    id: 'cryo_singularity',
+    name: 'Cryo Singularity',
+    type: 'WEAPON',
+    icon: 'assets/images/item_xp_gem_blue.png',
+    desc: 'FUSION (Gravity Well L5 + Glacial Shards L5): Absolute-zero gravitational maelstrom freezing trapped foes in stasis before shattering into piercing cryogenic shrapnel.',
+    maxLevel: 1,
+    baseDamage: 95,
+    cooldown: 2.6,
+    isEvolution: true,
+    isFusion: true,
+    consumedWeapons: ['gravity_well', 'frost_shard'],
+    cost: 235,
+    inflictsSlow: true,
   },
 
   // Awakened Weapon + Passive Evolutions
@@ -505,6 +532,18 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     cooldown: 0.85,
     isEvolution: true,
     cost: 185,
+  },
+  event_horizon: {
+    id: 'event_horizon',
+    name: 'Event Horizon',
+    type: 'WEAPON',
+    icon: 'assets/images/item_magnet_rune.png',
+    desc: 'Awakened (Gravity Well + Attraction Rune): Supermassive black hole drags enemies and vacuums all arena drops into a crushing accretion disk, ending with an antimatter supernova!',
+    maxLevel: 1,
+    baseDamage: 90,
+    cooldown: 2.8,
+    isEvolution: true,
+    cost: 190,
   },
 
   // Passives

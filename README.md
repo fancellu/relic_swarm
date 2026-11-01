@@ -63,7 +63,8 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 
 Players have **4 Weapon Slots** and **4 Passive Slots**.
 
-### Base Weapons (Max Level 5)
+### Base Weapons (Infinite Leveling, Level 5+ Evolution Threshold)
+Base weapons have no level cap and scale endlessly through draft picks and Blacksmith's Tempering; reaching **Level 5** unlocks Awakened Evolutions and Weapon Fusions.
 - **Magic Missile**: Rapid homing arcane bolts seeking nearest enemies.
 - **Flame Blast**: Explosive plasma bolts creating lingering scorching fire pools.
 - **Orbiting Daggers**: Steel razor blades continuously spinning around the hero.
@@ -75,6 +76,7 @@ Players have **4 Weapon Slots** and **4 Passive Slots**.
 - **Scattershot**: Fires a wide, short-range burst of arcane pellets at the nearest enemy; gains additional pellets with each level. Does knockback.
 - **Homing Missiles**: Launches heavy tracking missiles that seek enemies, retarget when a foe dies, and gain missiles and pierce as they level.
 - **Chain Lightning Gun**: Zaps the nearest enemy, with a level-scaling chance to chain through nearby foes; higher levels add bounces and a split bolt.
+- **Gravity Well**: High-mass gravitational singularities that drag enemies and ground drops to their center while inflicting continuous crushing ticks, before detonating in a screen-shaking implosion.
 
 ### Legendary Weapon Fusions (Level 5 + Level 5)
 - **Arcane Phantom Vortex**: *Magic Missile L5* + *Orbiting Daggers L5* $\to$ 8 astral blades firing rapid homing energy beams.
@@ -83,6 +85,7 @@ Players have **4 Weapon Slots** and **4 Passive Slots**.
 - **Shatterstorm**: *Glacial Shards L5* + *Thunder Strike L5* $\to$ Piercing ice lances freezing targets, followed by lightning shattering slowed/frozen foes.
 - **Frostbite Chakrams**: *Glacial Shards L5* + *Orbiting Daggers L5* $\to$ Expanding and contracting ring of 8 cryogenic chakrams trailing freezing slipstreams.
 - **Stormfront Barrage**: *Scattershot L5* + *Homing Missiles L5* $\to$ A wide fan of micro-missiles that curves back into nearby enemies.
+- **Cryo Singularity**: *Gravity Well L5* + *Glacial Shards L5* $\to$ Absolute-zero singularity pulling enemies inward and freezing them in stasis before shattering into piercing ice shrapnel.
 
 ### Awakened Evolutions (Max Weapon + Matched Passive via Boss Chest)
 - **Chrono Missiles**: *Magic Missile* + *Swift Boots* $\to$ Continuous stream of hyper-velocity laser bolts.
@@ -96,6 +99,7 @@ Players have **4 Weapon Slots** and **4 Passive Slots**.
 - **Starfall Scattergun**: *Scattershot* + *Might Talisman* $\to$ A dense, piercing blast of star-metal pellets.
 - **Swarm Seekers**: *Homing Missiles* + *Attraction Rune* $\to$ A piercing flock of aggressive tracking missiles.
 - **Tesla Tempest**: *Chain Lightning Gun* + *Swift Boots* $\to$ Lightning that reliably leaps and forks through the horde.
+- **Event Horizon**: *Gravity Well* + *Attraction Rune* $\to$ Supermassive black hole dragging enemies and vacuuming all arena loot straight into your pouch, concluding with an antimatter supernova!
 
 ---
 
