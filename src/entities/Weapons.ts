@@ -3,6 +3,7 @@ import {EnemyEntity, EquippedItem, SimulationState} from '../types/entities';
 import {ITEM_DEFS} from '../types/items';
 import {spatialGrid} from '../core/spatial';
 import {applyEnemySlow, DerivedStats} from './Player';
+import {isEnemyInvulnerable, handleEnemyInvulnerableDeflect} from './Spawner';
 
 export function applyEnemyPoison(enemy: EnemyEntity, dps: number, duration = 4.0): void {
   enemy.poisonDps = Math.max(enemy.poisonDps, dps);
@@ -442,6 +443,10 @@ export function updateWeaponCasting(
         spatialGrid.forEachNearby(sim.x, sim.y, auraRadius + 40, (enemy) => {
           const dist = Math.hypot(enemy.x - sim.x, enemy.y - sim.y);
           if (dist <= auraRadius + enemy.size) {
+            if (isEnemyInvulnerable(enemy, sim)) {
+              handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
+              return;
+            }
             const hitDmg = isGravitationalPulse ? dmg * 2.2 : dmg;
             enemy.hp -= hitDmg;
             sim.weaponDamageDealt[wep.id] = (sim.weaponDamageDealt[wep.id] || 0) + hitDmg;
@@ -617,6 +622,10 @@ export function updateWeaponCasting(
         spatialGrid.forEachNearby(sim.x, sim.y, sanctuaryRadius + 40, (enemy) => {
           const dist = Math.hypot(enemy.x - sim.x, enemy.y - sim.y);
           if (dist <= sanctuaryRadius + enemy.size) {
+            if (isEnemyInvulnerable(enemy, sim)) {
+              handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
+              return;
+            }
             enemy.hp -= dmg;
             sim.weaponDamageDealt['toxic_sanctuary'] = (sim.weaponDamageDealt['toxic_sanctuary'] || 0) + dmg;
             spawnDamageNumber(enemy.x, enemy.y, Math.round(dmg).toString(), '#22c55e');

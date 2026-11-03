@@ -389,10 +389,86 @@ export function renderGame(
     if (enemy.isElite || enemy.isBoss) {
       const pulse = 1 + Math.sin(sim.runTimer * 6) * 0.15;
       ctx.save();
-      ctx.fillStyle = enemy.isBoss ? 'rgba(239, 68, 68, 0.35)' : 'rgba(245, 158, 11, 0.35)';
+      ctx.fillStyle = enemy.isBoss
+        ? (sim.bossShieldActive ? 'rgba(56, 189, 248, 0.28)' : 'rgba(239, 68, 68, 0.35)')
+        : 'rgba(245, 158, 11, 0.35)';
       ctx.beginPath();
       ctx.arc(enemy.x, enemy.y, Math.max(0, enemy.size * 1.6 * pulse), 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
+    }
+
+    // Aegis Force Field & Minion Energy Tethers for Shielded Boss
+    if (enemy.isBoss && sim.bossShieldActive) {
+      // 1. Tethers to living minions
+      ctx.save();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+      ctx.lineWidth = 1.5;
+      let tetherCount = 0;
+      for (let m = 0; m < sim.enemies.length && tetherCount < 8; m++) {
+        const minion = sim.enemies[m];
+        if (!minion.isBoss && minion.hp > 0) {
+          const mdist = Math.hypot(minion.x - enemy.x, minion.y - enemy.y);
+          if (mdist < 850) {
+            ctx.beginPath();
+            ctx.moveTo(enemy.x, enemy.y);
+            const midX = (enemy.x + minion.x) / 2 + Math.sin(sim.runTimer * 8 + m) * 14;
+            const midY = (enemy.y + minion.y) / 2 + Math.cos(sim.runTimer * 8 + m) * 14;
+            ctx.quadraticCurveTo(midX, midY, minion.x, minion.y);
+            ctx.stroke();
+            tetherCount++;
+          }
+        }
+      }
+      ctx.restore();
+
+      // 2. Animated Force Field Dome
+      const shieldRadius = enemy.size * 2.2;
+      const shieldPulse = 1 + Math.sin(sim.runTimer * 5) * 0.04;
+      const curRadius = shieldRadius * shieldPulse;
+
+      ctx.save();
+      // Translucent dome fill
+      ctx.fillStyle = 'rgba(14, 165, 233, 0.16)';
+      ctx.beginPath();
+      ctx.arc(enemy.x, enemy.y, curRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Rotating hexagonal energy boundary
+      const hexRot = sim.runTimer * 1.4;
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      for (let h = 0; h < 6; h++) {
+        const hAngle = hexRot + (h * Math.PI * 2) / 6;
+        const hx = enemy.x + Math.cos(hAngle) * curRadius;
+        const hy = enemy.y + Math.sin(hAngle) * curRadius;
+        if (h === 0) ctx.moveTo(hx, hy);
+        else ctx.lineTo(hx, hy);
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      // Hexagonal energy nodes
+      ctx.fillStyle = '#e0f2fe';
+      for (let h = 0; h < 6; h++) {
+        const hAngle = hexRot + (h * Math.PI * 2) / 6;
+        const hx = enemy.x + Math.cos(hAngle) * curRadius;
+        const hy = enemy.y + Math.sin(hAngle) * curRadius;
+        ctx.beginPath();
+        ctx.arc(hx, hy, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Counter-rotating concentric inner ring
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([8, 8]);
+      ctx.lineDashOffset = -sim.runTimer * 20;
+      ctx.beginPath();
+      ctx.arc(enemy.x, enemy.y, curRadius * 0.72, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
       ctx.restore();
     }
 
@@ -468,14 +544,28 @@ export function renderGame(
 
     // Enemy Health Bar
     if (enemy.isElite || enemy.isBoss || enemy.hp < enemy.maxHp) {
-      const barW = enemy.isBoss ? 120 : 40;
-      const barH = enemy.isBoss ? 8 : 4;
+      const barW = enemy.isBoss ? 140 : 40;
+      const barH = enemy.isBoss ? 9 : 4;
       const hpRatio = clamp(enemy.hp / enemy.maxHp, 0, 1);
 
       ctx.fillStyle = '#1e1b4b';
-      ctx.fillRect(enemy.x - barW / 2, enemy.y - drawSize / 2 - 10, barW, barH);
-      ctx.fillStyle = enemy.isBoss ? '#ef4444' : enemy.poisonTimer > 0 ? '#22c55e' : enemy.burnTimer > 0 ? '#f97316' : '#eab308';
-      ctx.fillRect(enemy.x - barW / 2, enemy.y - drawSize / 2 - 10, barW * hpRatio, barH);
+      ctx.fillRect(enemy.x - barW / 2, enemy.y - drawSize / 2 - 12, barW, barH);
+
+      if (enemy.isBoss && sim.bossShieldActive) {
+        // Cyan shielded bar with locked indicator
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(enemy.x - barW / 2, enemy.y - drawSize / 2 - 12, barW, barH);
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(enemy.x - barW / 2, enemy.y - drawSize / 2 - 12, barW, barH);
+        ctx.fillStyle = '#f0f9ff';
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('AEGIS SHIELD LOCKED', enemy.x, enemy.y - drawSize / 2 - 16);
+      } else {
+        ctx.fillStyle = enemy.isBoss ? '#ef4444' : enemy.poisonTimer > 0 ? '#22c55e' : enemy.burnTimer > 0 ? '#f97316' : '#eab308';
+        ctx.fillRect(enemy.x - barW / 2, enemy.y - drawSize / 2 - 12, barW * hpRatio, barH);
+      }
     }
   });
 

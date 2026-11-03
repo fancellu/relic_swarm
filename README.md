@@ -17,7 +17,7 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 
 ## 🌟 Key Features
 
-- **Fluid Horde Combat**: High-density swarms rendered at a fixed 60 FPS with damage-scaled screen shake, micro hit-stop freeze frames, and responsive crowd-clearing feedback.
+- **Fluid Horde Combat & Realm Bosses**: High-density swarms rendered at a fixed 60 FPS with damage-scaled screen shake, micro hit-stop freeze frames, and responsive crowd-clearing feedback. Face monumental realm bosses protected by invulnerable force fields and elite escort phalanxes.
 - **Dynamic Arsenal Selling & Relic Forging (Mid-Run Pivoting)**: Don't get trapped in a dead-end build. Open your inventory or draft modal at any time to sell gear for an instant **70% gold refund**, or permanently **Extract Essence** from maxed Level 5 items to keep 20% of their power while freeing build slots.
 - **Wandering Black Market**: A wandering smuggler merchant cart arrives offering combat Overdrives, weapon temperings, and instant fusion catalysts for unbanked gold (permits 1 purchase per visit before relocating 1–2 minutes later).
 - **5 Distinct Champions**: Choose from Arcanist Vael, Knight Commander Roland, Pyromancer Ignis, Plague Alchemist Mortis, and Barbarian Thorgar — each featuring unique baseline stats, starting weapons, and passive affinities.
@@ -178,11 +178,31 @@ Runs in Relic Swarm no longer abruptly terminate upon defeating the Abyssal Tita
   5. *Astral Void* (Deep void / radiant cosmic purple border)
 - **Flexible Playstyles**: Players can choose to **Descend to Stage S+1** to push their build further, or **Claim Victory & Bank Gold** to retire safely and secure their Sanctum riches.
 
-### 👑 Realm Boss Encounter
+### 👑 Realm Boss Encounter & Aegis Mechanics
 
 | Realm Boss | Archetype | Unique Threat | Clear Reward |
 | :---: | :--- | :--- | :--- |
-| <img src="assets/images/portrait_boss_titan.png" width="56" height="56" alt="Abyssal Titan" /> | **Abyssal Titan** | Colossal Behemoth | Radial bullet-hell orb barrages ($min(16, 8 + (S-1) \times 2)$), high HP pool, screen-wide stomp shockwaves | Guaranteed Legendary Treasure Chest, +350g Victory Bonus & Stage Descent Intermission |
+| <img src="assets/images/portrait_boss_titan.png" width="56" height="56" alt="Abyssal Titan" /> | **Abyssal Titan** | Colossal Behemoth | Aegis Invulnerability Shield, 60-minion escort phalanx, radial bullet-hell orb barrages ($min(16, 8 + (S-1) \times 2)$), 35,000+ HP pool, seismic shockwaves | Guaranteed Legendary Treasure Chest, +350g Victory Bonus & Stage Descent Intermission |
+
+The Abyssal Titan serves as the ultimate test of your build at the climax of each realm (300s baseline):
+
+#### 🛡️ Phase 1: Aegis Force Field & Escort Phalanx
+- **Invulnerability Barrier**: The Titan is enveloped in a shimmering hexagonal energy shield that nullifies all incoming weapon damage, DoTs (Poison/Burn), explosions, and status effects. Attacks bounce with crystalline sparks, synthesized deflection pings, and an `IMMUNE` combat text.
+- **60-Minion Escort Swarm**: Regular horde wave spawning halts, and a guaranteed phalanx of **60 wave-scaled escort minions** (skeletons, hounds, sorcerers, and 15% high-threat elite guards) deploys in a defensive perimeter around the Titan. Escort minions receive a **+20% combat rush speed** boost while sustaining the shield.
+- **Dynamic Energy Tethers**: Pulsating cyan energy filaments physically link surrounding minions to the Titan's core. Stray minions wandering farther than 1,000 units are dynamically leashed towards the combat perimeter.
+- **Encounter HUD Status**: The top-center HUD switches to an Aegis Shield monitor showing the live elimination counter (`Destroy Minions to Break Shield: X / 60 Left`) and progress bar.
+
+#### ⚡ The Shield Shatter Moment
+- Slaying the final escort minion causes a catastrophic overload:
+  - **Screen Shake & Crystal Shockwave**: Intense camera shudder (`sim.screenShake = 18`) accompanied by 45 exploding cyan/gold crystal shards.
+  - **Synthesized Audio Stinger**: High-frequency crystal fracture resolving into a deep sub-bass drop (`playShieldBreak()`).
+  - **Vulnerability Callout**: Floating combat text announces `AEGIS SHIELD SHATTERED - ATTACK!`.
+
+#### ⚔️ Phase 2: Vulnerable Titan Assault
+- **35,000 Base Health Scaling**: The Titan has a massive 35,000 base health pool (scaled by $\times 1.25^{S-1}$ per subsequent stage), transforming the battle into a sustained 20–45 second DPS test.
+- **Bullet-Hell Barrages**: Emits expanding rings of high-velocity arcane projectiles ($min(16, 8 + (S-1) \times 2)$ orbs) requiring deliberate sprint timing and micro-dodging.
+- **Seismic Ground Stomps**: Heavy area-of-effect shockwaves radiating outward from the Titan's footsteps.
+- **Stage Descent Intermission**: Defeating the Titan drops a guaranteed high-tier Treasure Chest, awards +350 banked gold, and opens the **Stage Clear Intermission** modal to select a weapon carry-over for endless descent.
 
 ---
 

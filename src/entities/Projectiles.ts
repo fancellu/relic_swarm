@@ -3,6 +3,7 @@ import {MAX_PROJECTILES, SimulationState} from '../types/entities';
 import {spatialGrid} from '../core/spatial';
 import {applyEnemySlow} from './Player';
 import {applyEnemyPoison} from './Weapons';
+import {isEnemyInvulnerable, handleEnemyInvulnerableDeflect} from './Spawner';
 import {stageManager} from '../core/Stage';
 
 export function updateProjectiles(
@@ -49,6 +50,10 @@ export function updateProjectiles(
             if (lineDist < 25) {
               const dot = (enemy.x - p1.x) * (p2.x - p1.x) + (enemy.y - p1.y) * (p2.y - p1.y);
               if (dot >= 0 && dot <= segDist * segDist) {
+                if (isEnemyInvulnerable(enemy, sim)) {
+                  handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
+                  continue;
+                }
                 const arcDmg = 80 * dt;
                 enemy.hp -= arcDmg;
                 sim.weaponDamageDealt['mjolnir_conduit'] = (sim.weaponDamageDealt['mjolnir_conduit'] || 0) + arcDmg;
@@ -89,6 +94,10 @@ export function updateProjectiles(
         sim.enemies.forEach((enemy) => {
           const eDist = Math.hypot(enemy.x - midX, enemy.y - midY);
           if (eDist <= blastRad + enemy.size) {
+            if (isEnemyInvulnerable(enemy, sim)) {
+              handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
+              return;
+            }
             enemy.hp -= blastDmg;
             enemy.burnTimer = 3.5;
             enemy.burnDps = Math.max(enemy.burnDps, blastDmg * 0.35);
@@ -136,6 +145,11 @@ export function updateProjectiles(
         if (sim.runTimer - lastHit >= 0.35) {
           const dist = Math.hypot(enemy.x - proj.x, enemy.y - proj.y);
           if (dist < proj.radius + enemy.size) {
+            if (isEnemyInvulnerable(enemy, sim)) {
+              proj.hitTimes![enemy.id] = sim.runTimer;
+              handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
+              return;
+            }
             enemy.hp -= proj.damage;
             proj.hitTimes![enemy.id] = sim.runTimer;
             if (proj.sourceWeapon) {
@@ -169,6 +183,7 @@ export function updateProjectiles(
       spatialGrid.forEachNearby(proj.x, proj.y, proj.radius + 40, (enemy) => {
         const dist = Math.hypot(enemy.x - proj.x, enemy.y - proj.y);
         if (dist <= proj.radius + enemy.size) {
+          if (isEnemyInvulnerable(enemy, sim)) return;
           applyEnemyPoison(enemy, proj.damage * 0.7, 3.5);
           if (Math.random() < 0.1) {
             enemy.hp -= proj.damage * dt;
@@ -184,6 +199,7 @@ export function updateProjectiles(
       spatialGrid.forEachNearby(proj.x, proj.y, proj.radius + 40, (enemy) => {
         const dist = Math.hypot(enemy.x - proj.x, enemy.y - proj.y);
         if (dist <= proj.radius + enemy.size) {
+          if (isEnemyInvulnerable(enemy, sim)) return;
           enemy.burnTimer = 3.0;
           enemy.burnDps = Math.max(enemy.burnDps, proj.damage * 0.85);
           if (Math.random() < 0.12) {
@@ -203,6 +219,10 @@ export function updateProjectiles(
         spatialGrid.forEachNearby(proj.x, proj.y, proj.radius + 40, (enemy) => {
           const dist = Math.hypot(enemy.x - proj.x, enemy.y - proj.y);
           if (dist <= proj.radius + enemy.size) {
+            if (isEnemyInvulnerable(enemy, sim)) {
+              handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
+              return;
+            }
             enemy.hp -= proj.damage;
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
@@ -236,6 +256,10 @@ export function updateProjectiles(
           const lastHit = proj.hitTimes![enemy.id] || 0;
           if (sim.runTimer - lastHit >= 0.35) {
             proj.hitTimes![enemy.id] = sim.runTimer;
+            if (isEnemyInvulnerable(enemy, sim)) {
+              handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
+              return;
+            }
             enemy.hp -= proj.damage;
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
@@ -350,6 +374,12 @@ export function updateProjectiles(
           const dist = Math.hypot(enemy.x - proj.x, enemy.y - proj.y);
           if (dist < proj.radius + enemy.size) {
             proj.hitList.push(enemy.id);
+            if (isEnemyInvulnerable(enemy, sim)) {
+              proj.pierce -= 1;
+              handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
+              if (proj.pierce <= 0) proj.duration = 0;
+              return;
+            }
             enemy.hp -= proj.damage;
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
@@ -467,6 +497,10 @@ export function updateProjectiles(
           const bdy = enemy.y - proj.y;
           const bdist = Math.hypot(bdx, bdy);
           if (bdist <= blastRadius + enemy.size) {
+            if (isEnemyInvulnerable(enemy, sim)) {
+              handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
+              return;
+            }
             enemy.hp -= burstDmg;
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
@@ -519,6 +553,10 @@ export function updateProjectiles(
           const bdy = enemy.y - proj.y;
           const bdist = Math.hypot(bdx, bdy);
           if (bdist <= blastRadius + enemy.size) {
+            if (isEnemyInvulnerable(enemy, sim)) {
+              handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
+              return;
+            }
             let falloff = 1;
             if (bdist > coreRadius) {
               falloff = Math.max(0.35, 1 - ((bdist - coreRadius) / (blastRadius - coreRadius)) * 0.65);

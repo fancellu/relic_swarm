@@ -272,6 +272,10 @@ export interface SimulationState {
   nextDmgId: number;
   bossSpawned: boolean;
   bossDefeated: boolean;
+  bossShieldActive: boolean;
+  bossMinionsInitial: number;
+  bossMinionsRemaining: number;
+  bossImmuneSoundTimer?: number;
   auraVisualAngle: number;
   sprintParticlesTimer: number;
   rapidRegenTimer: number;

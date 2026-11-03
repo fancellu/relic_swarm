@@ -221,7 +221,6 @@ export const StageClearModal: React.FC<StageClearModalProps> = ({
             }`}>
             <Trophy size={14} className="text-emerald-400" />
             <span>CLAIM VICTORY & BANK GOLD</span>
-            <span className="text-[11px] font-mono opacity-70">[B / Esc]</span>
           </button>
         </div>
       </div>

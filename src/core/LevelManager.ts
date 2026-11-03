@@ -147,6 +147,9 @@ export class LevelManager {
     sim.spawnTimer = 0;
     sim.bossSpawned = false;
     sim.bossDefeated = false;
+    sim.bossShieldActive = false;
+    sim.bossMinionsInitial = 0;
+    sim.bossMinionsRemaining = 0;
 
     // 5. Reset character XP progression for the new stage so level-up drafts remain frequent
     sim.level = 1;

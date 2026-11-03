@@ -113,6 +113,18 @@ export const CONFIG = {
     label: 'Boss Spawn Time (s)',
     group: 'Rules',
   },
+  bossBaseHp: {
+    value: 35000,
+    type: 'number',
+    label: 'Boss Base HP',
+    group: 'Rules',
+  },
+  bossMinionEscortMin: {
+    value: 60,
+    type: 'number',
+    label: 'Boss Minion Escort Minimum',
+    group: 'Rules',
+  },
   screenShakeEnabled: {
     value: true,
     type: 'boolean',

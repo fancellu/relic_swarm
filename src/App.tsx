@@ -98,6 +98,10 @@ function createSimulation(heroIndex = 0): SimulationState {
     nextDmgId: 1,
     bossSpawned: false,
     bossDefeated: false,
+    bossShieldActive: false,
+    bossMinionsInitial: 0,
+    bossMinionsRemaining: 0,
+    bossImmuneSoundTimer: 0,
     auraVisualAngle: 0,
     sprintParticlesTimer: 0,
     rapidRegenTimer: 0,
@@ -176,6 +180,7 @@ export default function App() {
   const [stageClearFocusIndex, setStageClearFocusIndex] = useState(0);
   const stageClearFocusIndexRef = useRef(0);
   stageClearFocusIndexRef.current = stageClearFocusIndex;
+  const stageClearLockoutUntilRef = useRef(0);
   const [selectedCarryWeaponId, setSelectedCarryWeaponId] = useState<string>('');
   const selectedCarryWeaponIdRef = useRef('');
   selectedCarryWeaponIdRef.current = selectedCarryWeaponId;
@@ -184,6 +189,15 @@ export default function App() {
   const [activeObjective, setActiveObjective] = useState<{type: 'OBELISK' | 'BLOOD_TRIAL' | 'MERCHANT'; progress: number} | null>(null);
   const [isBossActive, setIsBossActive] = useState(false);
   const isBossActiveRef = useRef(false);
+  const [bossHudState, setBossHudState] = useState<{
+    name: string;
+    hp: number;
+    maxHp: number;
+    shielded: boolean;
+    minionsRemaining: number;
+    minionsInitial: number;
+  } | null>(null);
+  const lastBossHudUpdateRef = useRef(0);
 
   const [runGold, setRunGold] = useState(0);
   const [currentStage, setCurrentStage] = useState(1);
@@ -378,6 +392,7 @@ export default function App() {
     merchantCooldownRef.current = false;
     isBossActiveRef.current = false;
     setIsBossActive(false);
+    setBossHudState(null);
     setKillCount(0);
     sim.bannedItemIds = [];
     setEquippedWeapons([...sim.weapons]);
@@ -898,6 +913,9 @@ export default function App() {
     }
 
     if (isStageClearOpenRef.current) {
+      if (Date.now() < stageClearLockoutUntilRef.current) {
+        return;
+      }
       const weapons = simRef.current.weapons;
       const weaponCount = weapons.length;
       const descendIndex = weaponCount;
@@ -930,7 +948,9 @@ export default function App() {
         }
         navCooldownRef.current = 0.3;
       } else if (cancelJustPressed) {
-        handleClaimVictory();
+        // Cancel resets focus to Descend button rather than accidentally ending the run
+        stageClearFocusIndexRef.current = descendIndex;
+        setStageClearFocusIndex(descendIndex);
         navCooldownRef.current = 0.3;
       }
       return;
@@ -1058,6 +1078,8 @@ export default function App() {
         bossDefeated = true;
         isBossActiveRef.current = false;
         setIsBossActive(false);
+        setBossHudState(null);
+        syncEquipment();
         const currentWeapons = simRef.current.weapons;
         const defaultWep = currentWeapons[0]?.id || simRef.current.hero.startingWeapon;
         setSelectedCarryWeaponId(defaultWep);
@@ -1066,9 +1088,11 @@ export default function App() {
         setStageClearFocusIndex(currentWeapons.length);
         isStageClearOpenRef.current = true;
         setIsStageClearOpen(true);
-        navCooldownRef.current = 0.5;
+        stageClearLockoutUntilRef.current = Date.now() + 650; // 650ms lockout for combat input
+        navCooldownRef.current = 0.65;
         lastGpConfirmRef.current = true;
         lastGpCancelRef.current = true;
+        keyboardSprintRef.current = false;
       },
       () => setCurrentHp(Math.round(sim.hp)),
     );
@@ -1086,10 +1110,26 @@ export default function App() {
     if (bossDefeated) {
       return;
     }
-    const hasActiveBoss = sim.enemies.some((e) => e.isBoss);
+    const boss = sim.enemies.find((e) => e.isBoss);
+    const hasActiveBoss = Boolean(boss);
     if (hasActiveBoss !== isBossActiveRef.current) {
       isBossActiveRef.current = hasActiveBoss;
       setIsBossActive(hasActiveBoss);
+    }
+    if (hasActiveBoss && boss) {
+      if (sim.runTimer - lastBossHudUpdateRef.current >= 0.1) {
+        lastBossHudUpdateRef.current = sim.runTimer;
+        setBossHudState({
+          name: 'Abyssal Titan',
+          hp: Math.max(0, Math.round(boss.hp)),
+          maxHp: boss.maxHp,
+          shielded: sim.bossShieldActive,
+          minionsRemaining: sim.bossMinionsRemaining,
+          minionsInitial: sim.bossMinionsInitial,
+        });
+      }
+    } else if (!hasActiveBoss && bossHudState !== null) {
+      setBossHudState(null);
     }
     updateDrops(
       sim,
@@ -1135,9 +1175,13 @@ export default function App() {
             const push = Math.max(60, 420 - edist * 0.35);
             enemy.x += (edx / edist) * push;
             enemy.y += (edy / edist) * push;
-            const shockDmg = Math.round(200 * stats.mightMult);
-            enemy.hp -= shockDmg;
-            spawnDamageNumber(enemy.x, enemy.y, shockDmg.toString(), '#f43f5e');
+            if (!enemy.isBoss || !sim.bossShieldActive) {
+              const shockDmg = Math.round(200 * stats.mightMult);
+              enemy.hp -= shockDmg;
+              spawnDamageNumber(enemy.x, enemy.y, shockDmg.toString(), '#f43f5e');
+            } else {
+              spawnDamageNumber(enemy.x, enemy.y, 'IMMUNE', '#38bdf8');
+            }
           });
 
           if (Math.random() < 0.6) {
@@ -1483,6 +1527,12 @@ export default function App() {
         return;
       }
       if (isStageClearOpenRef.current) {
+        // Enforce 650ms lockout so combat keys (WASD, Space) do not leak into the modal
+        if (Date.now() < stageClearLockoutUntilRef.current) {
+          event.preventDefault();
+          return;
+        }
+
         const weapons = simRef.current.weapons;
         const weaponCount = weapons.length;
         const descendIndex = weaponCount;
@@ -1516,7 +1566,7 @@ export default function App() {
           gameAudio.playCrispClick();
           return;
         }
-        if (event.key === 'Enter' || event.key === ' ') {
+        if (event.key === 'Enter') {
           event.preventDefault();
           const idx = stageClearFocusIndexRef.current;
           if (idx < weaponCount) {
@@ -1535,7 +1585,9 @@ export default function App() {
         }
         if (event.key === 'Escape' || event.key === 'Backspace') {
           event.preventDefault();
-          handleClaimVictory();
+          // Escape resets focus to Descend button rather than claiming victory and ending run
+          stageClearFocusIndexRef.current = descendIndex;
+          setStageClearFocusIndex(descendIndex);
           return;
         }
         return;
@@ -1784,6 +1836,7 @@ export default function App() {
         isPlaying={gameState.status === 'PLAYING'}
         activeObjective={activeObjective}
         overdriveRemaining={overdriveDisplay}
+        bossState={bossHudState}
         touchJoystickRef={touchJoystickRef}
       />
       {assetsReady && (
@@ -1907,7 +1960,10 @@ export default function App() {
         equippedWeapons={equippedWeapons}
         equippedPassives={equippedPassives}
         selectedWeaponId={selectedCarryWeaponId}
-        onSelectWeapon={setSelectedCarryWeaponId}
+        onSelectWeapon={(id) => {
+          selectedCarryWeaponIdRef.current = id;
+          setSelectedCarryWeaponId(id);
+        }}
         focusIndex={stageClearFocusIndex}
         onSelectFocusIndex={(idx) => {
           stageClearFocusIndexRef.current = idx;

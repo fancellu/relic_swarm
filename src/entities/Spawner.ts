@@ -6,6 +6,28 @@ import {MAX_WORLD_CHESTS} from '../types/meta';
 import {DerivedStats} from './Player';
 import {stageManager} from '../core/Stage';
 
+export function isEnemyInvulnerable(enemy: EnemyEntity, sim: SimulationState): boolean {
+  return enemy.isBoss && sim.bossShieldActive;
+}
+
+export function handleEnemyInvulnerableDeflect(
+  sim: SimulationState,
+  enemy: EnemyEntity,
+  spawnDamageNumber?: (x: number, y: number, text: string, color: string) => void,
+  spawnParticles?: (x: number, y: number, count: number, color: string, speed?: number) => void,
+): void {
+  if (spawnParticles) {
+    spawnParticles(enemy.x, enemy.y, 4, '#38bdf8', 120);
+  }
+  if (!sim.bossImmuneSoundTimer || sim.runTimer - sim.bossImmuneSoundTimer > 0.28) {
+    sim.bossImmuneSoundTimer = sim.runTimer;
+    if (spawnDamageNumber) {
+      spawnDamageNumber(enemy.x, enemy.y - 35, 'IMMUNE', '#38bdf8');
+    }
+    gameAudio.playShieldDeflect();
+  }
+}
+
 export function createEnemy(
   id: number,
   type: EnemyEntity['type'],
@@ -116,23 +138,88 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
   // Boss Titan Spawn Trigger
   if (sim.runTimer >= bossSpawnTime && !sim.bossSpawned) {
     sim.bossSpawned = true;
+    const baseBossHp = (getConfig('bossBaseHp') as number) || 35000;
+    const bossHpMult = Math.pow(1.25, stage - 1);
+    const bossHp = Math.round(baseBossHp * bossHpMult);
     const angle = Math.random() * Math.PI * 2;
-    sim.enemies.push(
-      createEnemy(
-        sim.nextEnemyId++,
-        'titan',
-        sim.x + Math.cos(angle) * 600,
-        sim.y + Math.sin(angle) * 600,
-        Math.round(3500 * enemyHpMult),
-        90,
-        Math.round(30 * enemyDamageMult),
-        55,
-        '#dc2626',
-        true,
-        true,
-      ),
+    const bx = sim.x + Math.cos(angle) * 550;
+    const by = sim.y + Math.sin(angle) * 550;
+
+    const bossEnemy = createEnemy(
+      sim.nextEnemyId++,
+      'titan',
+      bx,
+      by,
+      bossHp,
+      90,
+      Math.round(30 * enemyDamageMult),
+      55,
+      '#dc2626',
+      true,
+      true,
     );
+    stageManager.resolveCircleCollision(bossEnemy, bossEnemy.size);
+    sim.enemies.push(bossEnemy);
+
+    // Ensure escort minion swarm around the boss
+    const minEscort = (getConfig('bossMinionEscortMin') as number) || 60;
+    const existingMinions = sim.enemies.filter((e) => !e.isBoss);
+
+    // Leash any stray minions that are too far away (> 1000 units) closer to the arena circle
+    for (const m of existingMinions) {
+      const mdist = Math.hypot(m.x - sim.x, m.y - sim.y);
+      if (mdist > 1000) {
+        const a = Math.random() * Math.PI * 2;
+        const d = 480 + Math.random() * 180;
+        m.x = sim.x + Math.cos(a) * d;
+        m.y = sim.y + Math.sin(a) * d;
+        stageManager.resolveCircleCollision(m, m.size);
+      }
+    }
+
+    // Spawn additional escort minions to reach the tripled minion phalanx (min 60)
+    const needed = Math.max(0, minEscort - existingMinions.length);
+    const waveScaledHp = (30 + (sim.runTimer / 10) * 8) * enemyHpMult;
+
+    for (let i = 0; i < needed; i++) {
+      const eAngle = Math.random() * Math.PI * 2;
+      const eDist = 80 + Math.random() * 260;
+      const ex = bx + Math.cos(eAngle) * eDist;
+      const ey = by + Math.sin(eAngle) * eDist;
+      const roll = Math.random();
+      const type = roll < 0.35 ? 'sorcerer' : roll < 0.65 ? 'hound' : 'skeleton';
+      const isElite = Math.random() < 0.15;
+      let hp = waveScaledHp * (type === 'sorcerer' ? 1.5 : type === 'hound' ? 1.2 : 1.0);
+      if (isElite) hp *= 2.8;
+
+      const escortEnemy = createEnemy(
+        sim.nextEnemyId++,
+        type,
+        ex,
+        ey,
+        Math.round(hp),
+        type === 'hound' ? 160 : type === 'sorcerer' ? 75 : 110,
+        Math.round((isElite ? 18 : 12) * enemyDamageMult),
+        type === 'sorcerer' ? 26 : type === 'hound' ? 24 : 22,
+        isElite ? '#f59e0b' : type === 'sorcerer' ? '#6366f1' : type === 'hound' ? '#8b5cf6' : '#94a3b8',
+        isElite,
+        false,
+      );
+      stageManager.resolveCircleCollision(escortEnemy, escortEnemy.size);
+      sim.enemies.push(escortEnemy);
+    }
+
+    const totalMinions = sim.enemies.filter((e) => !e.isBoss).length;
+    sim.bossShieldActive = true;
+    sim.bossMinionsInitial = totalMinions;
+    sim.bossMinionsRemaining = totalMinions;
+    sim.screenShake = 14;
     gameAudio.playPowerupChime();
+  }
+
+  // Halt all regular wave spawning while a boss is active on the battlefield
+  if (sim.enemies.some((e) => e.isBoss)) {
+    return;
   }
 
   // Wave Spawning
@@ -229,10 +316,14 @@ export function updateEnemies(
       enemy.poisonTickTimer += dt;
       if (enemy.poisonTickTimer >= 0.4) {
         enemy.poisonTickTimer = 0;
-        const tickDmg = Math.max(1, Math.round(enemy.poisonDps * 0.4));
-        enemy.hp -= tickDmg;
-        spawnDamageNumber(enemy.x, enemy.y, tickDmg.toString(), '#22c55e');
-        spawnParticles(enemy.x, enemy.y, 2, '#22c55e', 40);
+        if (!isEnemyInvulnerable(enemy, sim)) {
+          const tickDmg = Math.max(1, Math.round(enemy.poisonDps * 0.4));
+          enemy.hp -= tickDmg;
+          spawnDamageNumber(enemy.x, enemy.y, tickDmg.toString(), '#22c55e');
+          spawnParticles(enemy.x, enemy.y, 2, '#22c55e', 40);
+        } else {
+          handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
+        }
       }
     }
 
@@ -242,10 +333,14 @@ export function updateEnemies(
       enemy.burnTickTimer += dt;
       if (enemy.burnTickTimer >= 0.35) {
         enemy.burnTickTimer = 0;
-        const tickDmg = Math.max(1, Math.round(enemy.burnDps * 0.35));
-        enemy.hp -= tickDmg;
-        spawnDamageNumber(enemy.x, enemy.y, tickDmg.toString(), '#f97316');
-        spawnParticles(enemy.x, enemy.y, 2, '#f97316', 50);
+        if (!isEnemyInvulnerable(enemy, sim)) {
+          const tickDmg = Math.max(1, Math.round(enemy.burnDps * 0.35));
+          enemy.hp -= tickDmg;
+          spawnDamageNumber(enemy.x, enemy.y, tickDmg.toString(), '#f97316');
+          spawnParticles(enemy.x, enemy.y, 2, '#f97316', 50);
+        } else {
+          handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
+        }
       }
     }
 
@@ -435,6 +530,19 @@ export function updateEnemies(
     const dy = sim.y - enemy.y;
     const dist = Math.hypot(dx, dy);
 
+    // Escort swarm speed boost while shielding boss
+    if (sim.bossShieldActive && !enemy.isBoss) {
+      effectiveSpeed *= 1.2;
+      // Leash any stray minion that slipped past 950px away
+      if (dist > 950) {
+        const a = Math.random() * Math.PI * 2;
+        const d = 480 + Math.random() * 160;
+        enemy.x = sim.x + Math.cos(a) * d;
+        enemy.y = sim.y + Math.sin(a) * d;
+        stageManager.resolveCircleCollision(enemy, enemy.size);
+      }
+    }
+
     if (dist > 1) {
       const nx = dx / dist;
       const ny = dy / dist;
@@ -529,6 +637,22 @@ export function updateEnemies(
     if (enemyRenderer) {
       enemyRenderer.advanceInPlace(enemy.animState, dt);
     }
+  }
+
+  // Track active boss shield and check for Aegis Shield Shatter
+  const remainingMinions = sim.enemies.reduce((acc, e) => (!e.isBoss ? acc + 1 : acc), 0);
+  sim.bossMinionsRemaining = remainingMinions;
+
+  if (sim.bossShieldActive && remainingMinions === 0 && sim.enemies.some((e) => e.isBoss)) {
+    sim.bossShieldActive = false;
+    sim.screenShake = 18;
+    const boss = sim.enemies.find((e) => e.isBoss);
+    if (boss) {
+      spawnParticles(boss.x, boss.y, 45, '#38bdf8', 220);
+      spawnParticles(boss.x, boss.y, 30, '#fbbf24', 160);
+      spawnDamageNumber(boss.x, boss.y - 45, 'AEGIS SHIELD SHATTERED - ATTACK!', '#38bdf8');
+    }
+    gameAudio.playShieldBreak();
   }
 
   return playerDied;

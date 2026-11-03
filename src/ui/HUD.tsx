@@ -26,6 +26,14 @@ export interface HUDProps {
   isPlaying?: boolean;
   activeObjective?: {type: 'OBELISK' | 'BLOOD_TRIAL' | 'MERCHANT'; progress: number} | null;
   overdriveRemaining?: number;
+  bossState?: {
+    name: string;
+    hp: number;
+    maxHp: number;
+    shielded: boolean;
+    minionsRemaining: number;
+    minionsInitial: number;
+  } | null;
   touchJoystickRef: React.RefObject<{
     active: boolean;
     startX: number;
@@ -59,6 +67,7 @@ export const HUD: React.FC<HUDProps> = ({
   isPlaying = true,
   activeObjective,
   overdriveRemaining,
+  bossState,
   touchJoystickRef,
 }) => {
   return (
@@ -126,7 +135,63 @@ export const HUD: React.FC<HUDProps> = ({
               </>
             )}
           </div>
-          {activeObjective && (
+          {bossState ? (
+            <div
+              className={`mt-0.5 flex flex-col items-center px-3 py-1 rounded-lg border shadow-lg transition-all ${
+                bossState.shielded
+                  ? 'bg-sky-950/90 border-sky-400/80 text-sky-200'
+                  : 'bg-rose-950/90 border-rose-500/80 text-rose-100'
+              }`}
+            >
+              <div className="flex items-center gap-2 text-[11px] font-black tracking-wide">
+                <img
+                  src="assets/images/portrait_boss_titan.png"
+                  alt="Boss"
+                  className="w-4 h-4 rounded border border-rose-400/60 object-cover"
+                />
+                <span>{bossState.name.toUpperCase()}</span>
+                <span
+                  className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase border ${
+                    bossState.shielded
+                      ? 'bg-sky-900/60 border-sky-400 text-sky-300'
+                      : 'bg-rose-900/60 border-rose-400 text-rose-300 animate-pulse'
+                  }`}
+                >
+                  {bossState.shielded ? '🛡️ AEGIS SHIELD ACTIVE' : '⚔️ VULNERABLE'}
+                </span>
+              </div>
+
+              {bossState.shielded ? (
+                <div className="flex flex-col items-center mt-0.5 gap-0.5">
+                  <span className="text-[10px] text-sky-300 font-semibold tracking-tight">
+                    Destroy Minions to Break Shield: {bossState.minionsRemaining} / {bossState.minionsInitial || bossState.minionsRemaining} Left
+                  </span>
+                  <div className="w-48 bg-slate-900 rounded-full h-1.5 overflow-hidden border border-sky-800/80">
+                    <div
+                      className="bg-sky-400 h-full transition-all duration-150"
+                      style={{
+                        width: `${Math.max(0, Math.min(100, (1 - bossState.minionsRemaining / Math.max(1, bossState.minionsInitial)) * 100))}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center mt-0.5 gap-0.5">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-rose-300">
+                    <span>HP: {bossState.hp.toLocaleString()} / {bossState.maxHp.toLocaleString()}</span>
+                  </div>
+                  <div className="w-48 bg-slate-900 rounded-full h-2 overflow-hidden border border-rose-800/80">
+                    <div
+                      className="bg-rose-500 h-full transition-all duration-100"
+                      style={{
+                        width: `${Math.max(0, Math.min(100, (bossState.hp / Math.max(1, bossState.maxHp)) * 100))}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : activeObjective ? (
             <div
               className={`mt-0.5 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide border shadow-sm animate-pulse ${
                 activeObjective.type === 'OBELISK'
@@ -143,7 +208,7 @@ export const HUD: React.FC<HUDProps> = ({
                   : `🎪 BLACK MARKET NEARBY: ${activeObjective.progress}m`}
               </span>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Right: Gold, Inventory Button & Menu Button */}

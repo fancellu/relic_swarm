@@ -712,6 +712,26 @@ class GameAudio {
     this.noiseBurst(b, b.now, { dur: 0.08, gain: 0.08, from: 3000, to: 800 });
   }
 
+  playShieldDeflect() {
+    const b = this.begin();
+    if (!b) return;
+    const v = this.vary();
+    this.blip(b, b.now, { type: 'sine', freq: 1800 * v, freqTo: 2600 * v, dur: 0.12, gain: 0.08 });
+    this.blip(b, b.now + 0.02, { type: 'sine', freq: 3600 * v, dur: 0.08, gain: 0.04 });
+    this.noiseBurst(b, b.now, { dur: 0.05, gain: 0.05, from: 4000, to: 2000 });
+  }
+
+  playShieldBreak() {
+    const b = this.begin();
+    if (!b) return;
+    const v = this.vary();
+    this.blip(b, b.now, { type: 'sine', freq: 3200 * v, freqTo: 1600 * v, dur: 0.25, gain: 0.09 });
+    this.blip(b, b.now + 0.03, { type: 'sine', freq: 4400 * v, freqTo: 1100 * v, dur: 0.22, gain: 0.07 });
+    this.blip(b, b.now + 0.06, { type: 'sine', freq: 2400 * v, freqTo: 600 * v, dur: 0.3, gain: 0.08 });
+    this.blip(b, b.now + 0.05, { type: 'triangle', freq: 220 * v, freqTo: 40 * v, dur: 0.45, gain: 0.22 });
+    this.noiseBurst(b, b.now, { dur: 0.25, gain: 0.12, from: 3500, to: 400 });
+  }
+
   playChiptuneExplosion() {
     const b = this.begin();
     if (!b) return;
