@@ -10,6 +10,7 @@ import {
   useIsMobile,
 } from '../utils/helper';
 import {usePlayground, usePlaygroundGameLifecycle, useRpc} from '../utils/usePlayground';
+import {useScreenshotHotkey} from '../utils/useScreenshotHotkey';
 import {
   BACKGROUND_MUSIC_URL,
   getStageMusicUrl,
@@ -143,6 +144,7 @@ export default function App() {
   const [exitChat] = useRpc<Record<string, unknown>, void>('ExitChat');
   const isMobile = useIsMobile();
   const inputRef = useInput(canvasRef, true, {width: canvasWidth, height: canvasHeight});
+  useScreenshotHotkey(canvasRef); // Secret: backtick (`) saves a PNG of the game canvas
   const spriteRenderersRef = useRef(initSpriteRenderers());
   const simRef = useRef<SimulationState>(createSimulation());
 
