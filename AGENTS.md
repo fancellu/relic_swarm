@@ -21,6 +21,7 @@ Read `GEMINI.md` before changing input behavior, persistence, the fixed-step gam
 - `npm install` installs dependencies (Node 18+ recommended).
 - `npm run dev` starts the Vite server with hot module replacement.
 - `npm run build` runs TypeScript checking and creates the production bundle in `dist/`; run this before submitting changes.
+- Type checking in `build` uses [tsrs](https://github.com/oxc-project/tsrs), an experimental Rust port of the TypeScript 7 compiler (`tsrs -p . --noEmit`), pinned to an exact version in `package.json`. Vite does the actual compilation, so tsrs only replaces the check step. If tsrs misbehaves, `npm run typecheck:tsc` runs the standard `tsc` check; the `typescript` package also remains installed for editor support.
 - `npm run preview` serves the built bundle for a production smoke test.
 
 There is no configured automated test suite or linter. Exercise changed game flows manually in development, then run the production build.
