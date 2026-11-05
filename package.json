@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsrs -p . --noEmit && vite build",
+    "typecheck:tsc": "tsc",
     "preview": "vite preview"
   },
   "keywords": [
@@ -25,6 +26,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "tailwindcss": "^4.3.3",
+    "tsrs": "0.22.0-ts7.1.0-beta",
     "typescript": "^7.0.2",
     "vite": "^8.3.4"
   },
