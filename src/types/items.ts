@@ -304,6 +304,18 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     evolutionPair: 'might_talisman',
     cost: 75,
   },
+  inferno_lance: {
+    id: 'inferno_lance',
+    name: 'Inferno Lance',
+    type: 'WEAPON',
+    icon: 'assets/images/icon_inferno_lance.png',
+    desc: 'Channels a thick white-hot beam that sweeps onto the nearest foe, searing it and setting it ablaze. Pierces additional enemies at higher levels.',
+    maxLevel: 5,
+    baseDamage: 7,
+    cooldown: 1.6,
+    evolutionPair: 'vitality_charm',
+    cost: 75,
+  },
 
   // Level 5 + Level 5 Weapon Fusions (Evolutions)
   arcane_phantom_vortex: {
@@ -422,6 +434,21 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     isFusion: true,
     consumedWeapons: ['grenade_launcher', 'flame_blast'],
     cost: 235,
+  },
+  frostfire_prism: {
+    id: 'frostfire_prism',
+    name: 'Frostfire Prism',
+    type: 'WEAPON',
+    icon: 'assets/images/icon_frostfire_prism.png',
+    desc: 'FUSION (Inferno Lance L5 + Glacial Shards L5): A cryo-prism splits the lance into 3 frost-sheathed fire beams that ignite foes, then rupture them with repeated Thermal Shock detonations.',
+    maxLevel: 1,
+    baseDamage: 12,
+    cooldown: 0.9,
+    isEvolution: true,
+    isFusion: true,
+    consumedWeapons: ['inferno_lance', 'frost_shard'],
+    cost: 240,
+    inflictsSlow: true,
   },
 
   // Awakened Weapon + Passive Evolutions
@@ -582,6 +609,18 @@ export const ITEM_DEFS: Record<string, ItemDef> = {
     cooldown: 1.45,
     isEvolution: true,
     cost: 190,
+  },
+  phoenix_ray: {
+    id: 'phoenix_ray',
+    name: 'Phoenix Ray',
+    type: 'WEAPON',
+    icon: 'assets/images/icon_phoenix_ray.png',
+    desc: 'Awakened (Inferno Lance + Vitality Charm): A colossal, near-unbroken solar beam that burns through 5 foes at once and siphons their life force to heal you.',
+    maxLevel: 1,
+    baseDamage: 13,
+    cooldown: 0.6,
+    isEvolution: true,
+    cost: 195,
   },
 
   // Passives

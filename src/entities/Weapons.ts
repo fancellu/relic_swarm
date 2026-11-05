@@ -908,5 +908,78 @@ export function updateWeaponCasting(
         }
       }
     }
+
+    // --- Inferno Lance, Phoenix Ray & Frostfire Prism (channelled beams) ---
+    else if (wep.id === 'inferno_lance' || wep.id === 'phoenix_ray' || wep.id === 'frostfire_prism') {
+      // Cooldown only starts counting once the current beam(s) have finished channelling.
+      for (let p = 0; p < sim.projectiles.length; p++) {
+        const proj = sim.projectiles[p];
+        if (proj.type === 'beam' && proj.sourceWeapon === wep.id) {
+          sim.weaponTimers[timerKey] = 0;
+          return;
+        }
+      }
+      if (sim.weaponTimers[timerKey] < actualCd || sim.enemies.length === 0) return;
+
+      const isPhoenix = wep.id === 'phoenix_ray';
+      const isPrism = wep.id === 'frostfire_prism';
+      const range = (isPhoenix ? 560 : isPrism ? 500 : 380 + wep.level * 20) * stats.areaMult;
+      const rangeSq = range * range;
+      const beamCount = isPrism ? 3 : 1;
+
+      // Each beam locks onto a different nearby enemy (only enemies within range qualify).
+      const candidates = getClosestEnemies(sim.x, sim.y, sim.enemies, beamCount);
+      let inRange = 0;
+      for (let i = 0; i < candidates.length; i++) {
+        const c = candidates[i];
+        if ((c.x - sim.x) ** 2 + (c.y - sim.y) ** 2 <= rangeSq) inRange++;
+        else break;
+      }
+      if (inRange === 0) return;
+
+      sim.weaponTimers[timerKey] = 0;
+      gameAudio.playArcadeLaser();
+
+      const duration = isPhoenix ? 3.0 : isPrism ? 2.2 : 1.0 + wep.level * 0.1;
+      const damage = (def.baseDamage || 7) * stats.mightMult * (1 + (wep.level - 1) * 0.2);
+      // Half-thickness of the beam's hit corridor
+      const radius = (isPhoenix ? 22 : isPrism ? 13 : 9 + wep.level * 1.5) * stats.areaMult;
+      // Number of enemies each beam burns through before it is blocked
+      const pierce = isPhoenix ? 5 : isPrism ? 3 : 1 + Math.floor((wep.level - 1) / 2);
+      const color = isPhoenix ? '#f59e0b' : '#f97316';
+
+      for (let b = 0; b < beamCount; b++) {
+        // With fewer targets than beams, spare prism beams fan out around the primary target.
+        const target = candidates[b < inRange ? b : 0];
+        const fan = b < inRange ? 0 : (b % 2 === 0 ? 1 : -1) * 0.45;
+        const angle = Math.atan2(target.y - sim.y, target.x - sim.x) + fan;
+        sim.projectiles.push({
+          id: sim.nextProjId++,
+          type: 'beam',
+          sourceWeapon: wep.id,
+          x: sim.x,
+          y: sim.y,
+          vx: 0,
+          vy: 0,
+          damage,
+          radius,
+          duration,
+          maxDuration: duration,
+          pierce,
+          hitList: [],
+          color,
+          targetId: target.id,
+          rotation: angle,
+          beamRange: range,
+          beamEndX: target.x,
+          beamEndY: target.y,
+          beamTickTimer: 0,
+          beamTicks: 0,
+          inflictsSlow: isPrism,
+          inflictsPoison: stats.toxicLevel > 0 && Math.random() < 0.35,
+        });
+      }
+      spawnParticles(sim.x, sim.y, isPhoenix ? 12 : 6, isPrism ? '#a5f3fc' : '#fdba74', 90);
+    }
   });
 }

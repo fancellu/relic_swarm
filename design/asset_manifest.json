@@ -427,6 +427,48 @@
     "resolution": null
   },
   {
+    "id": "icon_inferno_lance",
+    "name": "Inferno Lance",
+    "art_style": "pixelated",
+    "category": null,
+    "media_type": "image_other",
+    "description": "Inferno Lance",
+    "aspect_ratio": "1:1",
+    "usage": "Inferno Lance channelled fire beam weapon UI card icon (hand-authored 32x32, 4x nearest-neighbour upscale to 128x128)",
+    "chroma_key": false,
+    "prompt": "16-bit retro arcade pixel art diagonal fire lance beam with a white-hot core, yellow/amber/orange body and crimson edges, fired from an iron-and-gold focusing crystal emitter, ending in a four-point impact starburst with drifting embers",
+    "actions": null,
+    "resolution": null
+  },
+  {
+    "id": "icon_phoenix_ray",
+    "name": "Phoenix Ray",
+    "art_style": "pixelated",
+    "category": null,
+    "media_type": "image_other",
+    "description": "Phoenix Ray",
+    "aspect_ratio": "1:1",
+    "usage": "Phoenix Ray awakened beam evolution UI card icon (hand-authored 32x32 palette variant of icon_inferno_lance, 4x nearest-neighbour upscale)",
+    "chroma_key": false,
+    "prompt": "16-bit retro arcade pixel art colossal solar beam with a white-gold core, golden body and rose/magenta shadow edges, fired from a gilded rose crystal emitter, ending in a radiant four-point starburst",
+    "actions": null,
+    "resolution": null
+  },
+  {
+    "id": "icon_frostfire_prism",
+    "name": "Frostfire Prism",
+    "art_style": "pixelated",
+    "category": null,
+    "media_type": "image_other",
+    "description": "Frostfire Prism",
+    "aspect_ratio": "1:1",
+    "usage": "Frostfire Prism beam fusion UI card icon (hand-authored 32x32 palette variant of icon_inferno_lance, 4x nearest-neighbour upscale)",
+    "chroma_key": false,
+    "prompt": "16-bit retro arcade pixel art fire beam with an amber/white core wrapped in a cyan cryo sheath and deep navy outline, fired from an ice-crystal emitter, ending in a fiery four-point starburst with frost sparks",
+    "actions": null,
+    "resolution": null
+  },
+  {
     "id": "bgm_blood_catacombs",
     "name": "Blood Catacombs BGM",
     "art_style": "pixelated",

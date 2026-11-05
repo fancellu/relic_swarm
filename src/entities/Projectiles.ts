@@ -1,10 +1,210 @@
 import {gameAudio} from '../../utils/helper';
-import {MAX_PROJECTILES, SimulationState} from '../types/entities';
+import {EnemyEntity, MAX_PROJECTILES, ProjectileEntity, SimulationState} from '../types/entities';
 import {spatialGrid} from '../core/spatial';
 import {applyEnemySlow} from './Player';
 import {applyEnemyPoison} from './Weapons';
 import {isEnemyInvulnerable, handleEnemyInvulnerableDeflect} from './Spawner';
 import {stageManager} from '../core/Stage';
+
+// --- Inferno Lance beam tuning ---
+const BEAM_TICK_INTERVAL = 0.1;
+const BEAM_TURN_RATE = 7.0; // radians per second the beam sweeps toward its target
+const BEAM_WALL_STEP = 18;
+const BEAM_MAX_PIERCE = 16;
+// Preallocated scratch buffers so the per-frame beam scan never allocates.
+const beamHitEnemies: (EnemyEntity | null)[] = new Array(BEAM_MAX_PIERCE).fill(null);
+const beamHitAlong = new Float64Array(BEAM_MAX_PIERCE);
+const BEAM_MAX_SIBLINGS = 8;
+const beamClaimedIds = new Float64Array(BEAM_MAX_SIBLINGS);
+// Phoenix Ray lifesteal: HP restored per enemy seared per tick, capped per tick.
+const PHOENIX_HEAL_PER_HIT = 0.25;
+const PHOENIX_HEAL_CAP_PER_TICK = 0.6;
+// Frostfire Prism: every Nth tick the frost sheath ruptures burning targets with Thermal Shock.
+const PRISM_SHOCK_EVERY_TICKS = 5;
+
+function updateBeam(
+  sim: SimulationState,
+  proj: ProjectileEntity,
+  dt: number,
+  spawnDamageNumber: (x: number, y: number, text: string, color: string) => void,
+  spawnParticles: (x: number, y: number, count: number, color: string, speed?: number) => void,
+): void {
+  const range = proj.beamRange || 400;
+
+  // 1. Anchor the emitter to the hero.
+  proj.x = sim.x;
+  proj.y = sim.y;
+
+  const isPhoenix = proj.sourceWeapon === 'phoenix_ray';
+  const isPrism = proj.sourceWeapon === 'frostfire_prism';
+
+  // 2a. Multi-beam weapons: note which targets sibling beams already hold (older beams keep priority).
+  let claimedCount = 0;
+  let ownTargetClaimed = false;
+  if (isPrism) {
+    for (let p = 0; p < sim.projectiles.length && claimedCount < BEAM_MAX_SIBLINGS; p++) {
+      const other = sim.projectiles[p];
+      if (other === proj || other.type !== 'beam' || other.sourceWeapon !== proj.sourceWeapon) continue;
+      if (other.targetId === undefined) continue;
+      beamClaimedIds[claimedCount++] = other.targetId;
+      if (other.targetId === proj.targetId && other.id < proj.id) ownTargetClaimed = true;
+    }
+  }
+
+  // 2b. Keep the current target, or retarget the nearest unclaimed living foe in range.
+  let target: EnemyEntity | null = null;
+  if (!ownTargetClaimed) {
+    for (let e = 0; e < sim.enemies.length; e++) {
+      const enemy = sim.enemies[e];
+      if (enemy.id === proj.targetId && enemy.hp > 0) {
+        target = enemy;
+        break;
+      }
+    }
+  }
+  if (!target) {
+    proj.targetId = undefined;
+    let bestSq = range * range;
+    for (let e = 0; e < sim.enemies.length; e++) {
+      const enemy = sim.enemies[e];
+      if (enemy.hp <= 0) continue;
+      let claimed = false;
+      for (let c = 0; c < claimedCount; c++) {
+        if (beamClaimedIds[c] === enemy.id) {
+          claimed = true;
+          break;
+        }
+      }
+      if (claimed) continue;
+      const dx = enemy.x - proj.x;
+      const dy = enemy.y - proj.y;
+      const dSq = dx * dx + dy * dy;
+      if (dSq < bestSq) {
+        bestSq = dSq;
+        target = enemy;
+      }
+    }
+    if (target) proj.targetId = target.id;
+  }
+
+  // 3. Sweep the beam toward the target at a capped turn rate (it scythes through crowds).
+  let angle = proj.rotation || 0;
+  if (target) {
+    let diff = Math.atan2(target.y - proj.y, target.x - proj.x) - angle;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    const maxTurn = BEAM_TURN_RATE * dt;
+    angle += diff > maxTurn ? maxTurn : diff < -maxTurn ? -maxTurn : diff;
+    proj.rotation = angle;
+  }
+  const dirX = Math.cos(angle);
+  const dirY = Math.sin(angle);
+
+  // 4. Solid terrain blocks the beam.
+  let maxLen = range;
+  for (let t = BEAM_WALL_STEP; t <= range; t += BEAM_WALL_STEP) {
+    if (!stageManager.isWalkable(proj.x + dirX * t, proj.y + dirY * t, 4)) {
+      maxLen = t;
+      break;
+    }
+  }
+
+  // 5. Collect the nearest `pierce` enemies along the beam corridor (insertion sort into scratch buffers).
+  const pierce = Math.max(1, Math.min(BEAM_MAX_PIERCE, proj.pierce));
+  let hitCount = 0;
+  for (let e = 0; e < sim.enemies.length; e++) {
+    const enemy = sim.enemies[e];
+    if (enemy.hp <= 0) continue;
+    const rx = enemy.x - proj.x;
+    const ry = enemy.y - proj.y;
+    const along = rx * dirX + ry * dirY;
+    if (along < -enemy.size || along > maxLen + enemy.size) continue;
+    const perp = Math.abs(rx * dirY - ry * dirX);
+    if (perp > proj.radius + enemy.size) continue;
+    if (hitCount === pierce && along >= beamHitAlong[hitCount - 1]) continue;
+
+    let slot = hitCount < pierce ? hitCount++ : hitCount - 1;
+    while (slot > 0 && beamHitAlong[slot - 1] > along) {
+      beamHitAlong[slot] = beamHitAlong[slot - 1];
+      beamHitEnemies[slot] = beamHitEnemies[slot - 1];
+      slot--;
+    }
+    beamHitAlong[slot] = along;
+    beamHitEnemies[slot] = enemy;
+  }
+
+  // 6. Beam terminates at the last enemy it burns through once its pierce is exhausted.
+  const beamLen = hitCount === pierce ? Math.max(0, Math.min(maxLen, beamHitAlong[hitCount - 1])) : maxLen;
+  proj.beamEndX = proj.x + dirX * beamLen;
+  proj.beamEndY = proj.y + dirY * beamLen;
+
+  // 7. Apply damage on a fixed tick.
+  proj.beamTickTimer = (proj.beamTickTimer || 0) + dt;
+  if (proj.beamTickTimer >= BEAM_TICK_INTERVAL) {
+    proj.beamTickTimer -= BEAM_TICK_INTERVAL;
+    proj.beamTicks = (proj.beamTicks || 0) + 1;
+    const showNumber = proj.beamTicks % 3 === 0;
+    const shockTick = isPrism && proj.beamTicks % PRISM_SHOCK_EVERY_TICKS === 0;
+    let healed = 0;
+
+    for (let h = 0; h < hitCount; h++) {
+      const enemy = beamHitEnemies[h]!;
+      beamHitEnemies[h] = null;
+      if (isEnemyInvulnerable(enemy, sim)) {
+        handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
+        continue;
+      }
+      enemy.hp -= proj.damage;
+      if (proj.sourceWeapon) {
+        sim.weaponDamageDealt[proj.sourceWeapon] = (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + proj.damage;
+      }
+      // Ignite: keeps a refreshed burn on everything the lance touches.
+      enemy.burnTimer = Math.max(enemy.burnTimer, 2.0);
+      enemy.burnDps = Math.max(enemy.burnDps, proj.damage * 1.2);
+      if (proj.inflictsPoison) applyEnemyPoison(enemy, proj.damage * 0.5);
+
+      if (isPrism) {
+        applyEnemySlow(enemy, 0.45, 1.0);
+        // Thermal Shock: the frost sheath ruptures the burn the fire core just applied.
+        if (shockTick && enemy.burnTimer > 0) {
+          const shockBonus = proj.damage * 2 + enemy.burnDps;
+          enemy.hp -= shockBonus;
+          if (proj.sourceWeapon) {
+            sim.weaponDamageDealt[proj.sourceWeapon] = (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + shockBonus;
+          }
+          enemy.burnTimer = 0;
+          spawnDamageNumber(enemy.x, enemy.y, `THERMAL SHOCK ${Math.round(shockBonus)}!`, '#38bdf8');
+          spawnParticles(enemy.x, enemy.y, 6, '#38bdf8', 120);
+          spawnParticles(enemy.x, enemy.y, 4, '#f97316', 100);
+          if (sim.screenShake < 3) sim.screenShake = 3;
+        }
+      }
+      if (isPhoenix) healed += PHOENIX_HEAL_PER_HIT;
+
+      if (showNumber) {
+        spawnDamageNumber(enemy.x, enemy.y, Math.round(proj.damage * 3).toString(), isPhoenix ? '#fbbf24' : '#fb923c');
+      }
+      if (Math.random() < 0.35) spawnParticles(enemy.x, enemy.y, 2, isPrism ? '#a5f3fc' : '#fdba74', 90);
+    }
+
+    // Phoenix Ray lifesteal
+    if (healed > 0 && sim.hp > 0 && sim.hp < sim.maxHp) {
+      sim.hp = Math.min(sim.maxHp, sim.hp + Math.min(healed, PHOENIX_HEAL_CAP_PER_TICK));
+      if (Math.random() < 0.3) spawnParticles(sim.x, sim.y, 1, '#fde68a', 50);
+    }
+  } else {
+    for (let h = 0; h < hitCount; h++) beamHitEnemies[h] = null;
+  }
+
+  // 8. Drifting embers along the beam and at the impact point.
+  if (Math.random() < 0.3) {
+    const t = Math.random() * beamLen;
+    spawnParticles(proj.x + dirX * t, proj.y + dirY * t, 1, '#f97316', 40);
+  }
+  if (beamLen < maxLen && Math.random() < 0.25) {
+    spawnParticles(proj.beamEndX, proj.beamEndY, 1, '#fef3c7', 70);
+  }
+}
 
 export function updateProjectiles(
   sim: SimulationState,
@@ -18,7 +218,14 @@ export function updateProjectiles(
     let removeIdx = -1;
     for (let p = 0; p < sim.projectiles.length; p++) {
       const type = sim.projectiles[p].type;
-      if (type !== 'dagger' && type !== 'vortex' && type !== 'chakram' && type !== 'gravity_well' && type !== 'grenade') {
+      if (
+        type !== 'dagger' &&
+        type !== 'vortex' &&
+        type !== 'chakram' &&
+        type !== 'gravity_well' &&
+        type !== 'grenade' &&
+        type !== 'beam'
+      ) {
         removeIdx = p;
         break;
       }
@@ -303,6 +510,8 @@ export function updateProjectiles(
         const randR = proj.radius * 0.75;
         spawnParticles(proj.x + Math.cos(randAngle) * randR, proj.y + Math.sin(randAngle) * randR, 1, proj.color, 45);
       }
+    } else if (proj.type === 'beam') {
+      updateBeam(sim, proj, dt, spawnDamageNumber, spawnParticles);
     } else if (proj.type === 'grenade') {
       // Parabolic flight: update ground coordinates & rotation
       const progress = Math.min(1, Math.max(0, 1 - proj.duration / proj.maxDuration));

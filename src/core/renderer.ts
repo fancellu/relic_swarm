@@ -728,6 +728,56 @@ export function renderGame(
       ctx.lineTo(proj.chainEndX, proj.chainEndY);
       ctx.stroke();
       ctx.restore();
+    } else if (proj.type === 'beam' && proj.beamEndX !== undefined && proj.beamEndY !== undefined) {
+      // Thick glowing lance: layered strokes under additive blending (no shadowBlur / ctx.filter).
+      const elapsed = proj.maxDuration - proj.duration;
+      const fade = Math.max(0, Math.min(1, elapsed / 0.08, proj.duration / 0.15));
+      const flicker = 1 + Math.sin(sim.runTimer * 45 + proj.id) * 0.12;
+      const width = proj.radius * 2 * fade * flicker;
+      if (width > 0.5) {
+        const isPhoenix = proj.sourceWeapon === 'phoenix_ray';
+        const isPrism = proj.sourceWeapon === 'frostfire_prism';
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(proj.x, proj.y);
+        ctx.lineTo(proj.beamEndX, proj.beamEndY);
+
+        // Outer glow: crimson (lance), rose (phoenix) or a cyan frost sheath (prism)
+        ctx.globalAlpha = isPrism ? 0.4 : 0.22;
+        ctx.strokeStyle = isPhoenix ? '#be185d' : isPrism ? '#0891b2' : '#dc2626';
+        ctx.lineWidth = width * 2.1;
+        ctx.stroke();
+
+        if (isPrism) {
+          ctx.globalAlpha = 0.6;
+          ctx.strokeStyle = '#67e8f9';
+          ctx.lineWidth = width * 1.35;
+          ctx.stroke();
+        }
+
+        ctx.globalAlpha = 0.75;
+        ctx.strokeStyle = proj.color;
+        ctx.lineWidth = width;
+        ctx.stroke();
+
+        ctx.globalAlpha = 0.95;
+        ctx.strokeStyle = isPhoenix ? '#fffbeb' : isPrism ? '#ecfeff' : '#fef3c7';
+        ctx.lineWidth = width * 0.38;
+        ctx.stroke();
+
+        // Impact flare and muzzle glow
+        ctx.globalAlpha = 0.55 * fade;
+        ctx.fillStyle = isPhoenix ? '#fde68a' : isPrism ? '#a5f3fc' : '#fdba74';
+        ctx.beginPath();
+        ctx.arc(proj.beamEndX, proj.beamEndY, width * 0.95, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(proj.x, proj.y, width * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
     } else if (proj.type === 'gravity_well') {
       ctx.save();
       const collapseProgress = proj.duration < 0.25 ? Math.max(0.1, proj.duration / 0.25) : 1;

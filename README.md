@@ -22,9 +22,9 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 - **Wandering Black Market**: A wandering smuggler merchant cart arrives offering combat Overdrives, weapon temperings, and instant fusion catalysts for unbanked gold (permits 1 purchase per visit before relocating 1–2 minutes later).
 - **5 Distinct Champions**: Choose from Arcanist Vael, Knight Commander Roland, Pyromancer Ignis, Plague Alchemist Mortis, and Barbarian Thorgar — each featuring unique baseline stats, starting weapons, and passive affinities.
 - **Weapons, Evolutions & Fusions**:
-  - **11 Base Weapons**: Magic Missiles, Orbiting Daggers, Flame Blast, Thunder Strike, Radiant Aura, Venom Spores, Glacial Shards, Gilded Chakram, Scattershot, Homing Missiles, and the Chain Lightning Gun.
-  - **Level 5 + Level 5 Fusions**: Combine max-level weapons to form dual-aspect super-weapons (*Arcane Phantom Vortex*, *Cataclysmic Supernova*, *Plague Sanctuary*, *Shatterstorm*, *Frostbite Chakrams*).
-  - **Awakened Evolutions**: Pair maxed weapons with matching passives in boss chests for legendary forms (*Chrono Missiles*, *Hellfire Nova*, *Mjolnir's Conduit*, *Solar Eclipse*, *Necrotic Blight*, *Phantom Storm*, *Absolute Zero*, *Midas' Wrath*).
+  - **14 Base Weapons**: Magic Missiles, Orbiting Daggers, Flame Blast, Thunder Strike, Radiant Aura, Venom Spores, Glacial Shards, Gilded Chakram, Scattershot, Homing Missiles, Chain Lightning Gun, Gravity Well, Grenade Launcher, and the Inferno Lance.
+  - **Level 5 + Level 5 Fusions**: Combine max-level weapons to form dual-aspect super-weapons (*Arcane Phantom Vortex*, *Cataclysmic Supernova*, *Plague Sanctuary*, *Shatterstorm*, *Frostbite Chakrams*, *Frostfire Prism*).
+  - **Awakened Evolutions**: Pair maxed weapons with matching passives in boss chests for legendary forms (*Chrono Missiles*, *Hellfire Nova*, *Mjolnir's Conduit*, *Solar Eclipse*, *Necrotic Blight*, *Phantom Storm*, *Absolute Zero*, *Midas' Wrath*, *Phoenix Ray*).
 - **Persistent Sanctum Meta-Shop**: Bank earned gold across runs in your Sanctum Vault and permanently enhance your attributes (Health, Might, Movement Speed, Cooldown Haste, Magnet Radius, Greed, and Fate Rerolls).
 - **Arena Objectives & Spatial Hazards**: Dynamic world events break up passive kiting — capture glowing **Corrupted Obelisks** under intense enemy swarms for massive screen shockwaves, risk your life in sealed **Blood Trials** for elite chests, and trigger explosive **Elemental Ground Synergies**.
 - **Universal Controls**: Full support for Keyboard, Gamepad / Controllers, and Virtual Touch controls for mobile and handheld play.
@@ -79,6 +79,7 @@ Base weapons have no level cap and scale endlessly through draft picks and Black
 - <img src="assets/images/proj_thunder_strike.png" width="20" height="20" valign="middle" /> **Chain Lightning Gun**: Zaps the nearest enemy, with a level-scaling chance to chain through nearby foes; higher levels add bounces and a split bolt.
 - <img src="assets/images/item_magnet_rune.png" width="20" height="20" valign="middle" /> **Gravity Well**: High-mass gravitational singularities that drag enemies and ground drops to their center while inflicting continuous crushing ticks, before detonating in a screen-shaking implosion.
 - <img src="assets/images/proj_grenade.png" width="20" height="20" valign="middle" /> **Grenade Launcher**: Lobs fragmentation grenades in high 3D parabolic arcs over front-line mobs, casting a dynamic ground shadow and detonating on impact with radial splash falloff and heavy outward knockback impulse.
+- <img src="assets/images/icon_inferno_lance.png" width="20" height="20" valign="middle" /> **Inferno Lance**: Channels a thick, flickering white-hot beam that sweeps onto the nearest enemy, searing it every tick and setting it ablaze. The beam is blocked by the first foe (and by solid terrain), but burns through an extra enemy at Lv 3, Lv 5, and every two levels after. Burning targets are primed for *Thermal Shock* from frost weapons.
 
 ### Legendary Weapon Fusions (Level 5 + Level 5)
 - <img src="assets/images/icon_daggers_weapon.png" width="20" height="20" valign="middle" /> **Arcane Phantom Vortex**: *Magic Missile L5* + *Orbiting Daggers L5* $\to$ 8 astral blades firing rapid homing energy beams.
@@ -89,6 +90,7 @@ Base weapons have no level cap and scale endlessly through draft picks and Black
 - <img src="assets/images/proj_magic_missile.png" width="20" height="20" valign="middle" /> **Stormfront Barrage**: *Scattershot L5* + *Homing Missiles L5* $\to$ A wide fan of micro-missiles that curves back into nearby enemies.
 - <img src="assets/images/item_xp_gem_blue.png" width="20" height="20" valign="middle" /> **Cryo Singularity**: *Gravity Well L5* + *Glacial Shards L5* $\to$ Absolute-zero singularity pulling enemies inward and freezing them in stasis before shattering into piercing ice shrapnel.
 - <img src="assets/images/proj_grenade.png" width="20" height="20" valign="middle" /> **Napalm Siege Mortar**: *Grenade Launcher L5* + *Flame Blast L5* $\to$ Lobs alchemical mortar shells creating cataclysmic fire blasts and massive lingering napalm infernos that slow and burn.
+- <img src="assets/images/icon_frostfire_prism.png" width="20" height="20" valign="middle" /> **Frostfire Prism**: *Inferno Lance L5* + *Glacial Shards L5* $	o$ A cryo-prism splits the lance into 3 frost-sheathed fire beams, each locking onto a different foe; they ignite and slow everything they touch, then rupture burning targets with repeated *Thermal Shock* detonations.
 
 ### Awakened Evolutions (Max Weapon + Matched Passive via Boss Chest)
 - <img src="assets/images/icon_wand_weapon.png" width="20" height="20" valign="middle" /> **Chrono Missiles**: *Magic Missile* + *Swift Boots* $\to$ Continuous stream of hyper-velocity laser bolts.
@@ -104,6 +106,7 @@ Base weapons have no level cap and scale endlessly through draft picks and Black
 - <img src="assets/images/proj_thunder_strike.png" width="20" height="20" valign="middle" /> **Tesla Tempest**: *Chain Lightning Gun* + *Swift Boots* $\to$ Lightning that reliably leaps and forks through the horde.
 - <img src="assets/images/item_magnet_rune.png" width="20" height="20" valign="middle" /> **Event Horizon**: *Gravity Well* + *Attraction Rune* $\to$ Supermassive black hole dragging enemies and vacuuming all arena loot straight into your pouch, concluding with an antimatter supernova!
 - <img src="assets/images/proj_grenade.png" width="20" height="20" valign="middle" /> **MIRV Cluster Mortar**: *Grenade Launcher* + *Might Talisman* $\to$ Heavy bunker-buster ordnance that splinters on impact into cascading cluster bomblets blanket-bombing swarms!
+- <img src="assets/images/icon_phoenix_ray.png" width="20" height="20" valign="middle" /> **Phoenix Ray**: *Inferno Lance* + *Vitality Charm* $	o$ A colossal, near-unbroken solar beam that burns through 5 foes at once and siphons their life force to heal you.
 
 ---
 

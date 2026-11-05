@@ -557,6 +557,14 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                     Lobs incendiary mortar shells unleashing cataclysmic fire blasts and massive lingering napalm infernos.
                   </div>
                 </div>
+
+                <div className="bg-slate-900/80 p-2.5 rounded-xl border border-amber-900/40">
+                  <div className="font-bold text-amber-300">Frostfire Prism</div>
+                  <div className="text-slate-400 text-[10px]">Inferno Lance (Lv 5) + Glacial Shards (Lv 5)</div>
+                  <div className="text-slate-300 text-[10px] mt-1">
+                    Splits the lance into 3 frost-sheathed fire beams that ignite foes, then rupture them with repeated Thermal Shock.
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -644,6 +652,12 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                   <div className="font-bold text-purple-300">MIRV Cluster Mortar</div>
                   <div className="text-slate-400 text-[10px]">Grenade Launcher (Lv 5) + Might Talisman</div>
                   <div className="text-slate-300 text-[10px] mt-1">Heavy bunker-buster ordnance splinters on impact into cascading cluster bomblets blanket-bombing swarms!</div>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
+                  <div className="font-bold text-purple-300">Phoenix Ray</div>
+                  <div className="text-slate-400 text-[10px]">Inferno Lance (Lv 5) + Vitality Charm</div>
+                  <div className="text-slate-300 text-[10px] mt-1">A colossal, near-unbroken solar beam that burns through 5 foes and heals you as it sears.</div>
                 </div>
               </div>
             </div>

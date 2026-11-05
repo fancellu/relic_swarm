@@ -76,7 +76,8 @@ export interface ProjectileEntity {
     | 'homing_missile'
     | 'chain_lightning'
     | 'gravity_well'
-    | 'grenade';
+    | 'grenade'
+    | 'beam';
   sourceWeapon?: string;
   x: number;
   y: number;
@@ -108,6 +109,12 @@ export interface ProjectileEntity {
   rotation?: number;
   spinSpeed?: number;
   isCluster?: boolean;
+  // Channelled Beam Properties (anchored to the hero, angle stored in `rotation`)
+  beamRange?: number;
+  beamEndX?: number;
+  beamEndY?: number;
+  beamTickTimer?: number;
+  beamTicks?: number;
 }
 
 export interface DerivedStats {

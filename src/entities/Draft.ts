@@ -111,6 +111,16 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
     ) {
       pool.push(ITEM_DEFS.napalm_mortar);
     }
+
+    // 9. Frostfire Prism (Inferno Lance + Glacial Shards)
+    if (
+      wepIds.includes('inferno_lance') &&
+      wepIds.includes('frost_shard') &&
+      !sim.weapons.some((w) => w.id === 'frostfire_prism') &&
+      !sim.bannedItemIds?.includes('frostfire_prism')
+    ) {
+      pool.push(ITEM_DEFS.frostfire_prism);
+    }
   }
 
   // Check Weapon + Passive Evolutions
@@ -195,6 +205,12 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
         const grenade = sim.weapons.find((w) => w.id === 'grenade_launcher');
         const might = sim.passives.find((p) => p.id === 'might_talisman');
         if (grenade && grenade.level >= 5 && might && !sim.weapons.some((w) => w.id === item.id)) {
+          pool.push(item);
+        }
+      } else if (item.id === 'phoenix_ray') {
+        const lance = sim.weapons.find((w) => w.id === 'inferno_lance');
+        const charm = sim.passives.find((p) => p.id === 'vitality_charm');
+        if (lance && lance.level >= 5 && charm && !sim.weapons.some((w) => w.id === item.id)) {
           pool.push(item);
         }
       }
@@ -351,6 +367,9 @@ export function applyUpgradeSelection(
     } else if (item.id === 'cluster_mirv') {
       sim.weapons = sim.weapons.filter((w) => w.id !== 'grenade_launcher');
       sim.weapons.push({id: item.id, level: 1});
+    } else if (item.id === 'phoenix_ray') {
+      sim.weapons = sim.weapons.filter((w) => w.id !== 'inferno_lance');
+      sim.weapons.push({id: item.id, level: 1});
     }
     if (sim.fusionCatalystAvailable && item.isFusion) {
       sim.fusionCatalystAvailable = false;
@@ -499,6 +518,10 @@ export function extractItemEssence(
     sim.bonusCdr = (sim.bonusCdr || 0) + 0.15;
     sim.bonusArea = (sim.bonusArea || 0) + 0.12;
     bonusDesc = '+15% CDR & +12% Area';
+  } else if (itemId === 'inferno_lance') {
+    sim.bonusMight = (sim.bonusMight || 0) + 0.15;
+    sim.bonusArea = (sim.bonusArea || 0) + 0.1;
+    bonusDesc = '+15% Might & +10% Area';
   } else if (itemId === 'might_talisman') {
     sim.bonusMight = (sim.bonusMight || 0) + 0.18;
     bonusDesc = '+18% Global Attack Damage';

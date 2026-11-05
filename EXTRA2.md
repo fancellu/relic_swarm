@@ -12,7 +12,7 @@ Some enemies have certain resistances (like skeleton not minding fire so much)
 - [x] Chain lightning gun
 - [x] Shotgun (short range burst?)
 - [x] Homing missiles
-- [ ] Beam energy weapon. Cold or poison or fire. Thick glowing laser beam effect. Hits individual enemies. Can penetrate on higher levels
+- [x] Beam energy weapon. Cold or poison or fire. Thick glowing laser beam effect. Hits individual enemies. Can penetrate on higher levels *(Implemented as fire **Inferno Lance**)*
 
 ## Summons
 
