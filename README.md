@@ -230,8 +230,8 @@ Gold collected from defeated foes and chests is banked into your permanent vault
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/fancellu/relicswarm.git
-cd relicswarm
+git clone https://github.com/fancellu/relic_swarm.git
+cd relic_swarm
 
 # Install dependencies
 npm install
@@ -270,7 +270,7 @@ npm run preview
 ## 📁 Project Structure
 
 ```
-relicswarm/
+relic_swarm/
 ├── README.md                    # Human developer and player documentation
 ├── AGENTS.md                    # Contributor/agent guidelines: structure, commands, style, commits
 ├── GEMINI.md                    # AI agent guidelines, architecture rules, and invariants
