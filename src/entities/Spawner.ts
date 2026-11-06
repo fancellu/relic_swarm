@@ -608,8 +608,14 @@ export function updateEnemies(
       }
     }
 
-    // Player Collision (Damage with 0.5s I-frames, Aegis Shield, and armor reduction)
-    if (dist < enemy.size + 18 && sim.invulnTimer <= 0 && sim.aegisShieldTimer <= 0) {
+    // Player Collision (Damage with 0.5s I-frames, Aegis Shield, Phase Dash, and armor reduction)
+    const canBeHit = dist < enemy.size + 18 && sim.invulnTimer <= 0 && sim.aegisShieldTimer <= 0;
+    if (canBeHit && sim.dashTimer > 0) {
+      if (!sim.dashPhased) {
+        sim.dashPhased = true;
+        spawnDamageNumber(sim.x, sim.y - 30, 'PHASED!', '#a5f3fc');
+      }
+    } else if (canBeHit) {
       const incomingDmg = Math.max(1, enemy.damage - stats.armor);
       sim.hp -= incomingDmg;
       sim.invulnTimer = 0.5;

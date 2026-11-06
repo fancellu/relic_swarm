@@ -1,8 +1,14 @@
 import {getConfig} from '../constants';
-import {EnemyEntity, HeroData, SimulationState} from '../types/entities';
+import {EnemyEntity, HeroData, MAX_PARTICLES, SimulationState} from '../types/entities';
 import {HEROES} from '../types/items';
 import {META_UPGRADES} from '../types/meta';
 import {stageManager} from '../core/Stage';
+import {gameAudio} from '../../utils/helper';
+
+// Phase Dash: a fresh sprint press with enough stamina triggers a short i-frame dodge burst.
+const DASH_COST_RATIO = 0.35; // fraction of max stamina spent (and required) per dash
+const DASH_DURATION = 0.15; // seconds of i-frames and speed burst
+const DASH_SPEED_MULT = 2.8;
 
 export interface DerivedStats {
   maxHp: number;
@@ -110,8 +116,38 @@ export function updatePlayerMovement(
   onStaminaChange: (stamina: number) => void,
   onHpChange: (hp: number) => void,
 ): void {
-  const wantsSprint = keyboardSprint || touchJoy.sprintTouch || gpSprint;
+  let wantsSprint = keyboardSprint || touchJoy.sprintTouch || gpSprint;
+  // A sprint button still held from closing a dialog is ignored until it is released.
+  if (sim.sprintLatched) {
+    if (wantsSprint) wantsSprint = false;
+    else sim.sprintLatched = false;
+  }
+  const sprintPressed = wantsSprint && !sim.prevWantsSprint;
+  sim.prevWantsSprint = wantsSprint;
   let speedMultiplier = 1.0;
+
+  // Phase Dash trigger (any sprint binding: Shift/Ctrl, gamepad A/B/LT/RT, touch sprint)
+  const dashCost = stats.maxStamina * DASH_COST_RATIO;
+  if (sprintPressed && sim.dashTimer <= 0 && sim.stamina >= dashCost) {
+    sim.stamina -= dashCost;
+    sim.dashTimer = DASH_DURATION;
+    sim.dashPhased = false;
+    gameAudio.playDashWhoosh();
+    for (let i = 0; i < 8 && sim.particles.length < MAX_PARTICLES; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      sim.particles.push({
+        x: sim.x,
+        y: sim.y,
+        vx: Math.cos(a) * 90,
+        vy: Math.sin(a) * 90,
+        life: 0.3,
+        maxLife: 0.3,
+        size: 5,
+        color: sim.hero.color,
+        alpha: 0.7,
+      });
+    }
+  }
 
   if (wantsSprint && sim.stamina > 5) {
     sim.isSprinting = true;
@@ -156,6 +192,25 @@ export function updatePlayerMovement(
   if (Math.abs(gpX) > 0.1 || Math.abs(gpY) > 0.1) {
     moveX += gpX;
     moveY += gpY;
+  }
+
+  const isDashing = sim.dashTimer > 0;
+  if (isDashing) {
+    speedMultiplier = DASH_SPEED_MULT;
+    // Standing still: dash in the facing direction
+    if (Math.hypot(moveX, moveY) <= 0.1) moveX = sim.facingLeft ? -1 : 1;
+    // Afterimage streak
+    if (sim.particles.length < MAX_PARTICLES) sim.particles.push({
+      x: sim.x,
+      y: sim.y,
+      vx: 0,
+      vy: 0,
+      life: 0.2,
+      maxLife: 0.2,
+      size: 10,
+      color: sim.hero.color,
+      alpha: 0.45,
+    });
   }
 
   const moveMag = Math.hypot(moveX, moveY);
@@ -218,6 +273,7 @@ export function updatePlayerMovement(
 
   // Invulnerability timer, Aegis Shield decay
   if (sim.invulnTimer > 0) sim.invulnTimer -= dt;
+  if (sim.dashTimer > 0) sim.dashTimer -= dt;
   if (sim.aegisShieldTimer > 0) {
     sim.aegisShieldTimer -= dt;
     if (Math.random() < 0.3) {

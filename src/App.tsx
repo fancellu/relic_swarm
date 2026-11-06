@@ -72,6 +72,10 @@ function createSimulation(heroIndex = 0): SimulationState {
     maxStamina: 100,
     isSprinting: false,
     invulnTimer: 0,
+    dashTimer: 0,
+    prevWantsSprint: false,
+    dashPhased: false,
+    sprintLatched: false,
     heroAnim: {currentAction: 'IDLE', currentFrame: 0, timer: 0},
     xp: 0,
     nextXp: 10,
@@ -247,6 +251,7 @@ export default function App() {
   pauseTabRef.current = pauseTab;
   const touchJoystickRef = useRef({active: false, startX: 0, startY: 0, currentX: 0, currentY: 0, dx: 0, dy: 0, sprintTouch: false});
   const keyboardSprintRef = useRef(false);
+  const simulatedLastStepRef = useRef(false);
   const navCooldownRef = useRef(0);
   const lastGpConfirmRef = useRef(false);
   const lastGpCancelRef = useRef(false);
@@ -735,6 +740,9 @@ export default function App() {
   }, [initGame, openInventory, returnToStart]);
 
   const update = useCallback((dt: number) => {
+    // Tracks whether the previous step reached the simulation (false while any modal/pause returns early).
+    const simulatedLastStep = simulatedLastStepRef.current;
+    simulatedLastStepRef.current = false;
     const gamepads = typeof navigator.getGamepads === 'function' ? navigator.getGamepads() : [];
     const gamepad = gamepads[0] || gamepads[1] || null;
     let gpX = 0;
@@ -1047,6 +1055,10 @@ export default function App() {
     sim.totalRunTimer = (sim.totalRunTimer || 0) + dt;
     sim.auraVisualAngle += dt * 3;
     spatialGrid.build(sim.enemies);
+    // First simulated step after a dialog/pause: a sprint button still held from confirming the
+    // dialog (gamepad A doubles as Confirm and Sprint) must be released before it sprints or dashes.
+    if (!simulatedLastStep) sim.sprintLatched = true;
+    simulatedLastStepRef.current = true;
     updatePlayerMovement(
       sim,
       inputRef.current.actions,

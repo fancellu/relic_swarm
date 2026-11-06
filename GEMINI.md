@@ -40,6 +40,8 @@ relicswarm/
 - **Pause Restriction**: Gamepad pause is bound **strictly to Button 9 (Options / Start)**.
   - **NEVER** bind stick clicks (L3 / R3, buttons 10/11) or auxiliary buttons to pause. Intense stick motion during survival combat causes accidental clicks.
 - **Dash / Sprint Parity**: Gamepad sprint/dash is bound to **both Button A (0) and Button B (1)**, as well as Triggers (`LT` / `RT`), giving players ergonomic thumb flexibility during combat.
+- **Phase Dash**: The *press* (rising edge) of any sprint binding (Shift/Ctrl, A/B/LT/RT, touch Sprint) triggers Phase Dash when stamina is at least 35% of max (`Player.ts` `DASH_*` constants). Never bind dash to a separate input; keeping it on sprint preserves parity across all three input schemes.
+- **Sprint Latch After Dialogs**: Gamepad A is both modal Confirm and Sprint. On the first simulated step after any modal/pause, `sim.sprintLatched` is set and sprint input is ignored until every sprint binding is released, so confirming a dialog never fires a dash or sprint.
 
 ### 2.2 Modal Navigation Parity
 Every modal overlay (Sanctum Shop, Start/Hero Select, Level-Up Draft, Inventory/Sell Sheet, Game Over, Victory, Pause Menu) **must support full navigation across all three input schemes**:

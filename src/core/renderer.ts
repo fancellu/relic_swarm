@@ -920,6 +920,9 @@ export function renderGame(
   }
 
   if (heroRenderer && !isBlinking) {
+    // Phase Dash: hero turns translucent while phasing through enemies
+    const isDashing = sim.dashTimer > 0;
+    if (isDashing) ctx.globalAlpha = 0.5;
     heroRenderer.draw(
       ctx,
       sim.heroAnim,
@@ -930,6 +933,7 @@ export function renderGame(
       assets,
       sim.facingLeft,
     );
+    if (isDashing) ctx.globalAlpha = 1;
   }
 
   // 8. Render Particles & Floating Combat Text

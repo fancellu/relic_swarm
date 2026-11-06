@@ -252,6 +252,12 @@ export interface SimulationState {
   maxStamina: number;
   isSprinting: boolean;
   invulnTimer: number;
+  // Phase Dash: remaining i-frame/burst time, sprint rising-edge tracking, once-per-dash "PHASED!" flag
+  dashTimer: number;
+  prevWantsSprint: boolean;
+  dashPhased: boolean;
+  // Sprint input ignored until every sprint binding is released (set when gameplay resumes after a dialog)
+  sprintLatched: boolean;
   heroAnim: SpriteAnimationState;
   xp: number;
   nextXp: number;

@@ -558,7 +558,14 @@ export function updateProjectiles(
           spawnParticles(proj.x, proj.y, 6, proj.color, 80);
         } else {
           const dist = Math.hypot(sim.x - proj.x, sim.y - proj.y);
-          if (dist < proj.radius + 20 && sim.invulnTimer <= 0 && sim.aegisShieldTimer <= 0) {
+          const canBeHit = dist < proj.radius + 20 && sim.invulnTimer <= 0 && sim.aegisShieldTimer <= 0;
+          if (canBeHit && sim.dashTimer > 0) {
+            // Phase Dash: the orb passes straight through the hero
+            if (!sim.dashPhased) {
+              sim.dashPhased = true;
+              spawnDamageNumber(sim.x, sim.y - 30, 'PHASED!', '#a5f3fc');
+            }
+          } else if (canBeHit) {
             sim.hp -= proj.damage;
             sim.invulnTimer = 0.5;
             sim.screenShake = 12;

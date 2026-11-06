@@ -87,13 +87,20 @@ export const HUD: React.FC<HUDProps> = ({
             {/* Stamina Bar */}
             <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-400">
               <Zap size={13} className="fill-emerald-400 text-emerald-400" />
-              <div className="w-16 bg-slate-900 rounded-full h-1.5 overflow-hidden border border-emerald-950">
+              <div
+                className="relative w-16 bg-slate-900 rounded-full h-1.5 overflow-hidden border border-emerald-950"
+                title="Phase Dash ready when stamina passes the tick (35%)"
+              >
                 <div
-                  className="bg-emerald-400 h-full transition-all duration-100"
+                  className={`${
+                    currentStamina >= maxStaminaDisplay * 0.35 ? 'bg-emerald-300' : 'bg-emerald-600'
+                  } h-full transition-all duration-100`}
                   style={{
                     width: `${Math.min(100, (currentStamina / Math.max(1, maxStaminaDisplay)) * 100)}%`,
                   }}
                 />
+                {/* Phase Dash threshold tick */}
+                <div className="absolute top-0 bottom-0 left-[35%] w-px bg-slate-100/80" />
               </div>
             </div>
           </div>

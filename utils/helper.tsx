@@ -693,6 +693,15 @@ class GameAudio {
     osc.stop(b.now + dur);
   }
 
+  playDashWhoosh() {
+    const b = this.begin();
+    if (!b) return;
+    const v = this.vary();
+    this.blip(b, b.now, { type: 'triangle', freq: 900 * v, freqTo: 180 * v, dur: 0.12, gain: 0.08 });
+    this.blip(b, b.now, { type: 'sine', freq: 300 * v, freqTo: 120 * v, dur: 0.14, gain: 0.06 });
+    this.noiseBurst(b, b.now, { dur: 0.1, gain: 0.05, from: 2400, to: 400 });
+  }
+
   playMeleePunch() {
     const b = this.begin();
     if (!b) return;
