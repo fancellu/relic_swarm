@@ -1,4 +1,4 @@
-import {Coins, Heart, Menu, Skull, Sparkles, Sword, Zap} from 'lucide-react';
+import {Coins, Gauge, Heart, Menu, Skull, Sparkles, Sword, Zap} from 'lucide-react';
 import React from 'react';
 import {EquippedItem} from '../types/entities';
 import {ITEM_DEFS} from '../types/items';
@@ -10,6 +10,7 @@ export interface HUDProps {
   maxHpDisplay: number;
   currentStamina: number;
   maxStaminaDisplay: number;
+  momentum?: number;
   level: number;
   stage?: number;
   stageName?: string;
@@ -51,6 +52,7 @@ export const HUD: React.FC<HUDProps> = ({
   maxHpDisplay,
   currentStamina,
   maxStaminaDisplay,
+  momentum = 0,
   level,
   stage = 1,
   stageName,
@@ -101,6 +103,23 @@ export const HUD: React.FC<HUDProps> = ({
                 />
                 {/* Phase Dash threshold tick */}
                 <div className="absolute top-0 bottom-0 left-[35%] w-px bg-slate-100/80" />
+              </div>
+            </div>
+            {/* Kinetic Charge Momentum Meter */}
+            <div
+              className="flex items-center gap-1 text-[11px] font-bold text-amber-400"
+              title="Momentum: sprint to charge; release sprint at full to unleash a Kinetic Burst"
+            >
+              <Gauge size={13} className="text-amber-400" />
+              <div
+                className={`w-16 bg-slate-900 rounded-full h-1.5 overflow-hidden border ${
+                  momentum >= 100 ? 'border-amber-300 animate-pulse' : 'border-amber-950'
+                }`}
+              >
+                <div
+                  className={`${momentum >= 100 ? 'bg-amber-300' : 'bg-amber-500'} h-full transition-all duration-100`}
+                  style={{width: `${Math.min(100, momentum)}%`}}
+                />
               </div>
             </div>
           </div>

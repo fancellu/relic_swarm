@@ -105,7 +105,7 @@ export function updateDrops(
         if (sim.xp >= sim.nextXp) {
           sim.xp -= sim.nextXp;
           sim.level += 1;
-          sim.nextXp = Math.round(sim.nextXp * 1.35 + 5);
+          sim.nextXp = Math.round(sim.nextXp * 1.3 + 5);
           onLevelUp();
         }
 

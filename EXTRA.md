@@ -61,7 +61,7 @@ Horde survival games can feel like an infinite treadmill if the terrain is unifo
 
 Your `Player.ts` already tracks **Sprint** and **Stamina** (`Shift` / `RT` / `Button B`), and the Sanctum has **Haste Footwork** for Sprint Recovery. Right now, sprinting is purely defensive repositioning:
 
-* [ ] **Kinetic Charge (Momentum Scaling):** Add a passive or Champion trait where sprinting builds a "Momentum" meter (0 to 100). At 100 Momentum, stopping or releasing Sprint unleashes a shockwave or fires a free volley of your equipped Slot 1 weapon.
+* [x] **Kinetic Charge (Momentum Scaling):** Add a passive or Champion trait where sprinting builds a "Momentum" meter (0 to 100). At 100 Momentum, stopping or releasing Sprint unleashes a shockwave or fires a free volley of your equipped Slot 1 weapon. *(Implemented as a built-in mechanic for every champion: ~1.25 s of sprinting fills Momentum, Phase Dash adds +15, and releasing sprint at full unleashes a Kinetic Burst shockwave)*
 * [x] **Phase Dash / Parry Window:** Give the first `150ms` of initiating a Sprint (when stamina is full) brief i-frames or phasing through enemy collision boxes in `spatial.ts`, consuming a flat 35% stamina chunk. It turns the sprint button into a clutch dodge-roll when cornered by a swarm, rewarding skill without adding a separate button to your control scheme. *(Implemented: triggers on any sprint press with 35%+ stamina rather than only at full stamina; 150 ms i-frames plus a speed burst, and "PHASED!" feedback)*
 
 

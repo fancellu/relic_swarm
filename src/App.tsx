@@ -24,6 +24,7 @@ import {applyChestReward, generateChestReward} from './entities/Chests';
 import {applyUpgradeSelection, extractItemEssence, generateDraftChoices, getAvailableFusion, sellEquippedItem} from './entities/Draft';
 import {updateDrops} from './entities/Drops';
 import {calculateDerivedStats, updatePlayerMovement} from './entities/Player';
+import {MOMENTUM_MAX, updateKineticCharge} from './entities/KineticCharge';
 import {updateProjectiles} from './entities/Projectiles';
 import {updateEnemies, updateEnemySpawner} from './entities/Spawner';
 import {updateWeaponCasting} from './entities/Weapons';
@@ -76,9 +77,10 @@ function createSimulation(heroIndex = 0): SimulationState {
     prevWantsSprint: false,
     dashPhased: false,
     sprintLatched: false,
+    momentum: 0,
     heroAnim: {currentAction: 'IDLE', currentFrame: 0, timer: 0},
     xp: 0,
-    nextXp: 10,
+    nextXp: 50,
     level: 1,
     weapons,
     passives,
@@ -218,6 +220,7 @@ export default function App() {
   const [maxHpDisplay, setMaxHpDisplay] = useState(100);
   const [currentStamina, setCurrentStamina] = useState(100);
   const [maxStaminaDisplay, setMaxStaminaDisplay] = useState(100);
+  const [momentumDisplay, setMomentumDisplay] = useState(0);
   const [xpDisplay, setXpDisplay] = useState(0);
   const [nextLevelXpDisplay, setNextLevelXpDisplay] = useState(10);
 
@@ -317,6 +320,15 @@ export default function App() {
     if (now - lastStaminaUpdateTimeRef.current >= 100 || stamina <= 0 || stamina >= 100) {
       lastStaminaUpdateTimeRef.current = now;
       setCurrentStamina((prev) => (prev === stamina ? prev : stamina));
+    }
+  }, []);
+  // Momentum HUD updates are throttled to 5-point steps (max ~8 React updates/s while charging)
+  const lastMomentumStepRef = useRef(0);
+  const handleMomentumChange = useCallback((momentum: number) => {
+    const step = momentum >= MOMENTUM_MAX ? MOMENTUM_MAX : Math.floor(momentum / 5) * 5;
+    if (step !== lastMomentumStepRef.current) {
+      lastMomentumStepRef.current = step;
+      setMomentumDisplay(step);
     }
   }, []);
   const handleHpChange = useCallback((hp: number) => {
@@ -1059,6 +1071,9 @@ export default function App() {
     // dialog (gamepad A doubles as Confirm and Sprint) must be released before it sprints or dashes.
     if (!simulatedLastStep) sim.sprintLatched = true;
     simulatedLastStepRef.current = true;
+    // A sprint interrupted by a dialog is not a deliberate release, so it never fires a Kinetic Burst.
+    const wasSprinting = simulatedLastStep && sim.isSprinting;
+    const wasDashing = sim.dashTimer > 0;
     updatePlayerMovement(
       sim,
       inputRef.current.actions,
@@ -1072,6 +1087,8 @@ export default function App() {
       handleStaminaChange,
       handleHpChange,
     );
+    updateKineticCharge(sim, stats, dt, wasSprinting, wasDashing, spawnDamageNumber, spawnParticles);
+    handleMomentumChange(sim.momentum);
     sim.screenShake = Math.max(0, sim.screenShake - dt * 30);
     const heroRenderer = spriteRenderersRef.current[sim.hero.spriteKey];
     if (heroRenderer) heroRenderer.advanceInPlace(sim.heroAnim, dt);
@@ -1834,6 +1851,7 @@ export default function App() {
         maxHpDisplay={maxHpDisplay}
         currentStamina={currentStamina}
         maxStaminaDisplay={maxStaminaDisplay}
+        momentum={momentumDisplay}
         level={gameState.level}
         stage={simRef.current.stage || 1}
         stageName={levelManager.getModifiers(simRef.current.stage || 1).theme.name}

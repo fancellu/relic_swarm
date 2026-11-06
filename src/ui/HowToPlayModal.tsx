@@ -38,6 +38,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({isOpen, onClose, 
             <div>• Gamepad: Left Stick / D-pad to move, <span className="text-emerald-400 font-bold">Button A / B / RT / LT</span> to Sprint.</div>
             <div>• Mobile: Drag virtual joystick + tap green Sprint button.</div>
             <div>• <span className="text-cyan-300 font-bold">Phase Dash</span>: Each fresh Sprint press with 35%+ stamina (past the tick on the stamina bar) dashes forward with brief invulnerability, phasing through enemies and orbs. Costs 35% stamina.</div>
+            <div>• <span className="text-amber-300 font-bold">Kinetic Charge</span>: Sprinting fills the amber Momentum meter (dashes add a kick). When it's full and the hero glows, release Sprint to unleash a Kinetic Burst that blasts nearby enemies away.</div>
           </div>
 
           <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">

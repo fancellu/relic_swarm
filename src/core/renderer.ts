@@ -728,6 +728,20 @@ export function renderGame(
       ctx.lineTo(proj.chainEndX, proj.chainEndY);
       ctx.stroke();
       ctx.restore();
+    } else if (proj.type === 'kinetic_wave') {
+      // Kinetic Charge release: expanding, fading shockwave ring
+      const t = 1 - Math.max(0, proj.duration) / proj.maxDuration;
+      const ringRadius = Math.max(0, proj.radius * (0.25 + 0.75 * t));
+      ctx.save();
+      ctx.globalAlpha = 1 - t;
+      ctx.fillStyle = 'rgba(251, 191, 36, 0.12)';
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, ringRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = proj.color;
+      ctx.lineWidth = 6 * (1 - t) + 2;
+      ctx.stroke();
+      ctx.restore();
     } else if (proj.type === 'beam' && proj.beamEndX !== undefined && proj.beamEndY !== undefined) {
       // Thick glowing lance: layered strokes under additive blending (no shadowBlur / ctx.filter).
       const elapsed = proj.maxDuration - proj.duration;
@@ -915,6 +929,18 @@ export function renderGame(
     ctx.beginPath();
     ctx.arc(sim.x, sim.y, 40 * pulse, 0, Math.PI * 2);
     ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Kinetic Charge: pulsing amber ring while Momentum is full (release sprint to unleash)
+  if (sim.momentum >= 100) {
+    const pulse = 1 + Math.sin(sim.runTimer * 12) * 0.1;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.9)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(sim.x, sim.y, 34 * pulse, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
   }

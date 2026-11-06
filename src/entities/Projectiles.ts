@@ -383,7 +383,7 @@ export function updateProjectiles(
           }
         }
       });
-    } else if (proj.type === 'chain_lightning') {
+    } else if (proj.type === 'chain_lightning' || proj.type === 'kinetic_wave') {
       // Damage is applied at cast time; retain the projectile only for its brief visual arc.
     } else if (proj.type === 'spore') {
       // Lingering toxic cloud field (spatial query)

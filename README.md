@@ -28,6 +28,7 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 - **Persistent Sanctum Meta-Shop**: Bank earned gold across runs in your Sanctum Vault and permanently enhance your attributes (Health, Might, Movement Speed, Cooldown Haste, Magnet Radius, Greed, and Fate Rerolls).
 - **Arena Objectives & Spatial Hazards**: Dynamic world events break up passive kiting — capture glowing **Corrupted Obelisks** under intense enemy swarms for massive screen shockwaves, risk your life in sealed **Blood Trials** for elite chests, and trigger explosive **Elemental Ground Synergies**.
 - **Phase Dash**: Every fresh Sprint press with at least 35% stamina launches a 150 ms dodge burst with invulnerability, phasing straight through swarms and sorcerer orbs. It costs 35% stamina, so it's a clutch escape rather than a free pass.
+- **Kinetic Charge**: Sprinting builds a Momentum meter (each Phase Dash adds a kick). Once it's full, releasing Sprint unleashes a Kinetic Burst shockwave that damages and hurls back nearby enemies, turning escapes into counterattacks.
 - **Universal Controls**: Full support for Keyboard, Gamepad / Controllers, and Virtual Touch controls for mobile and handheld play.
 
 ---
@@ -38,6 +39,7 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 | **Move** | `W` `A` `S` `D` or Arrow Keys | Left Analog Stick / D-Pad | Virtual Analog Joystick (Bottom-Left) |
 | **Sprint** | `Shift` / `Ctrl` | `Button A` / `Button B` / `RT` / `LT` | Virtual Sprint Button (Bottom-Right) |
 | **Phase Dash** | Tap Sprint (35%+ stamina) | Tap Sprint (35%+ stamina) | Tap Sprint Button (35%+ stamina) |
+| **Kinetic Burst** | Release Sprint at full Momentum | Release Sprint at full Momentum | Release Sprint Button at full Momentum |
 | **Confirm / Select** | `Enter` / `Space` | Button `A` (Button 0) | Tap Button / Card |
 | **Cancel / Back** | `Escape` / `Backspace` | Button `B` (Button 1) | Tap Close / Back Button |
 | **Toggle Inventory & Sell** | `Tab` / `I` | Button `Y` (Button 3) | Floating Sell Button (Bottom-Right) |

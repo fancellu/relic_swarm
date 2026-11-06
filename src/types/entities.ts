@@ -77,7 +77,8 @@ export interface ProjectileEntity {
     | 'chain_lightning'
     | 'gravity_well'
     | 'grenade'
-    | 'beam';
+    | 'beam'
+    | 'kinetic_wave';
   sourceWeapon?: string;
   x: number;
   y: number;
@@ -258,6 +259,8 @@ export interface SimulationState {
   dashPhased: boolean;
   // Sprint input ignored until every sprint binding is released (set when gameplay resumes after a dialog)
   sprintLatched: boolean;
+  // Kinetic Charge: 0-100 Momentum built by sprinting; releases a shockwave when a full sprint ends
+  momentum: number;
   heroAnim: SpriteAnimationState;
   xp: number;
   nextXp: number;
