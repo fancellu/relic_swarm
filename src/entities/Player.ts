@@ -1,7 +1,7 @@
 import {getConfig} from '../constants';
 import {EnemyEntity, HeroData, MAX_PARTICLES, SimulationState} from '../types/entities';
 import {HEROES} from '../types/items';
-import {META_UPGRADES} from '../types/meta';
+import {FRAGILE_GLASS_HP_MULT, META_UPGRADES} from '../types/meta';
 import {stageManager} from '../core/Stage';
 import {gameAudio} from '../../utils/helper';
 
@@ -35,7 +35,10 @@ export function calculateDerivedStats(
   // Max HP
   const metaHpMult = 1 + (meta.maxHp || 0) * (META_UPGRADES.maxHp.bonusPerLevel / 100);
   const vitalityLevel = sim.passives.find((p) => p.id === 'vitality_charm')?.level || 0;
-  const maxHp = Math.round(hero.baseHp * metaHpMult + vitalityLevel * 25 + (sim.bonusMaxHp || 0));
+  const rawMaxHp = hero.baseHp * metaHpMult + vitalityLevel * 25 + (sim.bonusMaxHp || 0);
+  // Pact of the Swarm: Fragile Glass halves Max HP
+  const pactHpMult = sim.pacts?.includes('fragile_glass') ? FRAGILE_GLASS_HP_MULT : 1;
+  const maxHp = Math.round(rawMaxHp * pactHpMult);
 
   // Max Stamina
   const bootsLevel = sim.passives.find((p) => p.id === 'swift_boots')?.level || 0;

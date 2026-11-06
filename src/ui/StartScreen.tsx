@@ -1,7 +1,8 @@
-import {Coins, HelpCircle, Play, Zap} from 'lucide-react';
+import {Coins, HelpCircle, Play, Skull, Zap} from 'lucide-react';
 import React, {useEffect, useRef} from 'react';
 import {HeroData} from '../types/entities';
 import {HEROES, ITEM_DEFS} from '../types/items';
+import {PACT_GOLD_BONUS, PACTS, PactId} from '../types/meta';
 import {gameAudio, MenuOverlay} from '../../utils/helper';
 
 export function AnimatedHeroPortrait({
@@ -92,6 +93,10 @@ export interface StartScreenProps {
   onOpenSanctumShop: () => void;
   onStartGame: (heroIdx: number) => void;
   onOpenHowToPlay: () => void;
+  activePacts: PactId[];
+  onTogglePact: (id: PactId) => void;
+  pactFocusIndex: number;
+  onPactFocus: (index: number) => void;
 }
 
 export const StartScreen: React.FC<StartScreenProps> = ({
@@ -102,6 +107,10 @@ export const StartScreen: React.FC<StartScreenProps> = ({
   onOpenSanctumShop,
   onStartGame,
   onOpenHowToPlay,
+  activePacts,
+  onTogglePact,
+  pactFocusIndex,
+  onPactFocus,
 }) => {
   if (!isOpen) return null;
 
@@ -217,6 +226,51 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Pact of the Swarm: optional curses for bonus Sanctum Gold */}
+        <div className="w-full flex flex-col gap-2">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <span className="flex items-center gap-1.5">
+              <Skull size={13} className="text-rose-400" />
+              Pacts of the Swarm:
+              <span className={activePacts.length > 0 ? 'text-amber-300' : 'text-slate-500'}>
+                +{Math.round(activePacts.length * PACT_GOLD_BONUS * 100)}% Sanctum Gold
+              </span>
+            </span>
+            <span className="text-[10px] text-sky-400 font-normal normal-case">[1-3] or [↑↓ + Y] Toggle</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {PACTS.map((pact, idx) => {
+              const isActive = activePacts.includes(pact.id);
+              const isFocused = pactFocusIndex === idx;
+              return (
+                <button
+                  key={pact.id}
+                  onClick={() => onTogglePact(pact.id)}
+                  onPointerEnter={() => onPactFocus(idx)}
+                  aria-pressed={isActive}
+                  className={`p-2 rounded-xl border-2 text-left transition-all ${
+                    isActive
+                      ? 'bg-rose-950/70 border-rose-500 shadow-md shadow-rose-950/50'
+                      : 'bg-slate-900/60 border-slate-800 hover:border-slate-600'
+                  } ${isFocused ? 'ring-2 ring-sky-400/60' : ''}`}>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className={`font-bold text-xs ${isActive ? 'text-rose-300' : 'text-slate-200'}`}>
+                      {idx + 1}. {pact.name}
+                    </span>
+                    <span
+                      className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
+                        isActive ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-400'
+                      }`}>
+                      {isActive ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">{pact.curse}</div>
+                </button>
+              );
+            })}
           </div>
         </div>
 

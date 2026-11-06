@@ -75,7 +75,7 @@ Once a player beats the 900-second boss (`boss_abyssal_titan`), they need a reas
 * [x] **Weapon Banishing / Sealing (Sanctum Upgrade):** Add an 8th upgrade to `relic_swarm_meta` (e.g., `"banishes": 0`, max 2). During the `DRAFT` modal, pressing a button lets you **Banish** an unwanted weapon/passive for the rest of the run so it stops polluting your level-up pool. *(Implemented as the **Banishment Rites** Sanctum upgrade)*
 
 
-* [ ] **Pact of the Swarm (Heat / Ascension Modifiers):** On the `StartScreen.tsx`, add optional toggleable curses before starting a run (e.g., *Swarm Frenzy*: Enemies move 20% faster; *Titan's Wrath*: Bosses spawn in pairs; *Fragile Glass*: $-50\%$ Max HP). Each active curse multiplies Sanctum Gold earned by $+25\%$.
+* [x] **Pact of the Swarm (Heat / Ascension Modifiers):** On the `StartScreen.tsx`, add optional toggleable curses before starting a run (e.g., *Swarm Frenzy*: Enemies move 20% faster; *Titan's Wrath*: Bosses spawn in pairs; *Fragile Glass*: $-50\%$ Max HP). Each active curse multiplies Sanctum Gold earned by $+25\%$. *(Implemented with these three Pacts; bonuses stack additively up to +75%, and the selection is remembered between runs)*
 
 
 

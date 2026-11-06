@@ -67,6 +67,7 @@ LocalStorage keys must maintain backward compatibility:
   ```json
   { "maxHp": 0, "might": 0, "speed": 0, "haste": 0, "magnet": 0, "greed": 0, "rerolls": 0 }
   ```
+- `relic_swarm_pacts`: Serialized JSON string array of the remembered Pact of the Swarm selection (e.g. `["swarm_frenzy", "fragile_glass"]`). Unknown ids are ignored on load (`getStoredPacts()` in `src/types/meta.ts`).
 
 ### 2.6 React 19 Typing Standards
 - React 19 `@types/react` requires initial arguments on `useRef` calls (e.g., `useRef<T>(undefined)` instead of `useRef<T>()`).

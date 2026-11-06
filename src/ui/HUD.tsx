@@ -11,6 +11,7 @@ export interface HUDProps {
   currentStamina: number;
   maxStaminaDisplay: number;
   momentum?: number;
+  activePactNames?: string[];
   level: number;
   stage?: number;
   stageName?: string;
@@ -53,6 +54,7 @@ export const HUD: React.FC<HUDProps> = ({
   currentStamina,
   maxStaminaDisplay,
   momentum = 0,
+  activePactNames,
   level,
   stage = 1,
   stageName,
@@ -135,6 +137,15 @@ export const HUD: React.FC<HUDProps> = ({
               {stageName || STAGE_THEMES[(stage - 1) % STAGE_THEMES.length]?.name || 'Gothic Sanctum'}
             </span>
           </div>
+          {activePactNames && activePactNames.length > 0 && (
+            <div
+              className="flex items-center gap-1 text-rose-300 font-bold bg-rose-950/70 px-2 py-0.5 rounded border border-rose-700/50 text-[11px]"
+              title={`Pacts of the Swarm active: +${activePactNames.length * 25}% Sanctum Gold`}
+            >
+              <Skull size={12} className="text-rose-400 shrink-0" />
+              <span>{activePactNames.join(' · ')}</span>
+            </div>
+          )}
         </div>
 
         {/* Center: Top-aligned XP Bar, Survival Timer & Active Objective */}

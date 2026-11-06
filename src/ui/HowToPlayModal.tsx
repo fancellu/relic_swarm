@@ -39,6 +39,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({isOpen, onClose, 
             <div>• Mobile: Drag virtual joystick + tap green Sprint button.</div>
             <div>• <span className="text-cyan-300 font-bold">Phase Dash</span>: Each fresh Sprint press with 35%+ stamina (past the tick on the stamina bar) dashes forward with brief invulnerability, phasing through enemies and orbs. Costs 35% stamina.</div>
             <div>• <span className="text-amber-300 font-bold">Kinetic Charge</span>: Sprinting fills the amber Momentum meter (dashes add a kick). When it's full and the hero glows, release Sprint to unleash a Kinetic Burst that blasts nearby enemies away.</div>
+            <div>• <span className="text-rose-300 font-bold">Pacts of the Swarm</span>: On the start screen, toggle optional curses (keys 1-3, or D-pad Up/Down + Y). Each active Pact adds +25% to the Sanctum Gold you bank.</div>
           </div>
 
           <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">

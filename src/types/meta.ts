@@ -135,3 +135,48 @@ export function getStoredMeta(): Record<string, number> {
     };
   }
 }
+
+// --- Pact of the Swarm: optional pre-run curses, each adding +25% banked Sanctum Gold ---
+export type PactId = 'swarm_frenzy' | 'titans_wrath' | 'fragile_glass';
+
+export interface PactDef {
+  id: PactId;
+  name: string;
+  short: string;
+  curse: string;
+}
+
+export const PACTS: PactDef[] = [
+  {id: 'swarm_frenzy', name: 'Swarm Frenzy', short: 'Frenzy', curse: 'Enemies move 20% faster'},
+  {id: 'titans_wrath', name: "Titan's Wrath", short: 'Titans', curse: 'The boss spawns as a pair of Titans'},
+  {id: 'fragile_glass', name: 'Fragile Glass', short: 'Glass', curse: '-50% Max HP'},
+];
+
+export const PACT_GOLD_BONUS = 0.25;
+export const PACTS_STORAGE_KEY = 'relic_swarm_pacts';
+export const SWARM_FRENZY_SPEED_MULT = 1.2;
+export const FRAGILE_GLASS_HP_MULT = 0.5;
+
+export function getPactGoldMult(pacts: readonly string[]): number {
+  return 1 + pacts.length * PACT_GOLD_BONUS;
+}
+
+/** Loads the remembered Pact selection, keeping only known pact ids. */
+export function getStoredPacts(): PactId[] {
+  try {
+    const saved = localStorage.getItem(PACTS_STORAGE_KEY);
+    const parsed: unknown = saved ? JSON.parse(saved) : [];
+    if (!Array.isArray(parsed)) return [];
+    return PACTS.filter((p) => parsed.includes(p.id)).map((p) => p.id);
+  } catch {
+    return [];
+  }
+}
+
+export function storePacts(pacts: readonly PactId[]): void {
+  try {
+    localStorage.setItem(PACTS_STORAGE_KEY, JSON.stringify(pacts));
+  } catch (error) {
+    console.warn(error);
+  }
+}

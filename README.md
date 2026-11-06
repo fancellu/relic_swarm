@@ -25,6 +25,11 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
   - **14 Base Weapons**: Magic Missiles, Orbiting Daggers, Flame Blast, Thunder Strike, Radiant Aura, Venom Spores, Glacial Shards, Gilded Chakram, Scattershot, Homing Missiles, Chain Lightning Gun, Gravity Well, Grenade Launcher, and the Inferno Lance.
   - **Level 5 + Level 5 Fusions**: Combine max-level weapons to form dual-aspect super-weapons (*Arcane Phantom Vortex*, *Cataclysmic Supernova*, *Plague Sanctuary*, *Shatterstorm*, *Frostbite Chakrams*, *Frostfire Prism*).
   - **Awakened Evolutions**: Pair maxed weapons with matching passives in boss chests for legendary forms (*Chrono Missiles*, *Hellfire Nova*, *Mjolnir's Conduit*, *Solar Eclipse*, *Necrotic Blight*, *Phantom Storm*, *Absolute Zero*, *Midas' Wrath*, *Phoenix Ray*).
+- **Pacts of the Swarm**: On the start screen, sign optional curses before a run for bigger rewards. Each active Pact adds **+25% Sanctum Gold** when the run's gold is banked (up to +75%), and your choice is remembered between runs:
+  - **Swarm Frenzy**: enemies move 20% faster.
+  - **Titan's Wrath**: the realm boss arrives as a pair of Abyssal Titans; both must fall to clear the stage.
+  - **Fragile Glass**: -50% Max HP.
+  - Toggle with the mouse, keys `1`–`3`, or gamepad D-pad Up/Down + `Y`.
 - **Persistent Sanctum Meta-Shop**: Bank earned gold across runs in your Sanctum Vault and permanently enhance your attributes (Health, Might, Movement Speed, Cooldown Haste, Magnet Radius, Greed, and Fate Rerolls).
 - **Arena Objectives & Spatial Hazards**: Dynamic world events break up passive kiting — capture glowing **Corrupted Obelisks** under intense enemy swarms for massive screen shockwaves, risk your life in sealed **Blood Trials** for elite chests, and trigger explosive **Elemental Ground Synergies**.
 - **Phase Dash**: Every fresh Sprint press with at least 35% stamina launches a 150 ms dodge burst with invulnerability, phasing straight through swarms and sorcerer orbs. It costs 35% stamina, so it's a clutch escape rather than a free pass.

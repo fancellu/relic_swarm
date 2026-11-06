@@ -38,6 +38,11 @@ import {
   LEGACY_GOLD_STORAGE_KEY,
   META_STORAGE_KEY,
   META_UPGRADES,
+  getPactGoldMult,
+  getStoredPacts,
+  PACTS,
+  PactId,
+  storePacts,
 } from './types/meta';
 import {ChestModal} from './ui/ChestModal';
 import {DraftModal} from './ui/DraftModal';
@@ -78,6 +83,7 @@ function createSimulation(heroIndex = 0): SimulationState {
     dashPhased: false,
     sprintLatched: false,
     momentum: 0,
+    pacts: [],
     heroAnim: {currentAction: 'IDLE', currentFrame: 0, timer: 0},
     xp: 0,
     nextXp: 50,
@@ -194,6 +200,15 @@ export default function App() {
   selectedCarryWeaponIdRef.current = selectedCarryWeaponId;
   const [pauseMenuFocusIndex, setPauseMenuFocusIndex] = useState(0);
   const [endScreenFocusIndex, setEndScreenFocusIndex] = useState(0);
+  // Pact of the Swarm: remembered curse selection and start-screen gamepad focus
+  const [activePacts, setActivePacts] = useState<PactId[]>(getStoredPacts);
+  const activePactsRef = useRef<PactId[]>(activePacts);
+  const [pactFocusIndex, setPactFocusIndex] = useState(0);
+  const pactFocusIndexRef = useRef(0);
+  const activePactShortNames = React.useMemo(
+    () => PACTS.filter((p) => activePacts.includes(p.id)).map((p) => p.short),
+    [activePacts],
+  );
   const [activeObjective, setActiveObjective] = useState<{type: 'OBELISK' | 'BLOOD_TRIAL' | 'MERCHANT'; progress: number} | null>(null);
   const [isBossActive, setIsBossActive] = useState(false);
   const isBossActiveRef = useRef(false);
@@ -353,12 +368,25 @@ export default function App() {
       console.warn(error);
     }
   }, []);
+  const togglePact = useCallback((id: PactId) => {
+    const current = activePactsRef.current;
+    const next = PACTS.filter((p) => (p.id === id ? !current.includes(id) : current.includes(p.id))).map((p) => p.id);
+    activePactsRef.current = next;
+    setActivePacts(next);
+    storePacts(next);
+    gameAudio.playCrispClick();
+  }, []);
+  const focusPact = useCallback((index: number) => {
+    pactFocusIndexRef.current = index;
+    setPactFocusIndex(index);
+  }, []);
   const bankRunGold = useCallback(() => {
     if (runBankedRef.current) return;
     const gold = simRef.current.gold;
     runBankedRef.current = true;
     if (gold <= 0) return;
-    const total = getStoredGold() + gold;
+    // Pact of the Swarm: each active curse adds +25% to the banked gold
+    const total = getStoredGold() + Math.round(gold * getPactGoldMult(simRef.current.pacts || []));
     savePersistentData(total, metaLevelsRef.current);
   }, [savePersistentData]);
   const returnToStart = useCallback(() => {
@@ -388,6 +416,7 @@ export default function App() {
 
   const initGame = useCallback((heroIndex = selectedHeroIndex) => {
     const sim = createSimulation(heroIndex);
+    sim.pacts = [...activePactsRef.current]; // before derived stats so Fragile Glass applies to starting HP
     const stats = calculateDerivedStats(sim, metaLevelsRef.current);
     sim.maxHp = stats.maxHp;
     sim.hp = stats.maxHp;
@@ -848,10 +877,19 @@ export default function App() {
         } else if (navRight) {
           setSelectedHeroIndex((index) => (index + 1) % HEROES.length);
           navCooldownRef.current = 0.2;
+        } else if (navUp) {
+          focusPact((pactFocusIndexRef.current + PACTS.length - 1) % PACTS.length);
+          navCooldownRef.current = 0.2;
+        } else if (navDown) {
+          focusPact((pactFocusIndexRef.current + 1) % PACTS.length);
+          navCooldownRef.current = 0.2;
         } else if (confirmJustPressed) {
           navCooldownRef.current = 0.3;
           initGame();
-        } else if (xJustPressed || yJustPressed) {
+        } else if (yJustPressed) {
+          togglePact(PACTS[pactFocusIndexRef.current].id);
+          navCooldownRef.current = 0.2;
+        } else if (xJustPressed) {
           openSanctum();
         }
       }
@@ -1150,10 +1188,21 @@ export default function App() {
     if (hasActiveBoss && boss) {
       if (sim.runTimer - lastBossHudUpdateRef.current >= 0.1) {
         lastBossHudUpdateRef.current = sim.runTimer;
+        // Titan's Wrath: twin Titans share one combined health bar
+        let bossHp = 0;
+        let bossMaxHp = 0;
+        let bossCount = 0;
+        for (let b = 0; b < sim.enemies.length; b++) {
+          const e = sim.enemies[b];
+          if (!e.isBoss) continue;
+          bossHp += Math.max(0, e.hp);
+          bossMaxHp += e.maxHp;
+          bossCount++;
+        }
         setBossHudState({
-          name: 'Abyssal Titan',
-          hp: Math.max(0, Math.round(boss.hp)),
-          maxHp: boss.maxHp,
+          name: bossCount > 1 ? 'Twin Abyssal Titans' : 'Abyssal Titan',
+          hp: Math.round(bossHp),
+          maxHp: bossMaxHp,
           shielded: sim.bossShieldActive,
           minionsRemaining: sim.bossMinionsRemaining,
           minionsInitial: sim.bossMinionsInitial,
@@ -1438,6 +1487,12 @@ export default function App() {
           }
           if (event.key === 'h' || event.key === 'H' || event.key === '?') {
             setIsHowToPlayOpen(true);
+            return;
+          }
+          const pactIndex = ['1', '2', '3'].indexOf(event.key);
+          if (pactIndex >= 0 && pactIndex < PACTS.length) {
+            focusPact(pactIndex);
+            togglePact(PACTS[pactIndex].id);
             return;
           }
           if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') {
@@ -1852,6 +1907,7 @@ export default function App() {
         currentStamina={currentStamina}
         maxStaminaDisplay={maxStaminaDisplay}
         momentum={momentumDisplay}
+        activePactNames={activePactShortNames}
         level={gameState.level}
         stage={simRef.current.stage || 1}
         stageName={levelManager.getModifiers(simRef.current.stage || 1).theme.name}
@@ -1893,6 +1949,10 @@ export default function App() {
         onOpenSanctumShop={openSanctum}
         onStartGame={initGame}
         onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
+        activePacts={activePacts}
+        onTogglePact={togglePact}
+        pactFocusIndex={pactFocusIndex}
+        onPactFocus={focusPact}
       />
       <SanctumShop
         isOpen={isSanctumOpen}
@@ -2013,6 +2073,7 @@ export default function App() {
         level={gameState.level}
         score={gameState.score}
         runGold={runGold}
+        pactBonusPercent={Math.round((getPactGoldMult(simRef.current.pacts || []) - 1) * 100)}
         persistentGold={persistentGold}
         endScreenFocusIndex={endScreenFocusIndex}
         onSelectIndex={(index) => {

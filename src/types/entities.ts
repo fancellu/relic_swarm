@@ -261,6 +261,8 @@ export interface SimulationState {
   sprintLatched: boolean;
   // Kinetic Charge: 0-100 Momentum built by sprinting; releases a shockwave when a full sprint ends
   momentum: number;
+  // Pact of the Swarm curses active this run (PactId values from types/meta)
+  pacts: string[];
   heroAnim: SpriteAnimationState;
   xp: number;
   nextXp: number;

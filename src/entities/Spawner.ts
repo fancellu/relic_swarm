@@ -2,7 +2,7 @@ import {getConfig} from '../constants';
 import {SpriteRenderer} from '../SpriteRenderer';
 import {gameAudio} from '../../utils/helper';
 import {addDrop, EnemyEntity, SimulationState} from '../types/entities';
-import {MAX_WORLD_CHESTS} from '../types/meta';
+import {MAX_WORLD_CHESTS, SWARM_FRENZY_SPEED_MULT} from '../types/meta';
 import {DerivedStats} from './Player';
 import {stageManager} from '../core/Stage';
 
@@ -161,6 +161,25 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
     stageManager.resolveCircleCollision(bossEnemy, bossEnemy.size);
     sim.enemies.push(bossEnemy);
 
+    // Pact of the Swarm: Titan's Wrath summons a twin Titan on the opposite flank
+    if (sim.pacts?.includes('titans_wrath')) {
+      const twin = createEnemy(
+        sim.nextEnemyId++,
+        'titan',
+        sim.x - Math.cos(angle) * 550,
+        sim.y - Math.sin(angle) * 550,
+        bossHp,
+        90,
+        Math.round(30 * enemyDamageMult),
+        55,
+        '#dc2626',
+        true,
+        true,
+      );
+      stageManager.resolveCircleCollision(twin, twin.size);
+      sim.enemies.push(twin);
+    }
+
     // Ensure escort minion swarm around the boss
     const minEscort = (getConfig('bossMinionEscortMin') as number) || 60;
     const existingMinions = sim.enemies.filter((e) => !e.isBoss);
@@ -306,6 +325,8 @@ export function updateEnemies(
   onPlayerHit: (damage: number) => void,
 ): boolean {
   let playerDied = false;
+  // Pact of the Swarm: Swarm Frenzy speeds up every enemy
+  const pactSpeedMult = sim.pacts?.includes('swarm_frenzy') ? SWARM_FRENZY_SPEED_MULT : 1;
 
   for (let i = sim.enemies.length - 1; i >= 0; i--) {
     const enemy = sim.enemies[i];
@@ -354,6 +375,7 @@ export function updateEnemies(
     if (sim.inObeliskZone) {
       effectiveSpeed *= 1.3;
     }
+    effectiveSpeed *= pactSpeedMult;
 
     // Death Check
     if (enemy.hp <= 0) {
@@ -392,7 +414,34 @@ export function updateEnemies(
       let currentWorldChests = 0;
       for (let d = 0; d < sim.drops.length; d++) { if (sim.drops[d].type === 'chest') currentWorldChests++; }
 
+      // Titan's Wrath: the stage is only won once every Titan has fallen
+      let otherBossAlive = false;
       if (enemy.isBoss) {
+        for (let b = 0; b < sim.enemies.length; b++) {
+          const other = sim.enemies[b];
+          if (other !== enemy && other.isBoss && other.hp > 0) {
+            otherBossAlive = true;
+            break;
+          }
+        }
+      }
+
+      if (enemy.isBoss && otherBossAlive) {
+        // First twin down: still pays out its spoils, but the fight goes on
+        gameAudio.playPowerupChime();
+        sim.gold += 350;
+        spawnDamageNumber(enemy.x, enemy.y - 40, 'ONE TITAN FALLS! +350g', '#facc15');
+        if (currentWorldChests < MAX_WORLD_CHESTS) {
+          addDrop(sim, {
+            id: sim.nextDropId++,
+            type: 'chest',
+            x: enemy.x,
+            y: enemy.y,
+            value: 100,
+            attracted: false,
+          });
+        }
+      } else if (enemy.isBoss) {
         sim.bossDefeated = true;
         gameAudio.playPowerupChime();
         const victoryBonus = 350;

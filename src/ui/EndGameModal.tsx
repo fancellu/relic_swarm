@@ -12,6 +12,7 @@ export interface EndGameModalProps {
   level: number;
   score: number;
   runGold: number;
+  pactBonusPercent?: number;
   persistentGold: number;
   endScreenFocusIndex: number;
   onSelectIndex: (idx: number) => void;
@@ -28,6 +29,7 @@ export const EndGameModal: React.FC<EndGameModalProps> = ({
   level,
   score,
   runGold,
+  pactBonusPercent = 0,
   persistentGold,
   endScreenFocusIndex,
   onSelectIndex,
@@ -58,6 +60,11 @@ export const EndGameModal: React.FC<EndGameModalProps> = ({
             <div className="flex items-center gap-1.5 font-bold text-amber-300">
               <Coins size={15} />
               <span>Gold Earned: +{runGold}g</span>
+              {pactBonusPercent > 0 && (
+                <span className="text-rose-300 font-semibold">
+                  (+{pactBonusPercent}% Pact → {Math.round(runGold * (1 + pactBonusPercent / 100))}g banked)
+                </span>
+              )}
             </div>
             <div className="font-bold text-amber-400">
               Vault: {persistentGold}g
@@ -137,6 +144,11 @@ export const EndGameModal: React.FC<EndGameModalProps> = ({
           <div className="flex items-center gap-1.5 font-bold text-amber-300">
             <Coins size={15} />
             <span>Gold Earned: +{runGold}g</span>
+              {pactBonusPercent > 0 && (
+                <span className="text-rose-300 font-semibold">
+                  (+{pactBonusPercent}% Pact → {Math.round(runGold * (1 + pactBonusPercent / 100))}g banked)
+                </span>
+              )}
           </div>
           <div className="font-bold text-amber-400">
             Vault: {persistentGold}g
