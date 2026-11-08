@@ -5,6 +5,13 @@ import {applyEnemySlow} from './Player';
 import {applyEnemyPoison} from './Weapons';
 import {damageEnemy, isEnemyInvulnerable, handleEnemyInvulnerableDeflect} from './Spawner';
 import {getBoosterTrailColor, hitEnemy} from './Boosters';
+import {
+  isProtectedSignatureType,
+  onSignatureProjectileExpire,
+  SIGNATURE_PROJECTILE_TYPES,
+  spawnAcidPool,
+  updateSignatureProjectile,
+} from './SignatureWeapons';
 import {stageManager} from '../core/Stage';
 
 // --- Inferno Lance beam tuning ---
@@ -225,7 +232,8 @@ export function updateProjectiles(
         type !== 'chakram' &&
         type !== 'gravity_well' &&
         type !== 'grenade' &&
-        type !== 'beam'
+        type !== 'beam' &&
+        !isProtectedSignatureType(type)
       ) {
         removeIdx = p;
         break;
@@ -538,6 +546,8 @@ export function updateProjectiles(
         const randR = proj.radius * 0.75;
         spawnParticles(proj.x + Math.cos(randAngle) * randR, proj.y + Math.sin(randAngle) * randR, 1, proj.color, 45);
       }
+    } else if (SIGNATURE_PROJECTILE_TYPES.has(proj.type)) {
+      updateSignatureProjectile(sim, proj, dt, spawnDamageNumber, spawnParticles);
     } else if (proj.type === 'beam') {
       updateBeam(sim, proj, dt, spawnDamageNumber, spawnParticles);
     } else if (proj.type === 'grenade') {
@@ -645,6 +655,10 @@ export function updateProjectiles(
             if (proj.type === 'gilded_disc' && Math.random() < 0.25) {
               gameAudio.playCoinPickup();
             }
+            if (proj.sourceWeapon === 'blight_seekers') {
+              // Blight Seekers burst into a corrosive pool where they strike
+              spawnAcidPool(sim, enemy.x, enemy.y, proj.damage * 0.9, 85, 4, 'blight_seekers');
+            }
 
             // Thermal Shock: Glacial / Ice hits a burning enemy
             if ((proj.type === 'ice' || proj.inflictsSlow) && enemy.burnTimer > 0) {
@@ -716,6 +730,9 @@ export function updateProjectiles(
     }
 
     if (proj.duration <= 0) {
+      if (SIGNATURE_PROJECTILE_TYPES.has(proj.type)) {
+        onSignatureProjectileExpire(sim, proj, spawnDamageNumber, spawnParticles);
+      }
       if (proj.type === 'gravity_well') {
         gameAudio.playChiptuneExplosion();
         const isEventHorizon = proj.sourceWeapon === 'event_horizon';

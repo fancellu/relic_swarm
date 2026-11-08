@@ -981,6 +981,173 @@ export function renderGame(
       ctx.fill();
 
       ctx.restore();
+    } else if (proj.type === 'axe') {
+      // Spinning axe: its own icon rotated around its centre
+      const axeSize = Math.max(40, proj.radius * 3);
+      ctx.save();
+      ctx.translate(proj.x, proj.y);
+      ctx.rotate(proj.rotation || 0);
+      drawAsset(
+        ctx,
+        assets[SIG_ASSET_KEYS[proj.sourceWeapon || 'whirling_axe']],
+        -axeSize / 2,
+        -axeSize / 2,
+        axeSize,
+        axeSize,
+        (fCtx) => {
+          fCtx.fillStyle = proj.color;
+          fCtx.beginPath();
+          fCtx.arc(0, 0, Math.max(0, proj.radius), 0, Math.PI * 2);
+          fCtx.fill();
+        },
+      );
+      ctx.restore();
+    } else if (proj.type === 'slash') {
+      const slashT = 1 - Math.max(0, proj.duration) / proj.maxDuration;
+      const slashRot = proj.rotation || 0;
+      const slashHalf = proj.arcAngle || 0.8;
+      ctx.save();
+      ctx.lineCap = 'round';
+      if (proj.vx !== 0 || proj.vy !== 0) {
+        // Flying crescent (Dawnbreaker): convex edge leads
+        ctx.globalAlpha = Math.min(1, proj.duration / 0.2);
+        const behind = proj.radius * 0.8;
+        const cxs = proj.x - Math.cos(slashRot) * behind;
+        const cys = proj.y - Math.sin(slashRot) * behind;
+        ctx.strokeStyle = proj.color;
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        ctx.arc(cxs, cys, proj.radius * 1.3, slashRot - slashHalf, slashRot + slashHalf);
+        ctx.stroke();
+        ctx.strokeStyle = '#fffbeb';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(cxs, cys, proj.radius * 1.3, slashRot - slashHalf, slashRot + slashHalf);
+        ctx.stroke();
+      } else {
+        // Sweep around the hero: a bright crescent that expands and fades
+        ctx.globalAlpha = 1 - slashT;
+        const sweepR = proj.radius * (0.6 + 0.4 * slashT);
+        ctx.strokeStyle = proj.color;
+        ctx.lineWidth = 16 * (1 - slashT) + 4;
+        ctx.beginPath();
+        ctx.arc(proj.x, proj.y, sweepR, slashRot - slashHalf, slashRot + slashHalf);
+        ctx.stroke();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 5 * (1 - slashT) + 1.5;
+        ctx.beginPath();
+        ctx.arc(proj.x, proj.y, sweepR, slashRot - slashHalf, slashRot + slashHalf);
+        ctx.stroke();
+      }
+      ctx.restore();
+    } else if (proj.type === 'meteor') {
+      const meteorT = Math.min(1, Math.max(0, 1 - proj.duration / proj.maxDuration));
+      // Ground warning: a growing shadow inside the blast outline
+      ctx.save();
+      ctx.globalAlpha = 0.22 + 0.35 * meteorT;
+      ctx.fillStyle = proj.color;
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, Math.max(0, proj.radius * (0.25 + 0.75 * meteorT)), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.55 + 0.4 * meteorT;
+      ctx.strokeStyle = proj.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, Math.max(0, proj.radius), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      // The rock itself, falling from above
+      const meteorSize = 44 + proj.radius * 0.45;
+      const meteorY = proj.y - (1 - meteorT) * 320;
+      drawAsset(
+        ctx,
+        assets[SIG_ASSET_KEYS[proj.sourceWeapon || 'meteor_storm']],
+        proj.x - meteorSize / 2,
+        meteorY - meteorSize / 2,
+        meteorSize,
+        meteorSize,
+        (fCtx) => {
+          fCtx.fillStyle = proj.color;
+          fCtx.beginPath();
+          fCtx.arc(proj.x, meteorY, 14, 0, Math.PI * 2);
+          fCtx.fill();
+        },
+      );
+    } else if (proj.type === 'flask') {
+      const flaskT = Math.min(1, Math.max(0, 1 - proj.duration / proj.maxDuration));
+      const flaskPeak = proj.arcPeakHeight || 60;
+      const flaskAlt = 4 * flaskPeak * flaskT * (1 - flaskT);
+      ctx.save();
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.beginPath();
+      ctx.ellipse(proj.x, proj.y, proj.radius * 0.9, proj.radius * 0.45, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.translate(proj.x, proj.y - flaskAlt);
+      ctx.rotate(proj.rotation || 0);
+      const flaskSize = proj.radius * 3.4;
+      drawAsset(
+        ctx,
+        assets[SIG_ASSET_KEYS[proj.sourceWeapon || 'corrosive_flask']],
+        -flaskSize / 2,
+        -flaskSize / 2,
+        flaskSize,
+        flaskSize,
+        (fCtx) => {
+          fCtx.fillStyle = proj.color;
+          fCtx.beginPath();
+          fCtx.arc(0, 0, Math.max(0, proj.radius), 0, Math.PI * 2);
+          fCtx.fill();
+        },
+      );
+      ctx.restore();
+    } else if (proj.type === 'acid_pool') {
+      const poolFade = Math.min(1, proj.duration / 0.6);
+      ctx.save();
+      ctx.globalAlpha = 0.42 * poolFade;
+      ctx.fillStyle = '#4d7c0f';
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, Math.max(0, proj.radius), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.75 * poolFade;
+      ctx.strokeStyle = '#a3e635';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, Math.max(0, proj.radius), 0, Math.PI * 2);
+      ctx.stroke();
+      // Bubbling surface
+      ctx.fillStyle = '#d9f99d';
+      for (let b = 0; b < 5; b++) {
+        const ang = proj.id * 1.7 + b * 1.26;
+        const dist = proj.radius * 0.6 * (0.55 + 0.45 * Math.sin(sim.runTimer * 2 + b));
+        ctx.beginPath();
+        ctx.arc(proj.x + Math.cos(ang) * dist, proj.y + Math.sin(ang) * dist, 2.5 + 1.5 * Math.sin(sim.runTimer * 5 + b * 2), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    } else if (proj.type === 'astral_orb') {
+      const orbBob = Math.sin(sim.runTimer * 3 + proj.id) * 2;
+      const orbSize = proj.radius * 3.4;
+      ctx.save();
+      ctx.globalAlpha = 0.22 + 0.1 * Math.sin(sim.runTimer * 4 + proj.id);
+      ctx.fillStyle = proj.color;
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y + orbBob, Math.max(0, proj.radius * 1.9), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      drawAsset(
+        ctx,
+        assets[SIG_ASSET_KEYS[proj.sourceWeapon || 'astral_orb']],
+        proj.x - orbSize / 2,
+        proj.y + orbBob - orbSize / 2,
+        orbSize,
+        orbSize,
+        (fCtx) => {
+          fCtx.fillStyle = proj.color;
+          fCtx.beginPath();
+          fCtx.arc(proj.x, proj.y + orbBob, Math.max(0, proj.radius), 0, Math.PI * 2);
+          fCtx.fill();
+        },
+      );
     } else if (proj.type === 'grenade') {
       const progress = Math.min(1, Math.max(0, 1 - proj.duration / proj.maxDuration));
       const peakHeight = proj.arcPeakHeight || 60;
@@ -1225,6 +1392,25 @@ export function renderGame(
 
 // How long the ENRAGED! label lives in total (must match ENRAGE_LABEL_SECONDS in Spawner.ts); drives its pop-in
 const ENRAGE_LABEL_TOTAL = 6;
+
+// Asset keys for hero Signature Weapon icons, keyed by weapon id (module constant: no per-frame string building)
+const SIG_ASSET_KEYS: Record<string, string> = {
+  whirling_axe: 'sig_whirling_axe',
+  bloodreaver: 'sig_bloodreaver',
+  thunder_cleaver: 'sig_thunder_cleaver',
+  spectral_greatsword: 'sig_spectral_greatsword',
+  tempest_oath: 'sig_tempest_oath',
+  dawnbreaker: 'sig_dawnbreaker',
+  meteor_storm: 'sig_meteor_storm',
+  armageddon: 'sig_armageddon',
+  collapsing_star: 'sig_collapsing_star',
+  corrosive_flask: 'sig_corrosive_flask',
+  pandemic_cauldron: 'sig_pandemic_cauldron',
+  blight_seekers: 'sig_blight_seekers',
+  astral_orb: 'sig_astral_orb',
+  astral_singularity: 'sig_astral_singularity',
+  storm_orb: 'sig_storm_orb',
+};
 
 // Asset keys for Booster pickup icons (module constant: no per-frame string building)
 const BOOSTER_ASSET_KEYS: Record<string, string> = {

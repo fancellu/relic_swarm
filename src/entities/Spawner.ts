@@ -48,10 +48,11 @@ const REGEN_UNLOCK_TIME = 90;
 const REGEN_CHANCE = 0.06;
 const REGEN_PERCENT_PER_SEC = 0.06; // of max HP, once REGEN_DELAY has passed without damage
 // Booster drops: uncommon pickups assigned to a weapon. Mostly come from tough enemies.
-const BOOSTER_BASE_CHANCE = 0.002;
-const BOOSTER_ELITE_BONUS = 0.01;
+const BOOSTER_BASE_CHANCE = 0.001;
+const BOOSTER_ELITE_BONUS = 0.002;
 const BOOSTER_PER_TRAIT_BONUS = 0.08;
 const BOOSTER_BOSS_DROPS = 2;
+const BOOSTER_MAX_ON_FIELD = 2; // never more than this many unclaimed boosters lying around: keeps them special
 const TANK_XP_PER_TRAIT = 1.5; // each trait adds this fraction of a gem's base value
 
 // Enrage: the first time a non-boss enemy is wounded below the threshold it gets one roll to fight back harder.
@@ -681,6 +682,12 @@ export function updateEnemies(
         const boosterChance =
           BOOSTER_BASE_CHANCE + (enemy.isElite ? BOOSTER_ELITE_BONUS : 0) + tankTraits * BOOSTER_PER_TRAIT_BONUS;
         if (Math.random() < boosterChance) boosterDrops = 1;
+      }
+      if (boosterDrops > 0) {
+        // Field cap: only drop into the free slots (a booster must be claimed before more can appear)
+        let onField = 0;
+        for (let d = 0; d < sim.drops.length; d++) if (sim.drops[d].type === 'booster') onField++;
+        boosterDrops = Math.min(boosterDrops, Math.max(0, BOOSTER_MAX_ON_FIELD - onField));
       }
       for (let b = 0; b < boosterDrops; b++) {
         addDrop(sim, {

@@ -5,6 +5,7 @@ import {spatialGrid} from '../core/spatial';
 import {applyEnemySlow, DerivedStats} from './Player';
 import {isEnemyInvulnerable, handleEnemyInvulnerableDeflect} from './Spawner';
 import {hitEnemy} from './Boosters';
+import {castSignatureWeapon, SIGNATURE_WEAPON_IDS} from './SignatureWeapons';
 
 export function applyEnemyPoison(enemy: EnemyEntity, dps: number, duration = 4.0): void {
   enemy.poisonDps = Math.max(enemy.poisonDps, dps);
@@ -49,6 +50,12 @@ export function updateWeaponCasting(
 
     const baseCd = def.cooldown || 1.0;
     const actualCd = baseCd * (1 - stats.cdr);
+
+    // Hero signature weapons (Whirling Axe, Greatsword, Meteor Storm, Flask, Orb and their upgrades)
+    if (SIGNATURE_WEAPON_IDS.has(wep.id)) {
+      castSignatureWeapon(sim, wep, def, stats, actualCd, spawnDamageNumber, spawnParticles);
+      return;
+    }
 
     // --- Magic Missile & Chrono Missiles ---
     if (wep.id === 'magic_missile' || wep.id === 'chrono_missiles') {

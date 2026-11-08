@@ -94,7 +94,12 @@ LocalStorage keys must maintain backward compatibility:
 - A **discrete weapon hit** must call `hitEnemy(sim, enemy, amount, weaponId)` from `src/entities/Boosters.ts`. It wraps `damageEnemy()` and applies the weapon's Boosters (burn, poison, frost, knockback) from `sim.weapons[].boosters`. Pass the **source weapon id** (`proj.sourceWeapon` / `wep.id`).
 - **Do not** use it for continuous chip damage (spore clouds, flame pools, conduit arcs), DoT ticks, Thermal Shock or other reaction bursts, Kinetic Burst, or holy bombs. Those stay on plain `damageEnemy()` so Boosters never proc every frame or loop on themselves.
 - DoT boosters scale from the **pre-armour** hit, so they remain the counter to Armoured enemies.
-- Booster drops (`drop.type === 'booster'`) are never pruned by the drop caps and are **never attracted** (the player must touch them; keep them out of every magnet/vacuum/pull effect), and evolutions/fusions must call `inheritBoosters()` so weapons keep their boosters.
+- Booster drops (`drop.type === 'booster'`) are never pruned by the drop caps and are **never attracted**, with a hard cap of 2 unclaimed boosters on the field (`BOOSTER_MAX_ON_FIELD`) (the player must touch them; keep them out of every magnet/vacuum/pull effect), and evolutions/fusions must call `inheritBoosters()` so weapons keep their boosters.
+
+### 2.7d Hero Signature Weapons
+- `ItemDef.heroId` makes a weapon **hero-exclusive**: `generateDraftChoices` never offers it (nor its evolution or fusion) to another hero. Each hero has exactly one signature family: base weapon -> `evolvesFrom` evolution -> fusion.
+- Evolutions with `evolvesFrom` and all fusions with `consumedWeapons` are handled **generically** in `Draft.ts` (no per-weapon `if` chains): the base weapon at L5 plus the base weapon's `evolutionPair` relic, or every consumed weapon at L5.
+- Their mechanics live in `src/entities/SignatureWeapons.ts` (casting, per-frame projectile behaviour, expiry), dispatched from `updateWeaponCasting` and `updateProjectiles` by `SIGNATURE_WEAPON_IDS` / `SIGNATURE_PROJECTILE_TYPES`. Discrete hits use `hitEnemy()`; acid-pool chip uses `damageEnemy(..., 0)`. Per-frame callbacks use module-level context objects (no closures or arrays allocated per frame). Icons come from `design/make_signature_icons.py`.
 
 ### 2.8 Zero-Allocation Simulation Loop & Hard Entity Caps
 1. **Decouple React State Dispatches from Frame Loops (60–144 Hz)**:

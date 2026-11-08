@@ -565,6 +565,36 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                     Splits the lance into 3 frost-sheathed fire beams that ignite foes, then rupture them with repeated Thermal Shock.
                   </div>
                 </div>
+
+                <div className="bg-slate-900/80 p-2.5 rounded-xl border border-amber-900/40">
+                  <div className="font-bold text-amber-300">Thunder Cleaver <span className="text-[9px] text-amber-500 font-semibold">★ Thorgar only</span></div>
+                  <div className="text-slate-400 text-[10px]">Whirling Axe (Lv 5) + Chain Lightning Gun (Lv 5)</div>
+                  <div className="text-slate-300 text-[10px] mt-1">Storm-charged axes whose every strike can arc lightning into a nearby foe.</div>
+                </div>
+
+                <div className="bg-slate-900/80 p-2.5 rounded-xl border border-amber-900/40">
+                  <div className="font-bold text-amber-300">Dawnbreaker <span className="text-[9px] text-amber-500 font-semibold">★ Roland only</span></div>
+                  <div className="text-slate-400 text-[10px]">Spectral Greatsword (Lv 5) + Radiant Aura (Lv 5)</div>
+                  <div className="text-slate-300 text-[10px] mt-1">Each holy sweep also hurls a piercing crescent of dawnlight across the field.</div>
+                </div>
+
+                <div className="bg-slate-900/80 p-2.5 rounded-xl border border-amber-900/40">
+                  <div className="font-bold text-amber-300">Collapsing Star <span className="text-[9px] text-amber-500 font-semibold">★ Ignis only</span></div>
+                  <div className="text-slate-400 text-[10px]">Meteor Storm (Lv 5) + Gravity Well (Lv 5)</div>
+                  <div className="text-slate-300 text-[10px] mt-1">Meteors open miniature singularities that pull survivors in before imploding.</div>
+                </div>
+
+                <div className="bg-slate-900/80 p-2.5 rounded-xl border border-amber-900/40">
+                  <div className="font-bold text-amber-300">Blight Seekers <span className="text-[9px] text-amber-500 font-semibold">★ Mortis only</span></div>
+                  <div className="text-slate-400 text-[10px]">Corrosive Flask (Lv 5) + Homing Missiles (Lv 5)</div>
+                  <div className="text-slate-300 text-[10px] mt-1">Homing acid missiles that burst into corrosive pools on contact.</div>
+                </div>
+
+                <div className="bg-slate-900/80 p-2.5 rounded-xl border border-amber-900/40">
+                  <div className="font-bold text-amber-300">Storm Orb <span className="text-[9px] text-amber-500 font-semibold">★ Vael only</span></div>
+                  <div className="text-slate-400 text-[10px]">Astral Orb (Lv 5) + Thunder Strike (Lv 5)</div>
+                  <div className="text-slate-300 text-[10px] mt-1">The orb calls lightning down onto every enemy near it.</div>
+                </div>
               </div>
             </div>
 
@@ -658,6 +688,36 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                   <div className="font-bold text-purple-300">Phoenix Ray</div>
                   <div className="text-slate-400 text-[10px]">Inferno Lance (Lv 5) + Vitality Charm</div>
                   <div className="text-slate-300 text-[10px] mt-1">A colossal, near-unbroken solar beam that burns through 5 foes and heals you as it sears.</div>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
+                  <div className="font-bold text-purple-300">Bloodreaver <span className="text-[9px] text-purple-400 font-semibold">★ Thorgar only</span></div>
+                  <div className="text-slate-400 text-[10px]">Whirling Axe (Lv 5) + Vitality Charm</div>
+                  <div className="text-slate-300 text-[10px] mt-1">Four blood-forged axes that cleave wider and drink the life of everything they hit.</div>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
+                  <div className="font-bold text-purple-300">Tempest Oath <span className="text-[9px] text-purple-400 font-semibold">★ Roland only</span></div>
+                  <div className="text-slate-400 text-[10px]">Spectral Greatsword (Lv 5) + Swift Boots</div>
+                  <div className="text-slate-300 text-[10px] mt-1">A full whirlwind that sweeps every foe around you twice.</div>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
+                  <div className="font-bold text-purple-300">Armageddon <span className="text-[9px] text-purple-400 font-semibold">★ Ignis only</span></div>
+                  <div className="text-slate-400 text-[10px]">Meteor Storm (Lv 5) + Might Talisman</div>
+                  <div className="text-slate-300 text-[10px] mt-1">A rain of colossal meteors that leave pools of fire where they land.</div>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
+                  <div className="font-bold text-purple-300">Pandemic Cauldron <span className="text-[9px] text-purple-400 font-semibold">★ Mortis only</span></div>
+                  <div className="text-slate-400 text-[10px]">Corrosive Flask (Lv 5) + Toxic Vial</div>
+                  <div className="text-slate-300 text-[10px] mt-1">Huge, long-lasting acid pools that dissolve armour and spread plague.</div>
+                </div>
+
+                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
+                  <div className="font-bold text-purple-300">Astral Singularity <span className="text-[9px] text-purple-400 font-semibold">★ Vael only</span></div>
+                  <div className="text-slate-400 text-[10px]">Astral Orb (Lv 5) + Attraction Rune</div>
+                  <div className="text-slate-300 text-[10px] mt-1">Orbs of collapsed starlight drag enemies inward while firing relentless bolts.</div>
                 </div>
               </div>
             </div>

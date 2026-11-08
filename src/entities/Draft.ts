@@ -34,94 +34,15 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
       .filter((w) => w.level >= 5 || sim.fusionCatalystAvailable)
       .map((w) => w.id);
 
-    // 1. Arcane Phantom Vortex (Missile + Daggers)
-    if (
-      wepIds.includes('magic_missile') &&
-      wepIds.includes('spinning_dagger') &&
-      !sim.weapons.some((w) => w.id === 'arcane_phantom_vortex') &&
-      !sim.bannedItemIds?.includes('arcane_phantom_vortex')
-    ) {
-      pool.push(ITEM_DEFS.arcane_phantom_vortex);
-    }
-
-    // 2. Cataclysmic Supernova (Flame Blast + Thunder Strike)
-    if (
-      wepIds.includes('flame_blast') &&
-      wepIds.includes('thunder_strike') &&
-      !sim.weapons.some((w) => w.id === 'cataclysmic_nova') &&
-      !sim.bannedItemIds?.includes('cataclysmic_nova')
-    ) {
-      pool.push(ITEM_DEFS.cataclysmic_nova);
-    }
-
-    // 3. Plague Sanctuary (Radiant Aura + Toxic Spores)
-    if (
-      wepIds.includes('radiant_aura') &&
-      wepIds.includes('venom_spores') &&
-      !sim.weapons.some((w) => w.id === 'toxic_sanctuary') &&
-      !sim.bannedItemIds?.includes('toxic_sanctuary')
-    ) {
-      pool.push(ITEM_DEFS.toxic_sanctuary);
-    }
-
-    // 4. Shatterstorm (Glacial Shards + Thunder Strike)
-    if (
-      wepIds.includes('frost_shard') &&
-      wepIds.includes('thunder_strike') &&
-      !sim.weapons.some((w) => w.id === 'shatterstorm') &&
-      !sim.bannedItemIds?.includes('shatterstorm')
-    ) {
-      pool.push(ITEM_DEFS.shatterstorm);
-    }
-
-    // 5. Frostbite Chakrams (Glacial Shards + Orbiting Daggers)
-    if (
-      wepIds.includes('frost_shard') &&
-      wepIds.includes('spinning_dagger') &&
-      !sim.weapons.some((w) => w.id === 'frostbite_chakrams') &&
-      !sim.bannedItemIds?.includes('frostbite_chakrams')
-    ) {
-      pool.push(ITEM_DEFS.frostbite_chakrams);
-    }
-
-    // 6. Stormfront Barrage (Scattershot + Homing Missiles)
-    if (
-      wepIds.includes('scattershot') &&
-      wepIds.includes('homing_missiles') &&
-      !sim.weapons.some((w) => w.id === 'stormfront_barrage') &&
-      !sim.bannedItemIds?.includes('stormfront_barrage')
-    ) {
-      pool.push(ITEM_DEFS.stormfront_barrage);
-    }
-
-    // 7. Cryo Singularity (Gravity Well + Glacial Shards)
-    if (
-      wepIds.includes('gravity_well') &&
-      wepIds.includes('frost_shard') &&
-      !sim.weapons.some((w) => w.id === 'cryo_singularity') &&
-      !sim.bannedItemIds?.includes('cryo_singularity')
-    ) {
-      pool.push(ITEM_DEFS.cryo_singularity);
-    }
-
-    // 8. Napalm Siege Mortar (Grenade Launcher + Flame Blast)
-    if (
-      wepIds.includes('grenade_launcher') &&
-      wepIds.includes('flame_blast') &&
-      !sim.weapons.some((w) => w.id === 'napalm_mortar') &&
-      !sim.bannedItemIds?.includes('napalm_mortar')
-    ) {
-      pool.push(ITEM_DEFS.napalm_mortar);
-    }
-
-    // 9. Frostfire Prism (Inferno Lance + Glacial Shards)
-    if (
-      wepIds.includes('inferno_lance') &&
-      wepIds.includes('frost_shard') &&
-      !sim.weapons.some((w) => w.id === 'frostfire_prism') &&
-      !sim.bannedItemIds?.includes('frostfire_prism')
-    ) {
-      pool.push(ITEM_DEFS.frostfire_prism);
+    // Every fusion def lists the weapons it consumes: offer it when all are ready (L5, or any level with a
+    // Fusion Catalyst), it is not owned or banned, and it belongs to this hero (if hero-exclusive).
+    const fusionDefs = Object.values(ITEM_DEFS);
+    for (let f = 0; f < fusionDefs.length; f++) {
+      const fusion = fusionDefs[f];
+      if (!fusion.isFusion || !fusion.consumedWeapons) continue;
+      if (fusion.heroId && fusion.heroId !== sim.hero?.id) continue;
+      if (sim.weapons.some((w) => w.id === fusion.id) || sim.bannedItemIds?.includes(fusion.id)) continue;
+      if (fusion.consumedWeapons.every((id) => wepIds.includes(id))) pool.push(fusion);
     }
   }
 
@@ -130,8 +51,20 @@ export function generateDraftChoices(sim: SimulationState): ItemDef[] {
     if (sim.bannedItemIds && sim.bannedItemIds.includes(item.id)) {
       return;
     }
+    // Hero-exclusive (signature) weapons never appear for any other hero
+    if (item.heroId && item.heroId !== sim.hero?.id) {
+      return;
+    }
     if (item.isEvolution && !item.isFusion) {
-      if (item.id === 'chrono_missiles') {
+      if (item.evolvesFrom) {
+        // Generic evolution: base weapon at L5 plus the base weapon's matched relic
+        const baseWeapon = sim.weapons.find((w) => w.id === item.evolvesFrom);
+        const pairId = ITEM_DEFS[item.evolvesFrom]?.evolutionPair;
+        const relic = pairId ? sim.passives.find((p) => p.id === pairId) : undefined;
+        if (baseWeapon && baseWeapon.level >= 5 && relic && !sim.weapons.some((w) => w.id === item.id)) {
+          pool.push(item);
+        }
+      } else if (item.id === 'chrono_missiles') {
         const wand = sim.weapons.find((w) => w.id === 'magic_missile');
         const boots = sim.passives.find((p) => p.id === 'swift_boots');
         if (wand && wand.level >= 5 && boots && !sim.weapons.some((w) => w.id === item.id)) {
@@ -334,7 +267,10 @@ export function applyUpgradeSelection(
     spawnDamageNumber(sim.x, sim.y, 'WEAPON FUSION UNLEASHED!', '#facc15');
   } else if (item.isEvolution) {
     // Weapon + Passive Evolution: replace base weapon with evolved weapon
-    if (item.id === 'chrono_missiles') {
+    if (item.evolvesFrom) {
+      sim.weapons = sim.weapons.filter((w) => w.id !== item.evolvesFrom);
+      sim.weapons.push({id: item.id, level: 1});
+    } else if (item.id === 'chrono_missiles') {
       sim.weapons = sim.weapons.filter((w) => w.id !== 'magic_missile');
       sim.weapons.push({id: item.id, level: 1});
     } else if (item.id === 'hellfire_nova') {

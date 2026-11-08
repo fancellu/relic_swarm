@@ -1,7 +1,7 @@
 import {Ban, DollarSign, RotateCw} from 'lucide-react';
 import React from 'react';
 import {EquippedItem} from '../types/entities';
-import {ItemDef} from '../types/items';
+import {HEROES, ItemDef} from '../types/items';
 import {MenuOverlay} from '../../utils/helper';
 
 export interface DraftModalProps {
@@ -141,6 +141,11 @@ export const DraftModal: React.FC<DraftModalProps> = ({
                     </div>
                   </div>
                   <div className="text-[11px] text-slate-300 line-clamp-2 mt-0.5">{item.desc}</div>
+                  {item.heroId && (
+                    <div className="text-[10px] font-bold text-amber-300 mt-0.5">
+                      ★ Signature weapon: {HEROES.find((h) => h.id === item.heroId)?.name ?? item.heroId}
+                    </div>
+                  )}
                   {isFocused && (
                     <div className="flex items-center justify-between text-[10px] font-extrabold mt-1">
                       <span className="text-amber-300 animate-pulse">▶ [ENTER / A] EQUIP</span>

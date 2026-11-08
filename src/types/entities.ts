@@ -90,7 +90,13 @@ export interface ProjectileEntity {
     | 'gravity_well'
     | 'grenade'
     | 'beam'
-    | 'kinetic_wave';
+    | 'kinetic_wave'
+    | 'axe'
+    | 'slash'
+    | 'meteor'
+    | 'flask'
+    | 'acid_pool'
+    | 'astral_orb';
   sourceWeapon?: string;
   x: number;
   y: number;
@@ -128,6 +134,11 @@ export interface ProjectileEntity {
   beamEndY?: number;
   beamTickTimer?: number;
   beamTicks?: number;
+  // Signature weapons
+  returning?: boolean; // Whirling Axe: on its way back to the hero
+  pulseTimer?: number; // Astral Orb: seconds until the next bolt volley
+  arcAngle?: number; // Greatsword slash: half-width of the cone in radians (>= PI = full circle)
+  boltCount?: number; // Astral Orb: bolts fired per volley
 }
 
 export interface DerivedStats {

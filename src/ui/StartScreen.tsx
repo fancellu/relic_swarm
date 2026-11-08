@@ -117,6 +117,8 @@ export const StartScreen: React.FC<StartScreenProps> = ({
   const curHero = HEROES[selectedHeroIndex] || HEROES[0];
   const startWepDef = ITEM_DEFS[curHero.startingWeapon];
   const startPasDef = curHero.startingPassive ? ITEM_DEFS[curHero.startingPassive] : null;
+  // Each hero has one exclusive signature weapon (with its own evolution and fusion)
+  const signatureDef = Object.values(ITEM_DEFS).find((d) => d.heroId === curHero.id && !d.isEvolution);
 
   return (
     <MenuOverlay tone="neutral" zIndex={40}>
@@ -225,6 +227,17 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                   <div className="font-bold text-emerald-400 truncate">{curHero.statBonus}</div>
                 </div>
               </div>
+
+              {signatureDef && (
+                <div className="col-span-2 bg-amber-950/30 p-2 rounded-lg border border-amber-800/50 flex items-center gap-2">
+                  <img src={signatureDef.icon} alt="" className="w-7 h-7 object-contain shrink-0" style={{imageRendering: 'pixelated'}} />
+                  <div className="min-w-0">
+                    <div className="text-[9px] text-amber-500 uppercase font-semibold">★ Signature Weapon (only {curHero.name.split(' ').pop()} can draft it)</div>
+                    <div className="font-bold text-amber-300 truncate">{signatureDef.name}</div>
+                    <div className="text-[10px] text-slate-400 leading-snug">{signatureDef.desc.replace(/^SIGNATURE \([^)]*\): /, '')}</div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
