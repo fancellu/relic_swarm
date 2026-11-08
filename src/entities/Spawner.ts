@@ -54,6 +54,13 @@ const BOOSTER_PER_TRAIT_BONUS = 0.08;
 const BOOSTER_BOSS_DROPS = 2;
 const TANK_XP_PER_TRAIT = 1.5; // each trait adds this fraction of a gem's base value
 
+// Enrage: the first time a non-boss enemy is wounded below the threshold it gets one roll to fight back harder.
+const ENRAGE_HP_THRESHOLD = 0.3; // fraction of max HP
+const ENRAGE_CHANCE = 0.01;
+const ENRAGE_SPEED_MULT = 1.5;
+const ENRAGE_DAMAGE_MULT = 1.5;
+const ENRAGE_LABEL_SECONDS = 6;
+
 /**
  * The single choke point for damaging enemies. Never write `enemy.hp -= x` elsewhere (GEMINI.md).
  * Applies armour (a 30% cut plus flat reduction), pauses regeneration, and returns the damage actually dealt so callers can
@@ -117,6 +124,9 @@ export function createEnemy(
     regenDelay: 0,
     isBrute: false,
     boosterKnockCd: 0,
+    enraged: false,
+    enrageRolled: false,
+    enrageLabelTimer: 0,
   };
 }
 
@@ -451,6 +461,20 @@ export function updateEnemies(
       else {
         enemy.hp = Math.min(enemy.maxHp, enemy.hp + enemy.regenPerSec * dt);
         if (Math.random() < dt * 6) spawnParticles(enemy.x, enemy.y - enemy.size * 0.6, 1, '#4ade80', 35);
+      }
+    }
+
+    // Enrage: one roll the first time a wounded enemy drops below the HP threshold (never bosses)
+    if (enemy.enrageLabelTimer > 0) enemy.enrageLabelTimer -= dt;
+    if (!enemy.isBoss && !enemy.enrageRolled && enemy.hp > 0 && enemy.hp < enemy.maxHp * ENRAGE_HP_THRESHOLD) {
+      enemy.enrageRolled = true;
+      if (Math.random() < ENRAGE_CHANCE) {
+        enemy.enraged = true;
+        enemy.enrageLabelTimer = ENRAGE_LABEL_SECONDS;
+        enemy.speed *= ENRAGE_SPEED_MULT;
+        enemy.damage *= ENRAGE_DAMAGE_MULT;
+        spawnParticles(enemy.x, enemy.y, 14, '#ef4444', 180);
+        gameAudio.playEnrageRoar();
       }
     }
 

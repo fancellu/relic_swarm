@@ -63,6 +63,10 @@ export interface EnemyEntity {
   regenDelay: number; // seconds of no damage remaining before regen resumes
   isBrute: boolean; // oversized high-HP variant
   boosterKnockCd: number; // seconds until Brawler-booster knockback can move this enemy again
+  // Enrage: a wounded enemy gets one roll to become faster and harder-hitting (never bosses)
+  enraged: boolean;
+  enrageRolled: boolean;
+  enrageLabelTimer: number; // seconds the floating "ENRAGED!" label remains
 }
 
 export interface ProjectileEntity {

@@ -16,7 +16,7 @@ Here are some feature ideas to make it more fun, grouped by where they'd slot in
 5. [x] **Tank / regenerating enemies** — force defensive play, fights melee swarms vs. tanky elites. *(Implemented as three stackable variants: **Brute** (6x HP), **Armoured** (30% cut plus flat reduction per hit; DoTs and Thermal Shock bypass it) and **Regenerating** (heart icon; pauses after taking damage))*
 6. **Splitter enemies** — explode into smaller minions, escalating swarm math.
 7. **Enemy projectiles aimed at the player** — currently the pressure is mostly attrition; adding bullet-hell enemy fire raises the skill ceiling.
-8. **Enrage mechanic** — enemies that get faster/stronger below 30% HP.
+8. [x] **Enrage mechanic** — enemies that get faster/stronger below 30% HP. *(Implemented: 1% chance, rolled once when a regular enemy is first wounded below 30% HP; ENRAGED label, flickering red double ring, +50% speed and damage)*
 
 ## Player Feel
 9. **Stamina-based dash with i-frames** — big missing defensive layer next to stamina already tracked.

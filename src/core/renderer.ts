@@ -427,7 +427,7 @@ export function renderGame(
     }
 
     // Tanky variants: make high health and armour readable before you engage
-    if (enemy.isBrute || enemy.armor > 0) {
+    if (enemy.isBrute || enemy.armor > 0 || enemy.enraged) {
       ctx.save();
       if (enemy.isBrute) {
         // Heavy dark-crimson footprint plus a thick ring
@@ -440,6 +440,27 @@ export function renderGame(
         ctx.beginPath();
         ctx.arc(enemy.x, enemy.y, Math.max(0, enemy.size * 1.2), 0, Math.PI * 2);
         ctx.stroke();
+      }
+      if (enemy.enraged) {
+        // Flickering double red ring (distinct from the Brute's steady thick ring)
+        const jitter = Math.sin(sim.runTimer * 40 + enemy.id) * 1.5;
+        ctx.globalAlpha = 0.8 + 0.2 * Math.sin(sim.runTimer * 30 + enemy.id * 2);
+        // faint red glow disc so the whole enemy reads as "hot"
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
+        ctx.beginPath();
+        ctx.arc(enemy.x, enemy.y, Math.max(0, enemy.size * 1.5), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(enemy.x, enemy.y, Math.max(0, enemy.size * 1.5 + jitter), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = '#fca5a5';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(enemy.x, enemy.y, Math.max(0, enemy.size * 1.75 - jitter), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
       }
       if (enemy.armor > 0) {
         // Dashed steel plating ring
@@ -599,7 +620,7 @@ export function renderGame(
 
     // Enemy Health Bar
     const isTanky = enemy.isBrute || enemy.armor > 0 || enemy.regenPerSec > 0;
-    if (enemy.isElite || enemy.isBoss || isTanky || enemy.hp < enemy.maxHp) {
+    if (enemy.isElite || enemy.isBoss || isTanky || enemy.enraged || enemy.hp < enemy.maxHp) {
       const barW = enemy.isBoss ? 140 : enemy.isBrute ? 64 : isTanky ? 48 : 40;
       const barH = enemy.isBoss ? 9 : enemy.isBrute ? 6 : 4;
       const hpRatio = clamp(enemy.hp / enemy.maxHp, 0, 1);
@@ -619,7 +640,7 @@ export function renderGame(
         ctx.textAlign = 'center';
         ctx.fillText('AEGIS SHIELD LOCKED', enemy.x, enemy.y - drawSize / 2 - 16);
       } else {
-        ctx.fillStyle = enemy.isBoss ? '#ef4444' : enemy.poisonTimer > 0 ? '#22c55e' : enemy.burnTimer > 0 ? '#f97316' : '#eab308';
+        ctx.fillStyle = enemy.isBoss || enemy.enraged ? '#ef4444' : enemy.poisonTimer > 0 ? '#22c55e' : enemy.burnTimer > 0 ? '#f97316' : '#eab308';
         ctx.fillRect(enemy.x - barW / 2, enemy.y - drawSize / 2 - 12, barW * hpRatio, barH);
       }
 
@@ -645,6 +666,27 @@ export function renderGame(
           // Heart pulses while healing; dim while regeneration is suppressed by recent damage
           drawHeartGlyph(ctx, barLeft + barW + 8, barMidY, enemy.regenDelay <= 0 && enemy.hp < enemy.maxHp, sim.runTimer);
         }
+      }
+
+      if (enemy.enrageLabelTimer > 0) {
+        // Big "ENRAGED!" that pops in, bobs, and fades out (crisp stroke + fill, no shadowBlur)
+        const age = ENRAGE_LABEL_TOTAL - enemy.enrageLabelTimer;
+        const fade = Math.min(1, enemy.enrageLabelTimer / 0.75);
+        const pop = age < 0.25 ? 1.6 - (age / 0.25) * 0.6 : 1; // starts large and settles
+        const bob = Math.sin(sim.runTimer * 8 + enemy.id) * 2;
+        ctx.save();
+        ctx.globalAlpha = fade;
+        ctx.translate(enemy.x, enemy.y - drawSize / 2 - (isTanky ? 26 : 24) + bob);
+        ctx.scale(pop, pop);
+        ctx.font = 'bold 22px monospace';
+        ctx.textAlign = 'center';
+        ctx.lineWidth = 5;
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#1c0505';
+        ctx.fillStyle = Math.floor(sim.runTimer * 6) % 2 === 0 ? '#ef4444' : '#fca5a5';
+        ctx.strokeText('ENRAGED!', 0, 0);
+        ctx.fillText('ENRAGED!', 0, 0);
+        ctx.restore();
       }
     }
   });
@@ -1180,6 +1222,9 @@ export function renderGame(
   // 12. Ambient Weather & Atmospheric Particles (Snow, Embers, Spores, Dust)
   stageManager.updateAndRenderAmbience(ctx, canvasWidth, canvasHeight, 1 / 60);
 }
+
+// How long the ENRAGED! label lives in total (must match ENRAGE_LABEL_SECONDS in Spawner.ts); drives its pop-in
+const ENRAGE_LABEL_TOTAL = 6;
 
 // Asset keys for Booster pickup icons (module constant: no per-frame string building)
 const BOOSTER_ASSET_KEYS: Record<string, string> = {

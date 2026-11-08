@@ -364,6 +364,7 @@ class GameAudio {
   private volume = 0.6; // master volume, 0..1
   private bufferCache = new Map<string, AudioBuffer>();
   private currentStingerSource: AudioBufferSourceNode | null = null;
+  private currentRoarSource: AudioBufferSourceNode | null = null; // separate from stingers: SFX, one at a time
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -373,6 +374,7 @@ class GameAudio {
       });
       this.preloadSound('assets/audio/fanfare_victory.wav');
       this.preloadSound('assets/audio/fanfare_defeat.wav');
+      this.preloadSound('assets/audio/fanfare_roar.wav');
     }
   }
 
@@ -392,6 +394,50 @@ class GameAudio {
         }
       })
       .catch(() => {});
+  }
+
+  /**
+   * Enrage roar. A plain SFX, so it never uses (or interrupts) the single musical-stinger slot; instead
+   * only one roar plays at a time, so several enemies enraging together cannot stack into a wall of noise.
+   * Falls back to the procedural buzz if the file cannot be loaded.
+   */
+  playEnrageRoar() {
+    void this.playRoarFile().then((played) => {
+      if (!played) this.playErrorBuzz();
+    });
+  }
+
+  private async playRoarFile(): Promise<boolean> {
+    if (this.muted) return true;
+    if (this.currentRoarSource) return true; // a roar is already sounding
+    const ctx = this.ensure();
+    if (!ctx) return false;
+    if (ctx.state === 'suspended') void ctx.resume().catch(() => {});
+    const url = 'assets/audio/fanfare_roar.wav';
+    try {
+      let buffer = this.bufferCache.get(url);
+      if (!buffer) {
+        const resp = await fetch(url);
+        if (!resp.ok) return false;
+        buffer = await ctx.decodeAudioData(await resp.arrayBuffer());
+        this.bufferCache.set(url, buffer);
+      }
+      if (this.currentRoarSource) return true; // another roar started while this one was loading
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.25, ctx.currentTime); // 0.25 x sfxMaster 0.6 = BGM parity (GEMINI.md 2.9)
+      source.connect(gain);
+      gain.connect(this.sfxMaster || this.master || ctx.destination);
+      this.currentRoarSource = source;
+      source.onended = () => {
+        if (this.currentRoarSource === source) this.currentRoarSource = null;
+      };
+      source.start();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**

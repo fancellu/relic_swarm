@@ -198,6 +198,7 @@ Runs in Relic Swarm no longer abruptly terminate upon defeating the Abyssal Tita
   - **Armoured** (from 70 s): a dashed steel ring and a shield icon. Every hit is cut by 30% and then loses a flat amount (growing over the run and per realm), though at least 15% always gets through. Big hits and burst beat armour, while rapid-fire weapons are almost shut down. **Poison, burn and Thermal Shock ignore armour entirely.**
   - **Regenerating** (from 90 s): a heart icon that pulses while it heals 6% of its max HP per second. Healing pauses for 2 s after any damage, so sustained fire and damage-over-time keep it down.
   - Traits can stack on one enemy (an armoured, regenerating Brute is a serious threat).
+  - **Enraged**: the first time a regular enemy is wounded below 30% HP, it has a small chance (1%) to snap. An "ENRAGED!" label appears above it and a flickering red double ring surrounds it; it moves **50% faster and hits 50% harder** until it dies. Finish wounded enemies quickly. Bosses never enrage.
 - **Flexible Playstyles**: Players can choose to **Descend to Stage S+1** to push their build further, or **Claim Victory & Bank Gold** to retire safely and secure their Sanctum riches.
 
 ### 👑 Realm Boss Encounter & Aegis Mechanics

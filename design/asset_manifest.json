@@ -637,6 +637,20 @@
     "resolution": null
   },
   {
+    "id": "fanfare_roar",
+    "name": "Enrage Roar",
+    "art_style": "pixelated",
+    "category": null,
+    "media_type": "music",
+    "description": "Short snarling roar played when an enemy becomes enraged",
+    "aspect_ratio": "1:1",
+    "usage": "Enemy enrage sound effect (played by GameAudio.playEnrageRoar; one roar at a time, independent of the musical-stinger slot)",
+    "chroma_key": false,
+    "prompt": "0.72s one-shot beast roar sound effect for an enemy flying into a rage",
+    "actions": null,
+    "resolution": null
+  },
+  {
     "id": "portrait_hero_vael",
     "name": "Arcanist Vael Portrait",
     "art_style": "pixelated",
