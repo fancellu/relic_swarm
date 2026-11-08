@@ -188,6 +188,11 @@ Runs in Relic Swarm no longer abruptly terminate upon defeating the Abyssal Tita
   3. *Glacial Abyss* (Midnight cyan / frozen teal border)
   4. *Blighted Necropolis* (Dark moss / radioactive emerald border)
   5. *Astral Void* (Deep void / radiant cosmic purple border)
+- **Tanky Enemy Variants**: As a run progresses, regular enemies can roll dangerous traits (elites roll them twice as often; bosses and escorts never do). Each variant is flagged on the battlefield and always shows its health bar, and a kill always drops a gem worth more XP per trait:
+  - **Brute** (from 45 s): drawn larger with a crimson footprint and ring, **6x HP**, slower but harder-hitting. Its wide health bar is split into quarters so the huge pool is readable at a glance.
+  - **Armoured** (from 70 s): a dashed steel ring and a shield icon. Every hit is cut by 30% and then loses a flat amount (growing over the run and per realm), though at least 15% always gets through. Big hits and burst beat armour, while rapid-fire weapons are almost shut down. **Poison, burn and Thermal Shock ignore armour entirely.**
+  - **Regenerating** (from 90 s): a heart icon that pulses while it heals 6% of its max HP per second. Healing pauses for 2 s after any damage, so sustained fire and damage-over-time keep it down.
+  - Traits can stack on one enemy (an armoured, regenerating Brute is a serious threat).
 - **Flexible Playstyles**: Players can choose to **Descend to Stage S+1** to push their build further, or **Claim Victory & Bank Gold** to retire safely and secure their Sanctum riches.
 
 ### 👑 Realm Boss Encounter & Aegis Mechanics

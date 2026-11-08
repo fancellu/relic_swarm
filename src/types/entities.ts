@@ -55,6 +55,11 @@ export interface EnemyEntity {
   burnTimer: number;
   burnDps: number;
   burnTickTimer: number;
+  // Tanky variants (all zero/false for ordinary enemies, bosses and escorts)
+  armor: number; // flat damage removed from each hit (DoTs bypass); min 25% always gets through
+  regenPerSec: number; // HP regained per second once regenDelay has elapsed
+  regenDelay: number; // seconds of no damage remaining before regen resumes
+  isBrute: boolean; // oversized high-HP variant
 }
 
 export interface ProjectileEntity {

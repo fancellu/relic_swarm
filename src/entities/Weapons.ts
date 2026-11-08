@@ -3,7 +3,7 @@ import {EnemyEntity, EquippedItem, SimulationState} from '../types/entities';
 import {ITEM_DEFS} from '../types/items';
 import {spatialGrid} from '../core/spatial';
 import {applyEnemySlow, DerivedStats} from './Player';
-import {isEnemyInvulnerable, handleEnemyInvulnerableDeflect} from './Spawner';
+import {damageEnemy, isEnemyInvulnerable, handleEnemyInvulnerableDeflect} from './Spawner';
 
 export function applyEnemyPoison(enemy: EnemyEntity, dps: number, duration = 4.0): void {
   enemy.poisonDps = Math.max(enemy.poisonDps, dps);
@@ -237,10 +237,10 @@ export function updateWeaponCasting(
         const maxChains = isTeslaTempest ? 5 : 1 + Math.floor((wep.level - 1) / 2);
         const chainRangeSq = ((isTeslaTempest ? 300 : 240) * stats.areaMult) ** 2;
         const zap = (fromX: number, fromY: number, target: EnemyEntity, damage: number): void => {
-          target.hp -= damage;
-          sim.weaponDamageDealt[wep.id] = (sim.weaponDamageDealt[wep.id] || 0) + damage;
+          const dealt = damageEnemy(target, damage);
+          sim.weaponDamageDealt[wep.id] = (sim.weaponDamageDealt[wep.id] || 0) + dealt;
           if (stats.toxicLevel > 0 && Math.random() < 0.35) applyEnemyPoison(target, damage * 0.5);
-          spawnDamageNumber(target.x, target.y, Math.round(damage).toString(), '#67e8f9');
+          spawnDamageNumber(target.x, target.y, Math.round(dealt).toString(), '#67e8f9');
           spawnParticles(target.x, target.y, 5, '#67e8f9', 115);
           sim.projectiles.push({
             id: sim.nextProjId++,
@@ -448,9 +448,9 @@ export function updateWeaponCasting(
               return;
             }
             const hitDmg = isGravitationalPulse ? dmg * 2.2 : dmg;
-            enemy.hp -= hitDmg;
-            sim.weaponDamageDealt[wep.id] = (sim.weaponDamageDealt[wep.id] || 0) + hitDmg;
-            spawnDamageNumber(enemy.x, enemy.y, Math.round(hitDmg).toString(), isEclipse ? '#f59e0b' : '#fde047');
+            const dealt = damageEnemy(enemy, hitDmg);
+            sim.weaponDamageDealt[wep.id] = (sim.weaponDamageDealt[wep.id] || 0) + dealt;
+            spawnDamageNumber(enemy.x, enemy.y, Math.round(dealt).toString(), isEclipse ? '#f59e0b' : '#fde047');
             if (Math.random() < 0.2) spawnParticles(enemy.x, enemy.y, 3, '#fde047', 80);
             if (stats.toxicLevel > 0 && Math.random() < 0.3) {
               applyEnemyPoison(enemy, hitDmg * 0.6);
@@ -626,9 +626,9 @@ export function updateWeaponCasting(
               handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
               return;
             }
-            enemy.hp -= dmg;
-            sim.weaponDamageDealt['toxic_sanctuary'] = (sim.weaponDamageDealt['toxic_sanctuary'] || 0) + dmg;
-            spawnDamageNumber(enemy.x, enemy.y, Math.round(dmg).toString(), '#22c55e');
+            const dealt = damageEnemy(enemy, dmg);
+            sim.weaponDamageDealt['toxic_sanctuary'] = (sim.weaponDamageDealt['toxic_sanctuary'] || 0) + dealt;
+            spawnDamageNumber(enemy.x, enemy.y, Math.round(dealt).toString(), '#22c55e');
             applyEnemyPoison(enemy, dmg * 0.7);
             applyEnemySlow(enemy, 0.4, 0.5);
             if (Math.random() < 0.2) spawnParticles(enemy.x, enemy.y, 4, '#22c55e', 90);

@@ -2,6 +2,7 @@ import {gameAudio, shuffle} from '../../utils/helper';
 import {EquippedItem, SimulationState} from '../types/entities';
 import {ITEM_DEFS, ItemDef} from '../types/items';
 import {calculateDerivedStats, DerivedStats} from './Player';
+import {damageEnemy} from './Spawner';
 
 export function getAvailableFusion(
   weapons: EquippedItem[],
@@ -305,7 +306,7 @@ export function applyUpgradeSelection(
       // Screen-wide holy shockwave: instantly incinerates non-bosses, deals 800 damage to bosses
       sim.enemies.forEach((e) => {
         if (e.isBoss) {
-          e.hp -= 800;
+          damageEnemy(e, 800, 0);
           spawnDamageNumber(e.x, e.y, '800 HOLY CRIT', '#f43f5e');
         } else {
           e.hp = 0;

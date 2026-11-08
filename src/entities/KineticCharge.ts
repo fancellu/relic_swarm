@@ -1,7 +1,7 @@
 import {gameAudio} from '../../utils/helper';
 import {EnemyEntity, SimulationState} from '../types/entities';
 import {spatialGrid} from '../core/spatial';
-import {isEnemyInvulnerable, handleEnemyInvulnerableDeflect} from './Spawner';
+import {damageEnemy, isEnemyInvulnerable, handleEnemyInvulnerableDeflect} from './Spawner';
 import type {DerivedStats} from './Player';
 
 // Kinetic Charge: sprinting builds Momentum; ending a sprint at full Momentum releases a shockwave.
@@ -36,9 +36,9 @@ function hitEnemy(enemy: EnemyEntity): void {
     handleEnemyInvulnerableDeflect(sim, enemy, wave.spawnDamageNumber!, wave.spawnParticles!);
     return;
   }
-  enemy.hp -= wave.damage;
-  sim.weaponDamageDealt['kinetic_charge'] = (sim.weaponDamageDealt['kinetic_charge'] || 0) + wave.damage;
-  wave.spawnDamageNumber!(enemy.x, enemy.y, Math.round(wave.damage).toString(), '#fbbf24');
+  const dealt = damageEnemy(enemy, wave.damage);
+  sim.weaponDamageDealt['kinetic_charge'] = (sim.weaponDamageDealt['kinetic_charge'] || 0) + dealt;
+  wave.spawnDamageNumber!(enemy.x, enemy.y, Math.round(dealt).toString(), '#fbbf24');
 
   // Strong radial knockback, stronger near the centre
   if (dist > 1) {

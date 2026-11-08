@@ -398,6 +398,33 @@ export function renderGame(
       ctx.restore();
     }
 
+    // Tanky variants: make high health and armour readable before you engage
+    if (enemy.isBrute || enemy.armor > 0) {
+      ctx.save();
+      if (enemy.isBrute) {
+        // Heavy dark-crimson footprint plus a thick ring
+        ctx.fillStyle = 'rgba(127, 29, 29, 0.5)';
+        ctx.beginPath();
+        ctx.ellipse(enemy.x, enemy.y + enemy.size * 0.55, enemy.size * 1.25, enemy.size * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(220, 38, 38, 0.85)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(enemy.x, enemy.y, Math.max(0, enemy.size * 1.2), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      if (enemy.armor > 0) {
+        // Dashed steel plating ring
+        ctx.strokeStyle = 'rgba(203, 213, 225, 0.9)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash(ARMOR_RING_DASH);
+        ctx.beginPath();
+        ctx.arc(enemy.x, enemy.y, Math.max(0, enemy.size * (enemy.isBrute ? 1.4 : 1.25)), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     // Aegis Force Field & Minion Energy Tethers for Shielded Boss
     if (enemy.isBoss && sim.bossShieldActive) {
       // 1. Tethers to living minions
@@ -528,7 +555,7 @@ export function renderGame(
       ctx.restore();
     }
 
-    const drawSize = enemy.isBoss ? 160 : enemy.isElite ? 80 : 54;
+    const drawSize = (enemy.isBoss ? 160 : enemy.isElite ? 80 : 54) * (enemy.isBrute ? 1.25 : 1);
     if (renderer) {
       renderer.draw(
         ctx,
@@ -543,9 +570,10 @@ export function renderGame(
     }
 
     // Enemy Health Bar
-    if (enemy.isElite || enemy.isBoss || enemy.hp < enemy.maxHp) {
-      const barW = enemy.isBoss ? 140 : 40;
-      const barH = enemy.isBoss ? 9 : 4;
+    const isTanky = enemy.isBrute || enemy.armor > 0 || enemy.regenPerSec > 0;
+    if (enemy.isElite || enemy.isBoss || isTanky || enemy.hp < enemy.maxHp) {
+      const barW = enemy.isBoss ? 140 : enemy.isBrute ? 64 : isTanky ? 48 : 40;
+      const barH = enemy.isBoss ? 9 : enemy.isBrute ? 6 : 4;
       const hpRatio = clamp(enemy.hp / enemy.maxHp, 0, 1);
 
       ctx.fillStyle = '#1e1b4b';
@@ -565,6 +593,30 @@ export function renderGame(
       } else {
         ctx.fillStyle = enemy.isBoss ? '#ef4444' : enemy.poisonTimer > 0 ? '#22c55e' : enemy.burnTimer > 0 ? '#f97316' : '#eab308';
         ctx.fillRect(enemy.x - barW / 2, enemy.y - drawSize / 2 - 12, barW * hpRatio, barH);
+      }
+
+      if (isTanky) {
+        const barLeft = enemy.x - barW / 2;
+        const barY = enemy.y - drawSize / 2 - 12;
+        const barMidY = barY + barH / 2;
+        if (enemy.isBrute) {
+          // Quarter ticks make the huge HP pool readable at a glance
+          ctx.fillStyle = '#0f0a1f';
+          for (let q = 1; q < 4; q++) ctx.fillRect(barLeft + (barW * q) / 4 - 0.5, barY, 1, barH);
+          ctx.strokeStyle = '#dc2626';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(barLeft, barY, barW, barH);
+        }
+        if (enemy.armor > 0) {
+          ctx.strokeStyle = '#cbd5e1';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(barLeft - 0.5, barY - 0.5, barW + 1, barH + 1);
+          drawShieldGlyph(ctx, barLeft - 8, barMidY);
+        }
+        if (enemy.regenPerSec > 0) {
+          // Heart pulses while healing; dim while regeneration is suppressed by recent damage
+          drawHeartGlyph(ctx, barLeft + barW + 8, barMidY, enemy.regenDelay <= 0 && enemy.hp < enemy.maxHp, sim.runTimer);
+        }
       }
     }
   });
@@ -1099,4 +1151,42 @@ export function renderGame(
 
   // 12. Ambient Weather & Atmospheric Particles (Snow, Embers, Spores, Dust)
   stageManager.updateAndRenderAmbience(ctx, canvasWidth, canvasHeight, 1 / 60);
+}
+
+// Shared line-dash pattern for the Armoured plating ring (avoids a per-frame array allocation)
+const ARMOR_RING_DASH: number[] = [6, 4];
+
+/** Small steel shield glyph, centred on (x, y), used to flag Armoured enemies. */
+function drawShieldGlyph(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  ctx.beginPath();
+  ctx.moveTo(x - 4.5, y - 4);
+  ctx.lineTo(x + 4.5, y - 4);
+  ctx.lineTo(x + 4.5, y + 1);
+  ctx.quadraticCurveTo(x + 4.5, y + 5, x, y + 7);
+  ctx.quadraticCurveTo(x - 4.5, y + 5, x - 4.5, y + 1);
+  ctx.closePath();
+  ctx.fillStyle = '#94a3b8';
+  ctx.fill();
+  ctx.strokeStyle = '#f1f5f9';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+/** Small heart glyph, centred on (x, y), used to flag Regenerating enemies. Pulses while actively healing. */
+function drawHeartGlyph(ctx: CanvasRenderingContext2D, x: number, y: number, healing: boolean, time: number): void {
+  const scale = healing ? 1 + Math.sin(time * 10) * 0.2 : 1;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.beginPath();
+  ctx.moveTo(0, 4);
+  ctx.bezierCurveTo(-7, -1, -4, -6, 0, -2.5);
+  ctx.bezierCurveTo(4, -6, 7, -1, 0, 4);
+  ctx.closePath();
+  ctx.fillStyle = healing ? '#f43f5e' : 'rgba(159, 18, 57, 0.6)';
+  ctx.fill();
+  ctx.strokeStyle = '#fff1f2';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+  ctx.restore();
 }

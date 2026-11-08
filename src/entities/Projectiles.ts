@@ -3,7 +3,7 @@ import {EnemyEntity, MAX_PROJECTILES, ProjectileEntity, SimulationState} from '.
 import {spatialGrid} from '../core/spatial';
 import {applyEnemySlow} from './Player';
 import {applyEnemyPoison} from './Weapons';
-import {isEnemyInvulnerable, handleEnemyInvulnerableDeflect} from './Spawner';
+import {damageEnemy, isEnemyInvulnerable, handleEnemyInvulnerableDeflect} from './Spawner';
 import {stageManager} from '../core/Stage';
 
 // --- Inferno Lance beam tuning ---
@@ -154,9 +154,9 @@ function updateBeam(
         handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
         continue;
       }
-      enemy.hp -= proj.damage;
+      const dealt = damageEnemy(enemy, proj.damage);
       if (proj.sourceWeapon) {
-        sim.weaponDamageDealt[proj.sourceWeapon] = (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + proj.damage;
+        sim.weaponDamageDealt[proj.sourceWeapon] = (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + dealt;
       }
       // Ignite: keeps a refreshed burn on everything the lance touches.
       enemy.burnTimer = Math.max(enemy.burnTimer, 2.0);
@@ -168,7 +168,7 @@ function updateBeam(
         // Thermal Shock: the frost sheath ruptures the burn the fire core just applied.
         if (shockTick && enemy.burnTimer > 0) {
           const shockBonus = proj.damage * 2 + enemy.burnDps;
-          enemy.hp -= shockBonus;
+          damageEnemy(enemy, shockBonus, 0); // Thermal Shock cracks armour
           if (proj.sourceWeapon) {
             sim.weaponDamageDealt[proj.sourceWeapon] = (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + shockBonus;
           }
@@ -182,7 +182,7 @@ function updateBeam(
       if (isPhoenix) healed += PHOENIX_HEAL_PER_HIT;
 
       if (showNumber) {
-        spawnDamageNumber(enemy.x, enemy.y, Math.round(proj.damage * 3).toString(), isPhoenix ? '#fbbf24' : '#fb923c');
+        spawnDamageNumber(enemy.x, enemy.y, Math.round(dealt * 3).toString(), isPhoenix ? '#fbbf24' : '#fb923c');
       }
       if (Math.random() < 0.35) spawnParticles(enemy.x, enemy.y, 2, isPrism ? '#a5f3fc' : '#fdba74', 90);
     }
@@ -261,8 +261,7 @@ export function updateProjectiles(
                   handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
                   continue;
                 }
-                const arcDmg = 80 * dt;
-                enemy.hp -= arcDmg;
+                const arcDmg = damageEnemy(enemy, 80 * dt, dt);
                 sim.weaponDamageDealt['mjolnir_conduit'] = (sim.weaponDamageDealt['mjolnir_conduit'] || 0) + arcDmg;
                 if (Math.random() < 0.15) {
                   spawnParticles(enemy.x, enemy.y, 2, '#38bdf8', 70);
@@ -305,11 +304,11 @@ export function updateProjectiles(
               handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
               return;
             }
-            enemy.hp -= blastDmg;
+            const blastDealt = damageEnemy(enemy, blastDmg);
             enemy.burnTimer = 3.5;
             enemy.burnDps = Math.max(enemy.burnDps, blastDmg * 0.35);
             applyEnemyPoison(enemy, blastDmg * 0.45, 4.0);
-            spawnDamageNumber(enemy.x, enemy.y, Math.round(blastDmg).toString(), '#f97316');
+            spawnDamageNumber(enemy.x, enemy.y, Math.round(blastDealt).toString(), '#f97316');
           }
         });
 
@@ -357,14 +356,14 @@ export function updateProjectiles(
               handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
               return;
             }
-            enemy.hp -= proj.damage;
+            const dealt = damageEnemy(enemy, proj.damage);
             proj.hitTimes![enemy.id] = sim.runTimer;
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
-                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + proj.damage;
+                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + dealt;
             }
             gameAudio.playSwordClash();
-            spawnDamageNumber(enemy.x, enemy.y, Math.round(proj.damage).toString(), proj.color);
+            spawnDamageNumber(enemy.x, enemy.y, Math.round(dealt).toString(), proj.color);
             spawnParticles(proj.x, proj.y, 4, proj.color, 90);
 
             if (proj.inflictsPoison) applyEnemyPoison(enemy, proj.damage * 0.5);
@@ -373,7 +372,7 @@ export function updateProjectiles(
             // Thermal Shock reaction with burning enemies
             if (proj.inflictsSlow && enemy.burnTimer > 0) {
               const shockBonus = proj.damage * 1.5 + enemy.burnDps * 2;
-              enemy.hp -= shockBonus;
+              damageEnemy(enemy, shockBonus, 0); // Thermal Shock cracks armour
               sim.screenShake = 5;
               spawnDamageNumber(enemy.x, enemy.y, `THERMAL SHOCK ${Math.round(shockBonus)}!`, '#38bdf8');
               spawnParticles(enemy.x, enemy.y, 10, '#38bdf8', 130);
@@ -393,10 +392,10 @@ export function updateProjectiles(
           if (isEnemyInvulnerable(enemy, sim)) return;
           applyEnemyPoison(enemy, proj.damage * 0.7, 3.5);
           if (Math.random() < 0.1) {
-            enemy.hp -= proj.damage * dt;
+            const chip = damageEnemy(enemy, proj.damage * dt, dt);
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
-                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + proj.damage * dt;
+                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + chip;
             }
           }
         }
@@ -410,10 +409,10 @@ export function updateProjectiles(
           enemy.burnTimer = 3.0;
           enemy.burnDps = Math.max(enemy.burnDps, proj.damage * 0.85);
           if (Math.random() < 0.12) {
-            enemy.hp -= proj.damage * dt * 1.5;
+            const chip = damageEnemy(enemy, proj.damage * dt * 1.5, dt);
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
-                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + proj.damage * dt * 1.5;
+                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + chip;
             }
           }
         }
@@ -430,12 +429,12 @@ export function updateProjectiles(
               handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
               return;
             }
-            enemy.hp -= proj.damage;
+            const dealt = damageEnemy(enemy, proj.damage);
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
-                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + proj.damage;
+                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + dealt;
             }
-            spawnDamageNumber(enemy.x, enemy.y, Math.round(proj.damage).toString(), '#38bdf8');
+            spawnDamageNumber(enemy.x, enemy.y, Math.round(dealt).toString(), '#38bdf8');
           }
         });
       }
@@ -467,12 +466,12 @@ export function updateProjectiles(
               handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
               return;
             }
-            enemy.hp -= proj.damage;
+            const dealt = damageEnemy(enemy, proj.damage);
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
-                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + proj.damage;
+                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + dealt;
             }
-            spawnDamageNumber(enemy.x, enemy.y, Math.round(proj.damage).toString(), proj.color);
+            spawnDamageNumber(enemy.x, enemy.y, Math.round(dealt).toString(), proj.color);
             if (Math.random() < 0.25) {
               spawnParticles(enemy.x, enemy.y, 2, proj.color, 60);
             }
@@ -596,12 +595,12 @@ export function updateProjectiles(
               if (proj.pierce <= 0) proj.duration = 0;
               return;
             }
-            enemy.hp -= proj.damage;
+            const dealt = damageEnemy(enemy, proj.damage);
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
-                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + proj.damage;
+                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + dealt;
             }
-            spawnDamageNumber(enemy.x, enemy.y, Math.round(proj.damage).toString(), proj.color);
+            spawnDamageNumber(enemy.x, enemy.y, Math.round(dealt).toString(), proj.color);
             spawnParticles(proj.x, proj.y, 5, proj.color, 100);
 
             if (proj.inflictsPoison) applyEnemyPoison(enemy, proj.damage * 0.5);
@@ -621,7 +620,7 @@ export function updateProjectiles(
             // Thermal Shock: Glacial / Ice hits a burning enemy
             if ((proj.type === 'ice' || proj.inflictsSlow) && enemy.burnTimer > 0) {
               const shockBonus = proj.damage * 1.8 + enemy.burnDps * 2.2;
-              enemy.hp -= shockBonus;
+              damageEnemy(enemy, shockBonus, 0); // Thermal Shock cracks armour
               sim.screenShake = 6;
               gameAudio.playSwordClash();
               spawnDamageNumber(enemy.x, enemy.y, `THERMAL SHOCK ${Math.round(shockBonus)}!`, '#38bdf8');
@@ -660,14 +659,14 @@ export function updateProjectiles(
                   if (other.id !== enemy.id) {
                     const splashDist = Math.hypot(other.x - proj.x, other.y - proj.y);
                     if (splashDist <= proj.splashRadius! + other.size) {
-                      other.hp -= proj.damage * 0.7;
+                      const splash = damageEnemy(other, proj.damage * 0.7);
                       other.burnTimer = 3.0;
                       other.burnDps = Math.max(other.burnDps, proj.damage * 0.4);
                       if (proj.sourceWeapon) {
                         sim.weaponDamageDealt[proj.sourceWeapon] =
-                          (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + proj.damage * 0.7;
+                          (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + splash;
                       }
-                      spawnDamageNumber(other.x, other.y, Math.round(proj.damage * 0.7).toString(), '#ea580c');
+                      spawnDamageNumber(other.x, other.y, Math.round(splash).toString(), '#ea580c');
                       if (proj.inflictsPoison) applyEnemyPoison(other, proj.damage * 0.4);
                     }
                   }
@@ -717,12 +716,12 @@ export function updateProjectiles(
               handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
               return;
             }
-            enemy.hp -= burstDmg;
+            const burstDealt = damageEnemy(enemy, burstDmg);
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
-                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + burstDmg;
+                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + burstDealt;
             }
-            spawnDamageNumber(enemy.x, enemy.y, Math.round(burstDmg).toString(), proj.color);
+            spawnDamageNumber(enemy.x, enemy.y, Math.round(burstDealt).toString(), proj.color);
 
             // Radial knockback outward
             if (bdist > 1) {
@@ -736,7 +735,7 @@ export function updateProjectiles(
               // Thermal Shock if burning
               if (enemy.burnTimer > 0) {
                 const shockBonus = burstDmg * 1.6 + enemy.burnDps * 2;
-                enemy.hp -= shockBonus;
+                damageEnemy(enemy, shockBonus, 0); // Thermal Shock cracks armour
                 spawnDamageNumber(enemy.x, enemy.y, `THERMAL SHOCK ${Math.round(shockBonus)}!`, '#38bdf8');
                 spawnParticles(enemy.x, enemy.y, 10, '#38bdf8', 130);
                 enemy.burnTimer = 0;
@@ -778,12 +777,12 @@ export function updateProjectiles(
               falloff = Math.max(0.35, 1 - ((bdist - coreRadius) / (blastRadius - coreRadius)) * 0.65);
             }
             const hitDmg = proj.damage * falloff;
-            enemy.hp -= hitDmg;
+            const hitDealt = damageEnemy(enemy, hitDmg);
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
-                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + hitDmg;
+                (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + hitDealt;
             }
-            spawnDamageNumber(enemy.x, enemy.y, Math.round(hitDmg).toString(), proj.color);
+            spawnDamageNumber(enemy.x, enemy.y, Math.round(hitDealt).toString(), proj.color);
 
             // High kinetic radial knockback
             if (bdist > 1) {

@@ -85,6 +85,11 @@ LocalStorage keys must maintain backward compatibility:
 3. **Batch Canvas State**:
    - Never call `ctx.save()` / `ctx.restore()` per-particle or per-grid-line in inner loops; batch state changes around outer loops.
 
+### 2.7b Enemy Damage Must Use `damageEnemy()`
+- **Never write `enemy.hp -= x`** (or `other.hp -= x`). All damage to enemies goes through `damageEnemy(enemy, amount, armorScale)` in `src/entities/Spawner.ts`, which applies flat armour for tanky variants, pauses regeneration, and **returns the damage actually dealt**. Use that return value for `weaponDamageDealt` and damage numbers so they stay truthful.
+- `armorScale`: `1` for a discrete hit (default); the frame's `dt` for continuous per-frame damage (armour is then charged per second); `0` to bypass armour (poison/burn ticks, Thermal Shock, Holy Bomb / Orb of Obliteration).
+- Instant kills (`e.hp = 0`) are allowed for purge effects.
+
 ### 2.8 Zero-Allocation Simulation Loop & Hard Entity Caps
 1. **Decouple React State Dispatches from Frame Loops (60–144 Hz)**:
    - **NEVER call React state setters unconditionally every frame**.

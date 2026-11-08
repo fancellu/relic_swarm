@@ -3,6 +3,7 @@ import {ChestRewardData, EquippedItem, SimulationState} from '../types/entities'
 import {ItemDef} from '../types/items';
 import {applyUpgradeSelection, generateDraftChoices} from './Draft';
 import {calculateDerivedStats} from './Player';
+import {damageEnemy} from './Spawner';
 
 export function generateChestReward(sim: SimulationState): ChestRewardData {
   const goldBounty = 50 + Math.floor(Math.random() * 51); // 50-100 gold
@@ -154,7 +155,7 @@ export function applyChestReward(
     spawnDamageNumber(sim.x, sim.y, 'SCREEN-CLEARING HOLY BOMB!', '#f43f5e');
     sim.enemies.forEach((e) => {
       if (e.isBoss) {
-        e.hp -= 1000;
+        damageEnemy(e, 1000, 0);
         spawnDamageNumber(e.x, e.y, '1000 HOLY CRIT', '#f43f5e');
       } else {
         e.hp = 0;

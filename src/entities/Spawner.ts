@@ -28,6 +28,44 @@ export function handleEnemyInvulnerableDeflect(
   }
 }
 
+/** Seconds without taking damage before a regenerating enemy starts healing again. */
+export const REGEN_DELAY = 2.0;
+const ARMOR_PERCENT_CUT = 0.3; // armoured enemies shrug off this share of every hit, before flat armour
+const ARMOR_MIN_PASSTHROUGH = 0.15; // ...but at least this share of a hit always lands
+
+// Tanky variants: traits roll independently on regular wave spawns (elites roll twice as often).
+const BRUTE_UNLOCK_TIME = 45; // seconds into the run
+const BRUTE_CHANCE = 0.07;
+const ARMORED_UNLOCK_TIME = 70;
+const ARMORED_CHANCE = 0.07;
+const BRUTE_HP_MULT = 6;
+const ARMORED_HP_MULT = 2.5;
+const REGEN_HP_MULT = 2;
+const ARMOR_BASE = 10; // flat armour at the start of a run...
+const ARMOR_PER_MINUTE = 3; // ...plus this much per minute survived (scaled by realm)
+const REGEN_UNLOCK_TIME = 90;
+const REGEN_CHANCE = 0.06;
+const REGEN_PERCENT_PER_SEC = 0.06; // of max HP, once REGEN_DELAY has passed without damage
+const TANK_XP_PER_TRAIT = 1.5; // each trait adds this fraction of a gem's base value
+
+/**
+ * The single choke point for damaging enemies. Never write `enemy.hp -= x` elsewhere (GEMINI.md).
+ * Applies armour (a 30% cut plus flat reduction), pauses regeneration, and returns the damage actually dealt so callers can
+ * credit weapon stats and show truthful numbers.
+ *
+ * `armorScale`: 1 = a discrete hit (default); a frame's `dt` = continuous damage of `dt` seconds
+ * (armour is charged per second); 0 = ignores armour (poison/burn ticks, holy bombs).
+ */
+export function damageEnemy(enemy: EnemyEntity, amount: number, armorScale = 1): number {
+  const dealt =
+    armorScale > 0 && enemy.armor > 0
+      ? Math.max(amount * ARMOR_MIN_PASSTHROUGH, amount * (1 - ARMOR_PERCENT_CUT) - enemy.armor * armorScale)
+      : amount;
+  enemy.hp -= dealt;
+  if (enemy.regenPerSec > 0) enemy.regenDelay = REGEN_DELAY;
+  return dealt;
+}
+
 export function createEnemy(
   id: number,
   type: EnemyEntity['type'],
@@ -68,6 +106,10 @@ export function createEnemy(
     burnTimer: 0,
     burnDps: 0,
     burnTickTimer: 0,
+    armor: 0,
+    regenPerSec: 0,
+    regenDelay: 0,
+    isBrute: false,
   };
 }
 
@@ -293,6 +335,20 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
         color = '#f59e0b';
       }
 
+      // Tanky variants (never applied to bosses or boss escorts)
+      const traitChanceMult = isElite ? 2 : 1;
+      const isBrute = sim.runTimer > BRUTE_UNLOCK_TIME && Math.random() < BRUTE_CHANCE * traitChanceMult;
+      const isArmored = sim.runTimer > ARMORED_UNLOCK_TIME && Math.random() < ARMORED_CHANCE * traitChanceMult;
+      const isRegen = sim.runTimer > REGEN_UNLOCK_TIME && Math.random() < REGEN_CHANCE * traitChanceMult;
+      if (isBrute) {
+        hp *= BRUTE_HP_MULT;
+        size *= 1.25;
+        speed *= 0.75;
+        damage *= 1.3;
+      }
+      if (isArmored) hp *= ARMORED_HP_MULT;
+      if (isRegen) hp *= REGEN_HP_MULT;
+
       const newEnemy = createEnemy(
         sim.nextEnemyId++,
         type,
@@ -306,6 +362,9 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
         isElite,
         false,
       );
+      newEnemy.isBrute = isBrute;
+      if (isArmored) newEnemy.armor = (ARMOR_BASE + ARMOR_PER_MINUTE * (sim.runTimer / 60)) * enemyHpMult;
+      if (isRegen) newEnemy.regenPerSec = newEnemy.maxHp * REGEN_PERCENT_PER_SEC;
       stageManager.resolveCircleCollision(newEnemy, newEnemy.size);
       sim.enemies.push(newEnemy);
     }
@@ -339,7 +398,7 @@ export function updateEnemies(
         enemy.poisonTickTimer = 0;
         if (!isEnemyInvulnerable(enemy, sim)) {
           const tickDmg = Math.max(1, Math.round(enemy.poisonDps * 0.4));
-          enemy.hp -= tickDmg;
+          damageEnemy(enemy, tickDmg, 0); // poison bypasses armour
           spawnDamageNumber(enemy.x, enemy.y, tickDmg.toString(), '#22c55e');
           spawnParticles(enemy.x, enemy.y, 2, '#22c55e', 40);
         } else {
@@ -356,7 +415,7 @@ export function updateEnemies(
         enemy.burnTickTimer = 0;
         if (!isEnemyInvulnerable(enemy, sim)) {
           const tickDmg = Math.max(1, Math.round(enemy.burnDps * 0.35));
-          enemy.hp -= tickDmg;
+          damageEnemy(enemy, tickDmg, 0); // burn bypasses armour
           spawnDamageNumber(enemy.x, enemy.y, tickDmg.toString(), '#f97316');
           spawnParticles(enemy.x, enemy.y, 2, '#f97316', 50);
         } else {
@@ -376,6 +435,15 @@ export function updateEnemies(
       effectiveSpeed *= 1.3;
     }
     effectiveSpeed *= pactSpeedMult;
+
+    // Regeneration: resumes once REGEN_DELAY has passed without taking damage (damageEnemy resets it)
+    if (enemy.regenPerSec > 0 && enemy.hp > 0 && enemy.hp < enemy.maxHp) {
+      if (enemy.regenDelay > 0) enemy.regenDelay -= dt;
+      else {
+        enemy.hp = Math.min(enemy.maxHp, enemy.hp + enemy.regenPerSec * dt);
+        if (Math.random() < dt * 6) spawnParticles(enemy.x, enemy.y - enemy.size * 0.6, 1, '#4ade80', 35);
+      }
+    }
 
     // Death Check
     if (enemy.hp <= 0) {
@@ -528,15 +596,16 @@ export function updateEnemies(
           });
         }
       } else {
-        // Standard enemy drops: 1-3 gold
-        const dropRoll = Math.random();
+        // Standard enemy drops: 1-3 gold. Tanky variants always drop a gem worth more per trait.
+        const traitCount = (enemy.isBrute ? 1 : 0) + (enemy.armor > 0 ? 1 : 0) + (enemy.regenPerSec > 0 ? 1 : 0);
+        const dropRoll = traitCount > 0 ? 0 : Math.random();
         if (dropRoll < 0.7) {
           addDrop(sim, {
             id: sim.nextDropId++,
             type: 'xp_blue',
             x: enemy.x,
             y: enemy.y,
-            value: 10,
+            value: Math.round(10 * (1 + TANK_XP_PER_TRAIT * traitCount)),
             attracted: false,
           });
         } else if (dropRoll < 0.85) {
