@@ -3,7 +3,8 @@ import {EnemyEntity, EquippedItem, SimulationState} from '../types/entities';
 import {ITEM_DEFS} from '../types/items';
 import {spatialGrid} from '../core/spatial';
 import {applyEnemySlow, DerivedStats} from './Player';
-import {damageEnemy, isEnemyInvulnerable, handleEnemyInvulnerableDeflect} from './Spawner';
+import {isEnemyInvulnerable, handleEnemyInvulnerableDeflect} from './Spawner';
+import {hitEnemy} from './Boosters';
 
 export function applyEnemyPoison(enemy: EnemyEntity, dps: number, duration = 4.0): void {
   enemy.poisonDps = Math.max(enemy.poisonDps, dps);
@@ -237,7 +238,7 @@ export function updateWeaponCasting(
         const maxChains = isTeslaTempest ? 5 : 1 + Math.floor((wep.level - 1) / 2);
         const chainRangeSq = ((isTeslaTempest ? 300 : 240) * stats.areaMult) ** 2;
         const zap = (fromX: number, fromY: number, target: EnemyEntity, damage: number): void => {
-          const dealt = damageEnemy(target, damage);
+          const dealt = hitEnemy(sim, target, damage, wep.id);
           sim.weaponDamageDealt[wep.id] = (sim.weaponDamageDealt[wep.id] || 0) + dealt;
           if (stats.toxicLevel > 0 && Math.random() < 0.35) applyEnemyPoison(target, damage * 0.5);
           spawnDamageNumber(target.x, target.y, Math.round(dealt).toString(), '#67e8f9');
@@ -448,7 +449,7 @@ export function updateWeaponCasting(
               return;
             }
             const hitDmg = isGravitationalPulse ? dmg * 2.2 : dmg;
-            const dealt = damageEnemy(enemy, hitDmg);
+            const dealt = hitEnemy(sim, enemy, hitDmg, wep.id);
             sim.weaponDamageDealt[wep.id] = (sim.weaponDamageDealt[wep.id] || 0) + dealt;
             spawnDamageNumber(enemy.x, enemy.y, Math.round(dealt).toString(), isEclipse ? '#f59e0b' : '#fde047');
             if (Math.random() < 0.2) spawnParticles(enemy.x, enemy.y, 3, '#fde047', 80);
@@ -626,7 +627,7 @@ export function updateWeaponCasting(
               handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
               return;
             }
-            const dealt = damageEnemy(enemy, dmg);
+            const dealt = hitEnemy(sim, enemy, dmg, wep.id);
             sim.weaponDamageDealt['toxic_sanctuary'] = (sim.weaponDamageDealt['toxic_sanctuary'] || 0) + dealt;
             spawnDamageNumber(enemy.x, enemy.y, Math.round(dealt).toString(), '#22c55e');
             applyEnemyPoison(enemy, dmg * 0.7);

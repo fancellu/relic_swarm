@@ -1,3 +1,4 @@
+import {BOOSTERS} from '../types/boosters';
 import {SpriteRenderer} from '../SpriteRenderer';
 import {clamp, drawAsset, prepareCanvas} from '../../utils/helper';
 import {DerivedStats} from '../entities/Player';
@@ -322,6 +323,33 @@ export function renderGame(
       ctx.arc(drop.x, drop.y - 3, 7, 0, Math.PI);
       ctx.fill();
       ctx.restore();
+      return;
+    }
+
+    if (drop.type === 'booster' && drop.boosterId) {
+      // Uncommon pickup: bobbing icon inside a pulsing ring in the booster's colour
+      const color = BOOSTERS[drop.boosterId].color;
+      const pulse = 0.5 + 0.5 * Math.sin(sim.runTimer * 5 + drop.id);
+      const bob = Math.sin(sim.runTimer * 3.5 + drop.id) * 3;
+      ctx.save();
+      ctx.globalAlpha = 0.18 + 0.12 * pulse;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(drop.x, drop.y, 22 + pulse * 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.55 + 0.35 * pulse;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(drop.x, drop.y, 20 + pulse * 3, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      drawAsset(ctx, assets[BOOSTER_ASSET_KEYS[drop.boosterId]], drop.x - 15, drop.y - 15 + bob, 30, 30, (fCtx) => {
+        fCtx.fillStyle = color;
+        fCtx.beginPath();
+        fCtx.arc(drop.x, drop.y + bob, 12, 0, Math.PI * 2);
+        fCtx.fill();
+      });
       return;
     }
 
@@ -1152,6 +1180,14 @@ export function renderGame(
   // 12. Ambient Weather & Atmospheric Particles (Snow, Embers, Spores, Dust)
   stageManager.updateAndRenderAmbience(ctx, canvasWidth, canvasHeight, 1 / 60);
 }
+
+// Asset keys for Booster pickup icons (module constant: no per-frame string building)
+const BOOSTER_ASSET_KEYS: Record<string, string> = {
+  burn: 'booster_burn',
+  poison: 'booster_poison',
+  frost: 'booster_frost',
+  knockback: 'booster_knockback',
+};
 
 // Shared line-dash pattern for the Armoured plating ring (avoids a per-frame array allocation)
 const ARMOR_RING_DASH: number[] = [6, 4];

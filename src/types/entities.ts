@@ -1,4 +1,5 @@
 import {SpriteAnimationState} from '../SpriteRenderer';
+import {BoosterId, BoosterStacks} from './boosters';
 import {ItemDef} from './items';
 
 // --- Hero Definitions ---
@@ -25,6 +26,7 @@ export interface HeroData {
 export interface EquippedItem {
   id: string;
   level: number;
+  boosters?: BoosterStacks; // Booster stacks assigned to this weapon
 }
 
 export interface EnemyEntity {
@@ -60,6 +62,7 @@ export interface EnemyEntity {
   regenPerSec: number; // HP regained per second once regenDelay has elapsed
   regenDelay: number; // seconds of no damage remaining before regen resumes
   isBrute: boolean; // oversized high-HP variant
+  boosterKnockCd: number; // seconds until Brawler-booster knockback can move this enemy again
 }
 
 export interface ProjectileEntity {
@@ -150,7 +153,7 @@ export function addDrop(sim: SimulationState, drop: DropEntity): void {
     let removeIdx = -1;
     for (let i = 0; i < sim.drops.length; i++) {
       const type = sim.drops[i].type;
-      if (type !== 'chest' && type !== 'blood_chalice') {
+      if (type !== 'chest' && type !== 'blood_chalice' && type !== 'booster') {
         removeIdx = i;
         break;
       }
@@ -165,7 +168,8 @@ export function addDrop(sim: SimulationState, drop: DropEntity): void {
 
 export interface DropEntity {
   id: number;
-  type: 'xp_blue' | 'xp_purple' | 'gold' | 'potion' | 'magnet' | 'chest' | 'blood_chalice';
+  type: 'xp_blue' | 'xp_purple' | 'gold' | 'potion' | 'magnet' | 'chest' | 'blood_chalice' | 'booster';
+  boosterId?: BoosterId;
   x: number;
   y: number;
   value: number;

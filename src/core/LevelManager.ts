@@ -157,7 +157,8 @@ export class LevelManager {
     sim.nextXp = 10;
 
     // 6. Set weapons to only the carried weapon at effective level, and restore hero's innate starting passive
-    sim.weapons = [{id: carriedWeapon.id, level: effectiveCarriedLevel}];
+    // Boosters travel with the carried weapon
+    sim.weapons = [{id: carriedWeapon.id, level: effectiveCarriedLevel, boosters: carriedWeapon.boosters}];
     sim.passives = sim.hero.startingPassive
       ? [{id: sim.hero.startingPassive, level: 1}]
       : [];

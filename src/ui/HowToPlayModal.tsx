@@ -41,6 +41,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({isOpen, onClose, 
             <div>• <span className="text-amber-300 font-bold">Kinetic Charge</span>: Sprinting fills the amber Momentum meter (dashes add a kick). When it's full and the hero glows, release Sprint to unleash a Kinetic Burst that blasts nearby enemies away.</div>
             <div>• <span className="text-rose-300 font-bold">Pacts of the Swarm</span>: On the start screen, toggle optional curses (keys 1-3, or D-pad Up/Down + Y). Each active Pact adds +25% to the Sanctum Gold you bank.</div>
             <div>• <span className="text-red-300 font-bold">Tanky foes</span>: <span className="font-bold">Brutes</span> (big, crimson ring) hold 6x HP; <span className="font-bold">Armoured</span> enemies (steel ring, shield icon) shrug off weak hits, but poison and burn ignore armour; <span className="font-bold">Regenerating</span> enemies (heart icon) heal unless you keep damaging them.</div>
+            <div>• <span className="text-amber-300 font-bold">Boosters</span>: Uncommon pickups (mostly from tough enemies) that let you infuse a weapon with <span className="font-bold">burn, poison, frost or knockback</span>. Pick the weapon when the prompt appears (keys 1-4, or D-pad + A). They stack, and a weapon can carry several.</div>
           </div>
 
           <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">

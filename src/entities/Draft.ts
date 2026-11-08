@@ -3,6 +3,7 @@ import {EquippedItem, SimulationState} from '../types/entities';
 import {ITEM_DEFS, ItemDef} from '../types/items';
 import {calculateDerivedStats, DerivedStats} from './Player';
 import {damageEnemy} from './Spawner';
+import {inheritBoosters} from './Boosters';
 
 export function getAvailableFusion(
   weapons: EquippedItem[],
@@ -320,10 +321,14 @@ export function applyUpgradeSelection(
 
   gameAudio.playPowerupChime();
 
+  // Evolutions and fusions replace weapons; their boosters carry over to the new weapon
+  const weaponsBefore = [...sim.weapons];
+
   if (item.isFusion && item.consumedWeapons) {
     // Weapon-Weapon Merge: remove the 2 source weapons and equip the fusion weapon
     sim.weapons = sim.weapons.filter((w) => !item.consumedWeapons!.includes(w.id));
     sim.weapons.push({id: item.id, level: 1});
+    inheritBoosters(weaponsBefore, sim.weapons, item.id);
     sim.screenShake = 15;
     spawnParticles(sim.x, sim.y, 40, '#facc15', 240);
     spawnDamageNumber(sim.x, sim.y, 'WEAPON FUSION UNLEASHED!', '#facc15');
@@ -372,6 +377,7 @@ export function applyUpgradeSelection(
       sim.weapons = sim.weapons.filter((w) => w.id !== 'inferno_lance');
       sim.weapons.push({id: item.id, level: 1});
     }
+    inheritBoosters(weaponsBefore, sim.weapons, item.id);
     if (sim.fusionCatalystAvailable && item.isFusion) {
       sim.fusionCatalystAvailable = false;
     }

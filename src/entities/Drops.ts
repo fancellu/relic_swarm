@@ -1,4 +1,5 @@
 import {gameAudio} from '../../utils/helper';
+import {BOOSTERS, BoosterId} from '../types/boosters';
 import {MAX_DROPS, SimulationState} from '../types/entities';
 import {DerivedStats} from './Player';
 import {createEnemy} from './Spawner';
@@ -15,13 +16,14 @@ export function updateDrops(
   onGoldChange: (gold: number) => void,
   onScoreAdd: (score: number) => void,
   onXpChange: (xp: number, nextXp: number) => void,
+  onBoosterPickup: (id: BoosterId) => void,
 ): void {
   // Cap drops at MAX_DROPS (200), pruning oldest drops
   while (sim.drops.length > MAX_DROPS) {
     let removeIdx = -1;
     for (let j = 0; j < sim.drops.length; j++) {
       const type = sim.drops[j].type;
-      if (type !== 'chest' && type !== 'blood_chalice') {
+      if (type !== 'chest' && type !== 'blood_chalice' && type !== 'booster') {
         removeIdx = j;
         break;
       }
@@ -89,6 +91,10 @@ export function updateDrops(
       if (Math.random() < 0.25) {
         spawnParticles(drop.x, drop.y, 1, '#dc2626', 30);
       }
+    } else if (drop.type === 'booster') {
+      // Boosters are never attracted (magnet radius, Magnet pulse, Solar Eclipse, Event Horizon all ignore
+      // them): you must walk onto one to claim it, so picking one up is always a deliberate choice.
+      drop.attracted = false;
     } else if (dist <= stats.magnetRadius || drop.attracted) {
       drop.attracted = true;
       const flySpeed = 550;
@@ -124,6 +130,11 @@ export function updateDrops(
         gameAudio.playPowerupChime();
         sim.drops.forEach((d) => (d.attracted = true));
         spawnDamageNumber(sim.x, sim.y, 'MAGNET PULSE!', '#38bdf8');
+      } else if (drop.type === 'booster' && drop.boosterId) {
+        gameAudio.playPowerupChime();
+        spawnDamageNumber(sim.x, sim.y - 20, `${BOOSTERS[drop.boosterId].name.toUpperCase()}!`, BOOSTERS[drop.boosterId].color);
+        spawnParticles(sim.x, sim.y, 14, BOOSTERS[drop.boosterId].color, 160);
+        onBoosterPickup(drop.boosterId);
       } else if (drop.type === 'blood_chalice') {
         gameAudio.playChiptuneExplosion();
         sim.screenShake = 16;

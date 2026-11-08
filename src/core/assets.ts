@@ -90,6 +90,10 @@ export const ASSETS_MANIFEST: Record<string, string> = {
   proj_spinning_dagger: 'assets/images/proj_spinning_dagger.png',
   proj_thunder_strike: 'assets/images/proj_thunder_strike.png',
   proj_grenade: 'assets/images/proj_grenade.png',
+  booster_burn: 'assets/images/booster_burn.png',
+  booster_poison: 'assets/images/booster_poison.png',
+  booster_frost: 'assets/images/booster_frost.png',
+  booster_knockback: 'assets/images/booster_knockback.png',
 
   // Champion & Boss Portraits
   portrait_hero_vael: 'assets/images/portrait_hero_vael.png',

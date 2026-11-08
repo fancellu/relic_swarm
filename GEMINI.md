@@ -90,6 +90,12 @@ LocalStorage keys must maintain backward compatibility:
 - `armorScale`: `1` for a discrete hit (default); the frame's `dt` for continuous per-frame damage (armour is then charged per second); `0` to bypass armour (poison/burn ticks, Thermal Shock, Holy Bomb / Orb of Obliteration).
 - Instant kills (`e.hp = 0`) are allowed for purge effects.
 
+### 2.7c Weapon Hits Use `hitEnemy()` (Boosters)
+- A **discrete weapon hit** must call `hitEnemy(sim, enemy, amount, weaponId)` from `src/entities/Boosters.ts`. It wraps `damageEnemy()` and applies the weapon's Boosters (burn, poison, frost, knockback) from `sim.weapons[].boosters`. Pass the **source weapon id** (`proj.sourceWeapon` / `wep.id`).
+- **Do not** use it for continuous chip damage (spore clouds, flame pools, conduit arcs), DoT ticks, Thermal Shock or other reaction bursts, Kinetic Burst, or holy bombs. Those stay on plain `damageEnemy()` so Boosters never proc every frame or loop on themselves.
+- DoT boosters scale from the **pre-armour** hit, so they remain the counter to Armoured enemies.
+- Booster drops (`drop.type === 'booster'`) are never pruned by the drop caps and are **never attracted** (the player must touch them; keep them out of every magnet/vacuum/pull effect), and evolutions/fusions must call `inheritBoosters()` so weapons keep their boosters.
+
 ### 2.8 Zero-Allocation Simulation Loop & Hard Entity Caps
 1. **Decouple React State Dispatches from Frame Loops (60–144 Hz)**:
    - **NEVER call React state setters unconditionally every frame**.

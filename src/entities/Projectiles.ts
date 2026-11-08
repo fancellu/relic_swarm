@@ -1,9 +1,10 @@
 import {gameAudio} from '../../utils/helper';
-import {EnemyEntity, MAX_PROJECTILES, ProjectileEntity, SimulationState} from '../types/entities';
+import {EnemyEntity, MAX_PARTICLES, MAX_PROJECTILES, ProjectileEntity, SimulationState} from '../types/entities';
 import {spatialGrid} from '../core/spatial';
 import {applyEnemySlow} from './Player';
 import {applyEnemyPoison} from './Weapons';
 import {damageEnemy, isEnemyInvulnerable, handleEnemyInvulnerableDeflect} from './Spawner';
+import {getBoosterTrailColor, hitEnemy} from './Boosters';
 import {stageManager} from '../core/Stage';
 
 // --- Inferno Lance beam tuning ---
@@ -154,7 +155,7 @@ function updateBeam(
         handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
         continue;
       }
-      const dealt = damageEnemy(enemy, proj.damage);
+      const dealt = hitEnemy(sim, enemy, proj.damage, proj.sourceWeapon);
       if (proj.sourceWeapon) {
         sim.weaponDamageDealt[proj.sourceWeapon] = (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + dealt;
       }
@@ -323,6 +324,34 @@ export function updateProjectiles(
     const proj = sim.projectiles[i];
     proj.duration -= dt;
 
+    // Boosted weapons leave a trail of their booster colours behind moving projectiles
+    if (
+      !proj.isEnemy &&
+      proj.sourceWeapon &&
+      proj.type !== 'chain_lightning' &&
+      proj.type !== 'kinetic_wave' &&
+      proj.type !== 'beam' &&
+      proj.type !== 'spore' &&
+      proj.type !== 'flame_pool' &&
+      Math.random() < 0.08 &&
+      sim.particles.length < MAX_PARTICLES
+    ) {
+      const trailColor = getBoosterTrailColor(sim, proj.sourceWeapon);
+      if (trailColor) {
+        sim.particles.push({
+          x: proj.x,
+          y: proj.y,
+          vx: 0,
+          vy: 0,
+          life: 0.35,
+          maxLife: 0.35,
+          size: 4,
+          color: trailColor,
+          alpha: 0.7,
+        });
+      }
+    }
+
     if (
       (proj.type === 'dagger' || proj.type === 'vortex' || proj.type === 'chakram') &&
       proj.orbitAngle !== undefined &&
@@ -356,7 +385,7 @@ export function updateProjectiles(
               handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
               return;
             }
-            const dealt = damageEnemy(enemy, proj.damage);
+            const dealt = hitEnemy(sim, enemy, proj.damage, proj.sourceWeapon);
             proj.hitTimes![enemy.id] = sim.runTimer;
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
@@ -429,7 +458,7 @@ export function updateProjectiles(
               handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
               return;
             }
-            const dealt = damageEnemy(enemy, proj.damage);
+            const dealt = hitEnemy(sim, enemy, proj.damage, proj.sourceWeapon);
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
                 (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + dealt;
@@ -466,7 +495,7 @@ export function updateProjectiles(
               handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
               return;
             }
-            const dealt = damageEnemy(enemy, proj.damage);
+            const dealt = hitEnemy(sim, enemy, proj.damage, proj.sourceWeapon);
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
                 (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + dealt;
@@ -488,7 +517,7 @@ export function updateProjectiles(
       // Pull ground drops inward (or vacuum directly to player if Event Horizon)
       for (let d = 0; d < sim.drops.length; d++) {
         const drop = sim.drops[d];
-        if (drop.type === 'chest' || drop.type === 'blood_chalice') continue;
+        if (drop.type === 'chest' || drop.type === 'blood_chalice' || drop.type === 'booster') continue;
         const ddx = proj.x - drop.x;
         const ddy = proj.y - drop.y;
         const ddist = Math.hypot(ddx, ddy);
@@ -595,7 +624,7 @@ export function updateProjectiles(
               if (proj.pierce <= 0) proj.duration = 0;
               return;
             }
-            const dealt = damageEnemy(enemy, proj.damage);
+            const dealt = hitEnemy(sim, enemy, proj.damage, proj.sourceWeapon);
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
                 (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + dealt;
@@ -659,7 +688,7 @@ export function updateProjectiles(
                   if (other.id !== enemy.id) {
                     const splashDist = Math.hypot(other.x - proj.x, other.y - proj.y);
                     if (splashDist <= proj.splashRadius! + other.size) {
-                      const splash = damageEnemy(other, proj.damage * 0.7);
+                      const splash = hitEnemy(sim, other, proj.damage * 0.7, proj.sourceWeapon);
                       other.burnTimer = 3.0;
                       other.burnDps = Math.max(other.burnDps, proj.damage * 0.4);
                       if (proj.sourceWeapon) {
@@ -716,7 +745,7 @@ export function updateProjectiles(
               handleEnemyInvulnerableDeflect(sim, enemy, spawnDamageNumber, spawnParticles);
               return;
             }
-            const burstDealt = damageEnemy(enemy, burstDmg);
+            const burstDealt = hitEnemy(sim, enemy, burstDmg, proj.sourceWeapon);
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
                 (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + burstDealt;
@@ -777,7 +806,7 @@ export function updateProjectiles(
               falloff = Math.max(0.35, 1 - ((bdist - coreRadius) / (blastRadius - coreRadius)) * 0.65);
             }
             const hitDmg = proj.damage * falloff;
-            const hitDealt = damageEnemy(enemy, hitDmg);
+            const hitDealt = hitEnemy(sim, enemy, hitDmg, proj.sourceWeapon);
             if (proj.sourceWeapon) {
               sim.weaponDamageDealt[proj.sourceWeapon] =
                 (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + hitDealt;

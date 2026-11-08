@@ -1,3 +1,4 @@
+import {BoosterChips} from './BoosterModal';
 import {Coins, Gauge, Heart, Menu, Skull, Sparkles, Sword, Zap} from 'lucide-react';
 import React from 'react';
 import {EquippedItem} from '../types/entities';
@@ -312,6 +313,7 @@ export const HUD: React.FC<HUDProps> = ({
                 <span className="text-amber-400 font-bold text-[10px]">
                   {def?.isEvolution ? 'EVO' : `L${wep.level}`}
                 </span>
+                <BoosterChips boosters={wep.boosters} size={12} />
               </div>
             );
           })}

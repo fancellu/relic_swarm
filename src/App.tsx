@@ -44,7 +44,10 @@ import {
   PactId,
   storePacts,
 } from './types/meta';
+import {BoosterModal} from './ui/BoosterModal';
 import {ChestModal} from './ui/ChestModal';
+import {BOOSTERS, BoosterId} from './types/boosters';
+import {addBooster, inheritBoosters} from './entities/Boosters';
 import {DraftModal} from './ui/DraftModal';
 import {EndGameModal} from './ui/EndGameModal';
 import {HowToPlayModal} from './ui/HowToPlayModal';
@@ -188,6 +191,10 @@ export default function App() {
   const [sanctumFocusIndex, setSanctumFocusIndex] = useState(0);
   const [inventoryFocusIndex, setInventoryFocusIndex] = useState(0);
   const [merchantFocusIndex, setMerchantFocusIndex] = useState(0);
+  // Boosters: pickups pause the game and ask which weapon to infuse (extra pickups queue up)
+  const [pendingBooster, setPendingBooster] = useState<BoosterId | null>(null);
+  const [boosterQueueCount, setBoosterQueueCount] = useState(0);
+  const [boosterFocusIndex, setBoosterFocusIndex] = useState(0);
   const [isStageClearOpen, setIsStageClearOpen] = useState(false);
   const isStageClearOpenRef = useRef(false);
   isStageClearOpenRef.current = isStageClearOpen;
@@ -259,6 +266,10 @@ export default function App() {
   const sanctumFocusIndexRef = useRef(0);
   const inventoryFocusIndexRef = useRef(0);
   const merchantFocusIndexRef = useRef(0);
+  const pendingBoosterRef = useRef<BoosterId | null>(null);
+  const boosterQueueRef = useRef<BoosterId[]>([]);
+  const boosterFocusIndexRef = useRef(0);
+  const boosterItemsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const pauseMenuFocusIndexRef = useRef(0);
   const endScreenFocusIndexRef = useRef(0);
   endScreenFocusIndexRef.current = endScreenFocusIndex;
@@ -288,6 +299,9 @@ export default function App() {
   useEffect(() => {
     merchantItemsRef.current[merchantFocusIndex]?.scrollIntoView({block: 'nearest', behavior: 'smooth'});
   }, [merchantFocusIndex, isMerchantOpen]);
+  useEffect(() => {
+    boosterItemsRef.current[boosterFocusIndex]?.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+  }, [boosterFocusIndex, pendingBooster]);
   useEffect(() => {
     if (pauseTab === 'MENU') pauseMenuItemsRef.current[pauseMenuFocusIndex]?.scrollIntoView({block: 'nearest', behavior: 'smooth'});
     if (pauseScrollRef.current) pauseScrollRef.current.scrollTop = 0;
@@ -455,6 +469,10 @@ export default function App() {
     setAvailableBans(2 + (metaLevelsRef.current.bans || 0));
     setChoices([]);
     setChestReward(null);
+    boosterQueueRef.current = [];
+    pendingBoosterRef.current = null;
+    setPendingBooster(null);
+    setBoosterQueueCount(0);
     setIsSanctumOpen(false);
     setIsHowToPlayOpen(false);
     setIsInventoryOpen(false);
@@ -489,6 +507,25 @@ export default function App() {
     syncEquipment();
     setChestReward(null);
   }, [chestReward, entityCallbacks, spawnDamageNumber, spawnParticles, syncEquipment]);
+  const queueBooster = useCallback((id: BoosterId) => {
+    boosterQueueRef.current.push(id);
+  }, []);
+  const assignBooster = useCallback((weaponIndex: number) => {
+    const id = pendingBoosterRef.current;
+    const sim = simRef.current;
+    const weapon = sim.weapons[weaponIndex];
+    if (!id || !weapon) return;
+    addBooster(weapon, id);
+    gameAudio.playPowerupChime();
+    spawnParticles(sim.x, sim.y, 20, BOOSTERS[id].color, 200);
+    spawnDamageNumber(sim.x, sim.y - 24, `${ITEM_DEFS[weapon.id]?.name ?? weapon.id} +${BOOSTERS[id].name}`, BOOSTERS[id].color);
+    syncEquipment();
+    pendingBoosterRef.current = null;
+    setPendingBooster(null);
+    setBoosterQueueCount(boosterQueueRef.current.length);
+    navCooldownRef.current = 0.3;
+    lastGpConfirmRef.current = true;
+  }, [spawnDamageNumber, spawnParticles, syncEquipment]);
   const reroll = useCallback(() => {
     if (availableRerollsRef.current <= 0) {
       gameAudio.playErrorBuzz();
@@ -659,8 +696,10 @@ export default function App() {
     spawnParticles(sim.x, sim.y, 50, '#c084fc', 280);
 
     if (availableFusion.consumedWeapons) {
+      const weaponsBefore = [...sim.weapons];
       sim.weapons = sim.weapons.filter((w) => !availableFusion.consumedWeapons!.includes(w.id));
       sim.weapons.push({id: availableFusion.id, level: 1});
+      inheritBoosters(weaponsBefore, sim.weapons, availableFusion.id);
       spawnDamageNumber(sim.x, sim.y, `FUSION SYNTHESIZED: ${availableFusion.name}!`, '#facc15');
       syncEquipment();
     }
@@ -831,7 +870,7 @@ export default function App() {
     lastGpPauseRef.current = pausePressed;
 
     navCooldownRef.current -= dt;
-    if (pauseJustPressed && navCooldownRef.current <= 0 && gameStateRef.current.status === 'PLAYING') {
+    if (pauseJustPressed && navCooldownRef.current <= 0 && gameStateRef.current.status === 'PLAYING' && !pendingBoosterRef.current) {
       setIsPauseOpen((value) => !value);
       navCooldownRef.current = 0.3;
       gameAudio.playCrispClick();
@@ -1091,6 +1130,33 @@ export default function App() {
       return;
     }
 
+    // Booster pickups: pause and choose a weapon to infuse; queued pickups open one after another
+    if (pendingBoosterRef.current) {
+      const weaponCount = simRef.current.weapons.length;
+      if (navCooldownRef.current <= 0 && navUp && weaponCount > 0) {
+        boosterFocusIndexRef.current = (boosterFocusIndexRef.current + weaponCount - 1) % weaponCount;
+        setBoosterFocusIndex(boosterFocusIndexRef.current);
+        navCooldownRef.current = 0.2;
+      } else if (navCooldownRef.current <= 0 && navDown && weaponCount > 0) {
+        boosterFocusIndexRef.current = (boosterFocusIndexRef.current + 1) % weaponCount;
+        setBoosterFocusIndex(boosterFocusIndexRef.current);
+        navCooldownRef.current = 0.2;
+      } else if (confirmJustPressed) {
+        assignBooster(boosterFocusIndexRef.current);
+      }
+      return;
+    }
+    if (boosterQueueRef.current.length > 0 && navCooldownRef.current <= 0) {
+      const next = boosterQueueRef.current.shift()!;
+      pendingBoosterRef.current = next;
+      setPendingBooster(next);
+      setBoosterQueueCount(boosterQueueRef.current.length);
+      boosterFocusIndexRef.current = 0;
+      setBoosterFocusIndex(0);
+      navCooldownRef.current = 0.3;
+      return;
+    }
+
     // Toggle Inventory with Button Y while playing
     if (yJustPressed && navCooldownRef.current <= 0) {
       openInventory();
@@ -1229,6 +1295,7 @@ export default function App() {
         setXpDisplay(xp);
         setNextLevelXpDisplay(nextXp);
       },
+      queueBooster,
     );
 
     // Corrupted Obelisk Mechanics: Zone Detection & Charging
@@ -1391,6 +1458,8 @@ export default function App() {
     buyForceUpgrade,
     buyMetaUpgrade,
     buyOverdrive,
+    queueBooster,
+    assignBooster,
     chestReward,
     claimChestReward,
     extractEssence,
@@ -1534,6 +1603,25 @@ export default function App() {
           event.preventDefault();
           returnToStart();
           return;
+        }
+        return;
+      }
+      if (pendingBoosterRef.current) {
+        const weaponCount = simRef.current.weapons.length;
+        if ((event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') && weaponCount > 0) {
+          event.preventDefault();
+          boosterFocusIndexRef.current = (boosterFocusIndexRef.current + weaponCount - 1) % weaponCount;
+          setBoosterFocusIndex(boosterFocusIndexRef.current);
+        } else if ((event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') && weaponCount > 0) {
+          event.preventDefault();
+          boosterFocusIndexRef.current = (boosterFocusIndexRef.current + 1) % weaponCount;
+          setBoosterFocusIndex(boosterFocusIndexRef.current);
+        } else if (/^[1-4]$/.test(event.key) && Number(event.key) <= weaponCount) {
+          event.preventDefault();
+          assignBooster(Number(event.key) - 1);
+        } else if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          assignBooster(boosterFocusIndexRef.current);
         }
         return;
       }
@@ -1858,6 +1946,7 @@ export default function App() {
     buyCatalyst,
     buyForceUpgrade,
     buyOverdrive,
+    assignBooster,
     chestReward,
     claimChestReward,
     extractEssence,
@@ -2018,6 +2107,18 @@ export default function App() {
         onOpenInventory={openInventory}
       />
       <ChestModal chestReward={chestReward} onClaim={claimChestReward} />
+      <BoosterModal
+        boosterId={pendingBooster}
+        weapons={equippedWeapons}
+        queuedCount={boosterQueueCount}
+        focusIndex={boosterFocusIndex}
+        onSelectIndex={(index) => {
+          boosterFocusIndexRef.current = index;
+          setBoosterFocusIndex(index);
+        }}
+        onAssign={assignBooster}
+        itemsRef={boosterItemsRef}
+      />
       <PauseMenu
         isOpen={isPauseOpen}
         onClose={() => setIsPauseOpen(false)}

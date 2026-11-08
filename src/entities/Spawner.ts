@@ -3,6 +3,7 @@ import {SpriteRenderer} from '../SpriteRenderer';
 import {gameAudio} from '../../utils/helper';
 import {addDrop, EnemyEntity, SimulationState} from '../types/entities';
 import {MAX_WORLD_CHESTS, SWARM_FRENZY_SPEED_MULT} from '../types/meta';
+import {randomBoosterId} from '../types/boosters';
 import {DerivedStats} from './Player';
 import {stageManager} from '../core/Stage';
 
@@ -46,6 +47,11 @@ const ARMOR_PER_MINUTE = 3; // ...plus this much per minute survived (scaled by 
 const REGEN_UNLOCK_TIME = 90;
 const REGEN_CHANCE = 0.06;
 const REGEN_PERCENT_PER_SEC = 0.06; // of max HP, once REGEN_DELAY has passed without damage
+// Booster drops: uncommon pickups assigned to a weapon. Mostly come from tough enemies.
+const BOOSTER_BASE_CHANCE = 0.002;
+const BOOSTER_ELITE_BONUS = 0.05;
+const BOOSTER_PER_TRAIT_BONUS = 0.08;
+const BOOSTER_BOSS_DROPS = 2;
 const TANK_XP_PER_TRAIT = 1.5; // each trait adds this fraction of a gem's base value
 
 /**
@@ -110,6 +116,7 @@ export function createEnemy(
     regenPerSec: 0,
     regenDelay: 0,
     isBrute: false,
+    boosterKnockCd: 0,
   };
 }
 
@@ -436,6 +443,8 @@ export function updateEnemies(
     }
     effectiveSpeed *= pactSpeedMult;
 
+    if (enemy.boosterKnockCd > 0) enemy.boosterKnockCd -= dt;
+
     // Regeneration: resumes once REGEN_DELAY has passed without taking damage (damageEnemy resets it)
     if (enemy.regenPerSec > 0 && enemy.hp > 0 && enemy.hp < enemy.maxHp) {
       if (enemy.regenDelay > 0) enemy.regenDelay -= dt;
@@ -637,6 +646,28 @@ export function updateEnemies(
             attracted: false,
           });
         }
+      }
+
+      // Booster drops: bosses always drop some; elites and tanky variants often; ordinary kills rarely
+      let boosterDrops = 0;
+      if (enemy.isBoss) {
+        boosterDrops = BOOSTER_BOSS_DROPS;
+      } else {
+        const tankTraits = (enemy.isBrute ? 1 : 0) + (enemy.armor > 0 ? 1 : 0) + (enemy.regenPerSec > 0 ? 1 : 0);
+        const boosterChance =
+          BOOSTER_BASE_CHANCE + (enemy.isElite ? BOOSTER_ELITE_BONUS : 0) + tankTraits * BOOSTER_PER_TRAIT_BONUS;
+        if (Math.random() < boosterChance) boosterDrops = 1;
+      }
+      for (let b = 0; b < boosterDrops; b++) {
+        addDrop(sim, {
+          id: sim.nextDropId++,
+          type: 'booster',
+          boosterId: randomBoosterId(),
+          x: enemy.x + (b - (boosterDrops - 1) / 2) * 30,
+          y: enemy.y - 14,
+          value: 1,
+          attracted: false,
+        });
       }
 
       sim.enemies.splice(i, 1);
