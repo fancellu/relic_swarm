@@ -49,7 +49,7 @@ const REGEN_CHANCE = 0.06;
 const REGEN_PERCENT_PER_SEC = 0.06; // of max HP, once REGEN_DELAY has passed without damage
 // Booster drops: uncommon pickups assigned to a weapon. Mostly come from tough enemies.
 const BOOSTER_BASE_CHANCE = 0.002;
-const BOOSTER_ELITE_BONUS = 0.05;
+const BOOSTER_ELITE_BONUS = 0.01;
 const BOOSTER_PER_TRAIT_BONUS = 0.08;
 const BOOSTER_BOSS_DROPS = 2;
 const TANK_XP_PER_TRAIT = 1.5; // each trait adds this fraction of a gem's base value
