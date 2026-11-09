@@ -175,7 +175,7 @@ function updateBeam(
         applyEnemySlow(enemy, 0.45, 1.0);
         // Thermal Shock: the frost sheath ruptures the burn the fire core just applied.
         if (shockTick && enemy.burnTimer > 0) {
-          triggerThermalShock(sim, enemy, proj.damage, proj.sourceWeapon, spawnDamageNumber, spawnParticles);
+          triggerThermalShock(sim, enemy, proj.damage, proj.sourceWeapon, spawnDamageNumber, spawnParticles, true);
         }
       }
       if (isPhoenix) healed += PHOENIX_HEAL_PER_HIT;

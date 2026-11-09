@@ -125,6 +125,7 @@ export function createEnemy(
     regenDelay: 0,
     isBrute: false,
     boosterKnockCd: 0,
+    shockCd: 0,
     enraged: false,
     enrageRolled: false,
     enrageLabelTimer: 0,
@@ -466,6 +467,7 @@ export function updateEnemies(
     effectiveSpeed *= pactSpeedMult;
 
     if (enemy.boosterKnockCd > 0) enemy.boosterKnockCd -= dt;
+    if (enemy.shockCd > 0) enemy.shockCd -= dt;
 
     // Regeneration: resumes once REGEN_DELAY has passed without taking damage (damageEnemy resets it)
     if (enemy.regenPerSec > 0 && enemy.hp > 0 && enemy.hp < enemy.maxHp) {

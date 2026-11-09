@@ -102,6 +102,8 @@ export interface MenuOverlayProps {
   children: React.ReactNode;
   tone?: OverlayTone;
   zIndex?: number;
+  /** Allow content up to max-w-6xl (two-column layouts like the start screen); default max-w-md. */
+  wide?: boolean;
 }
 
 /**
@@ -114,13 +116,14 @@ export function MenuOverlay({
   children,
   tone = 'neutral',
   zIndex = 40,
+  wide = false,
 }: MenuOverlayProps) {
   return (
     <div
       className={`absolute inset-0 ${TONE_CLASS[tone]} overflow-y-auto touch-auto`}
       style={{zIndex}}>
       <div className="min-h-full flex flex-col items-center p-4">
-        <div className="m-auto w-full max-w-md flex flex-col items-center">
+        <div className={`m-auto w-full ${wide ? 'max-w-6xl' : 'max-w-md'} flex flex-col items-center`}>
           {children}
         </div>
       </div>

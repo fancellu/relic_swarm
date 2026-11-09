@@ -121,8 +121,8 @@ export const StartScreen: React.FC<StartScreenProps> = ({
   const signatureDef = Object.values(ITEM_DEFS).find((d) => d.heroId === curHero.id && !d.isEvolution);
 
   return (
-    <MenuOverlay tone="neutral" zIndex={40}>
-      <div className="w-full max-w-xl bg-[#0e0c1f] border-2 border-rose-900/80 rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-5 my-auto">
+    <MenuOverlay tone="neutral" zIndex={40} wide>
+      <div className="w-full max-w-xl lg:max-w-6xl bg-[#0e0c1f] border-2 border-rose-900/80 rounded-2xl p-6 lg:p-5 shadow-2xl flex flex-col items-center gap-5 lg:gap-4 my-auto">
         <div className="text-center">
           <div className="text-xs uppercase tracking-widest text-rose-400 font-bold mb-1">
             Relentless Roguelite Survival
@@ -135,6 +135,8 @@ export const StartScreen: React.FC<StartScreenProps> = ({
           </p>
         </div>
 
+        {/* Two columns on wide screens (heroes | pacts, vault, start); a single column on narrow ones */}
+        <div className="w-full grid gap-5 lg:grid-cols-2 lg:gap-6 lg:items-start">
         {/* Hero Selection Grid */}
         <div className="w-full flex flex-col gap-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -171,7 +173,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                     />
                   </div>
                   <div className="min-w-0 w-full">
-                    <div className="font-bold text-xs text-slate-100 truncate">{hero.name}</div>
+                    <div className="font-bold text-xs text-slate-100 truncate" title={hero.name}>{hero.name.split(' ').pop()}</div>
                     <div className="text-[10px] text-slate-400 truncate">{hero.title}</div>
                   </div>
                 </button>
@@ -207,7 +209,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
               </span>
             </div>
 
-            <p className="text-[11px] text-slate-300 leading-relaxed">
+            <p className="text-[11px] text-slate-300 leading-relaxed lg:min-h-[2lh]">
               {curHero.desc}
             </p>
 
@@ -234,7 +236,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                   <div className="min-w-0">
                     <div className="text-[9px] text-amber-500 uppercase font-semibold">★ Signature Weapon (only {curHero.name.split(' ').pop()} can draft it)</div>
                     <div className="font-bold text-amber-300 truncate">{signatureDef.name}</div>
-                    <div className="text-[10px] text-slate-400 leading-snug">{signatureDef.desc.replace(/^SIGNATURE \([^)]*\): /, '')}</div>
+                    <div className="text-[10px] text-slate-400 leading-snug lg:min-h-[2lh]">{signatureDef.desc.replace(/^SIGNATURE \([^)]*\): /, '')}</div>
                   </div>
                 </div>
               )}
@@ -242,6 +244,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
           </div>
         </div>
 
+        <div className="w-full flex flex-col gap-5 lg:gap-4">
         {/* Pact of the Swarm: optional curses for bonus Sanctum Gold */}
         <div className="w-full flex flex-col gap-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -336,6 +339,8 @@ export const StartScreen: React.FC<StartScreenProps> = ({
             <HelpCircle size={14} />
             Gamepad, Keys & Combat Guide [H]
           </button>
+        </div>
+        </div>
         </div>
       </div>
     </MenuOverlay>

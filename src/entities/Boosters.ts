@@ -140,10 +140,19 @@ export function inheritBoosters(before: EquippedItem[], after: EquippedItem[], n
   }
 }
 
+// Thermal Shock gating: each enemy can be shocked at most once per THERMAL_SHOCK_COOLDOWN seconds, so
+// fire-on-chill cannot proc on every hit (e.g. Flame Blast inside the Permafrost Sigil aura), and the
+// clash sound is throttled globally so a crowd of shocks does not become noise.
+const THERMAL_SHOCK_COOLDOWN = 1.0;
+const THERMAL_SHOCK_SOUND_INTERVAL = 0.12;
+let lastShockSoundTime = -1;
+
 /**
  * Triggers a Thermal Shock elemental reaction when Fire and Frost collide on an enemy.
  * Symmetrically triggers when Frost strikes a burning enemy or Fire strikes a frozen/chilled enemy.
  * Bypasses armour (armorScale = 0), consumes the burn, inflicts screen shake, and emits visual feedback.
+ * Returns 0 (and does nothing) while the enemy is on its shock cooldown, unless `ignoreCooldown` is set
+ * (Frostfire Prism, whose shocks are already self-throttled to every 5th beam tick).
  */
 export function triggerThermalShock(
   sim: SimulationState,
@@ -152,7 +161,10 @@ export function triggerThermalShock(
   sourceWeapon?: string,
   spawnDamageNumber?: (x: number, y: number, text: string, color: string) => void,
   spawnParticles?: (x: number, y: number, count: number, color: string, speed?: number) => void,
+  ignoreCooldown = false,
 ): number {
+  if (!ignoreCooldown && enemy.shockCd > 0) return 0;
+  enemy.shockCd = THERMAL_SHOCK_COOLDOWN;
   const shockBonus = hitDamage * 1.8 + (enemy.burnDps || 0) * 2.0;
   damageEnemy(enemy, shockBonus, 0); // Thermal Shock cracks armour
   if (sourceWeapon) {
@@ -161,7 +173,10 @@ export function triggerThermalShock(
   enemy.burnTimer = 0;
   enemy.burnDps = 0;
   sim.screenShake = Math.max(sim.screenShake, 5);
-  gameAudio.playSwordClash();
+  if (sim.runTimer - lastShockSoundTime >= THERMAL_SHOCK_SOUND_INTERVAL || sim.runTimer < lastShockSoundTime) {
+    lastShockSoundTime = sim.runTimer;
+    gameAudio.playSwordClash();
+  }
   if (spawnDamageNumber) {
     spawnDamageNumber(enemy.x, enemy.y, `THERMAL SHOCK ${Math.round(shockBonus)}!`, '#38bdf8');
   }

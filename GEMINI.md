@@ -66,7 +66,7 @@ LocalStorage keys must maintain backward compatibility:
 - `relic_swarm_gold`: Legacy fallback gold key.
 - `relic_swarm_meta`: Serialized JSON object mapping upgrade IDs to level ranks:
   ```json
-  { "maxHp": 0, "might": 0, "speed": 0, "haste": 0, "magnet": 0, "greed": 0, "rerolls": 0 }
+  { "maxHp": 0, "might": 0, "speed": 0, "haste": 0, "magnet": 0, "greed": 0, "rerolls": 0, "bans": 0 }
   ```
 - `relic_swarm_pacts`: Serialized JSON string array of the remembered Pact of the Swarm selection (e.g. `["swarm_frenzy", "fragile_glass"]`). Unknown ids are ignored on load (`getStoredPacts()` in `src/types/meta.ts`).
 
@@ -93,6 +93,7 @@ LocalStorage keys must maintain backward compatibility:
 
 ### 2.7c Weapon Hits Use `hitEnemy()` (Boosters)
 - A **discrete weapon hit** must call `hitEnemy(sim, enemy, amount, weaponId)` from `src/entities/Boosters.ts`. It wraps `damageEnemy()` and applies the weapon's Boosters (burn, poison, frost, knockback) from `sim.weapons[].boosters`. Pass the **source weapon id** (`proj.sourceWeapon` / `wep.id`).
+- **Thermal Shock** (`triggerThermalShock()` in `Boosters.ts`) is the single implementation for both directions (frost on burning, fire on chilled). Each enemy has a 1 s `shockCd` so a reaction can never proc on every hit; only Frostfire Prism bypasses it (`ignoreCooldown`), being self-throttled to every 5th beam tick.
 - **Do not** use it for continuous chip damage (spore clouds, flame pools, conduit arcs), DoT ticks, Thermal Shock or other reaction bursts, Kinetic Burst, or holy bombs. Those stay on plain `damageEnemy()` so Boosters never proc every frame or loop on themselves.
 - DoT boosters scale from the **pre-armour** hit, so they remain the counter to Armoured enemies.
 - Booster drops (`drop.type === 'booster'`) are never pruned by the drop caps and are **never attracted**, with a hard cap of 2 unclaimed boosters on the field (`BOOSTER_MAX_ON_FIELD`) (the player must touch them; keep them out of every magnet/vacuum/pull effect), and evolutions/fusions must call `inheritBoosters()` so weapons keep their boosters.
@@ -180,7 +181,9 @@ stateDiagram-v2
     PLAYING --> CHEST_REWARD: Boss / Elite Chest Drop
     CHEST_REWARD --> PLAYING: Claim Reward
     PLAYING --> GAME_OVER: Player HP == 0
-    PLAYING --> VICTORY: 900s reached & Boss defeated
+    PLAYING --> STAGE_CLEAR: Boss (or both Titans) defeated
+    STAGE_CLEAR --> PLAYING: Descend to next stage
+    STAGE_CLEAR --> VICTORY: Claim Victory & Bank Gold
     GAME_OVER --> START: Return / Bank Gold
     VICTORY --> START: Return / Bank Gold
 ```
