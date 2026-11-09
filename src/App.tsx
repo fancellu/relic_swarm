@@ -19,6 +19,7 @@ import {
   ASSETS_MANIFEST,
 } from './core/assets';
 import {renderGame} from './core/renderer';
+import {updateScreenShake} from './core/engine';
 import {initSpriteRenderers} from './core/sprites';
 import {applyChestReward, generateChestReward} from './entities/Chests';
 import {applyUpgradeSelection, extractItemEssence, generateDraftChoices, getAvailableFusion, sellEquippedItem} from './entities/Draft';
@@ -26,7 +27,7 @@ import {updateDrops} from './entities/Drops';
 import {calculateDerivedStats, updatePlayerMovement} from './entities/Player';
 import {MOMENTUM_MAX, updateKineticCharge} from './entities/KineticCharge';
 import {updateProjectiles} from './entities/Projectiles';
-import {updateEnemies, updateEnemySpawner} from './entities/Spawner';
+import {damageEnemy, updateEnemies, updateEnemySpawner} from './entities/Spawner';
 import {updateWeaponCasting} from './entities/Weapons';
 import {spatialGrid} from './core/spatial';
 import {addDrop, ChestRewardData, EquippedItem, ExtractedEssence, MAX_DAMAGE_NUMBERS, MAX_PARTICLES, SimulationState} from './types/entities';
@@ -1193,7 +1194,7 @@ export default function App() {
     );
     updateKineticCharge(sim, stats, dt, wasSprinting, wasDashing, spawnDamageNumber, spawnParticles);
     handleMomentumChange(sim.momentum);
-    sim.screenShake = Math.max(0, sim.screenShake - dt * 30);
+    sim.screenShake = updateScreenShake(sim.screenShake, dt, 30);
     const heroRenderer = spriteRenderersRef.current[sim.hero.spriteKey];
     if (heroRenderer) heroRenderer.advanceInPlace(sim.heroAnim, dt);
     updateWeaponCasting(sim, stats, dt, spawnDamageNumber, spawnParticles);
@@ -1324,8 +1325,8 @@ export default function App() {
             enemy.y += (edy / edist) * push;
             if (!enemy.isBoss || !sim.bossShieldActive) {
               const shockDmg = Math.round(200 * stats.mightMult);
-              enemy.hp -= shockDmg;
-              spawnDamageNumber(enemy.x, enemy.y, shockDmg.toString(), '#f43f5e');
+              const actualDmg = damageEnemy(enemy, shockDmg, 0);
+              spawnDamageNumber(enemy.x, enemy.y, Math.round(actualDmg).toString(), '#f43f5e');
             } else {
               spawnDamageNumber(enemy.x, enemy.y, 'IMMUNE', '#38bdf8');
             }
@@ -1540,8 +1541,31 @@ export default function App() {
         return;
       }
       if (gameStateRef.current.status === 'START') {
-        if (isSanctumOpen && (event.key === 'Escape' || event.key === 'Backspace')) {
-          setIsSanctumOpen(false);
+        if (isSanctumOpen) {
+          if (event.key === 'Escape' || event.key === 'Backspace') {
+            setIsSanctumOpen(false);
+            return;
+          }
+          const total = Object.keys(META_UPGRADES).length + 1;
+          if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
+            sanctumFocusIndexRef.current = (sanctumFocusIndexRef.current + total - 1) % total;
+            setSanctumFocusIndex(sanctumFocusIndexRef.current);
+            return;
+          }
+          if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') {
+            sanctumFocusIndexRef.current = (sanctumFocusIndexRef.current + 1) % total;
+            setSanctumFocusIndex(sanctumFocusIndexRef.current);
+            return;
+          }
+          if (event.key === 'Enter' || event.key === ' ') {
+            const values = Object.values(META_UPGRADES);
+            if (sanctumFocusIndexRef.current < values.length) {
+              buyMetaUpgrade(values[sanctumFocusIndexRef.current].id);
+            } else {
+              setIsSanctumOpen(false);
+            }
+            return;
+          }
           return;
         }
         if (!isSanctumOpen && !isHowToPlayOpen) {
@@ -1654,6 +1678,10 @@ export default function App() {
         if (event.key === 'b' || event.key === 'B') {
           const cur = choicesRef.current[selectedChoiceIndexRef.current];
           if (cur) banItem(cur, selectedChoiceIndexRef.current);
+          return;
+        }
+        if (event.key === 'x' || event.key === 'X') {
+          openInventory();
           return;
         }
       }

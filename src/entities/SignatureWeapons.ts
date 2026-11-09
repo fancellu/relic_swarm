@@ -24,9 +24,9 @@ export const SIGNATURE_WEAPON_IDS = new Set<string>([
 
 export const SIGNATURE_PROJECTILE_TYPES = new Set<string>(['axe', 'slash', 'meteor', 'flask', 'acid_pool', 'astral_orb']);
 
-/** Signature projectiles that the projectile cap must never prune (slashes are disposable visuals). */
+/** Signature projectiles that the projectile cap must never prune to preserve visual and hit integrity. */
 export function isProtectedSignatureType(type: string): boolean {
-  return type !== 'slash' && SIGNATURE_PROJECTILE_TYPES.has(type);
+  return SIGNATURE_PROJECTILE_TYPES.has(type);
 }
 
 type SpawnDamageNumber = (x: number, y: number, text: string, color: string) => void;
@@ -120,8 +120,8 @@ export function castSignatureWeapon(
   spawnParticles: SpawnParticles,
 ): void {
   const id = wep.id;
-  const lv = def.isEvolution ? 5 : wep.level; // evolutions and fusions cast at max-level strength
-  const baseDmg = (def.baseDamage || 30) * stats.mightMult * (1 + (wep.level - 1) * 0.2);
+  const lv = (def.isEvolution || def.isFusion) ? Math.max(5, wep.level) : wep.level; // evolutions and fusions cast at max-level strength
+  const baseDmg = (def.baseDamage || 30) * stats.mightMult * (1 + (lv - 1) * 0.2);
 
   // Orbs are persistent: keep the right number alive instead of using the cooldown
   if (id === 'astral_orb' || id === 'astral_singularity' || id === 'storm_orb') {

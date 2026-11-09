@@ -133,7 +133,7 @@ export function createEnemy(
 
 export function updateEnemySpawner(sim: SimulationState, dt: number): void {
   const baseSpawnRate = (getConfig('enemySpawnRate') as number) || 1.2;
-  const maxEnemiesLimit = (getConfig('maxEnemies') as number) || 250;
+  const maxEnemiesLimit = (getConfig('maxEnemies') as number) || 180;
   const bossSpawnTime = (getConfig('bossSpawnTimeSeconds') as number) || 300;
 
   const stage = Math.max(1, sim.stage || 1);
@@ -326,21 +326,21 @@ export function updateEnemySpawner(sim: SimulationState, dt: number): void {
         type = 'hound';
         hp *= 1.4;
         speed = 175;
-        damage = 14;
+        damage = 14 * enemyDamageMult;
         size = 24;
         color = '#8b5cf6';
       } else if (roll < 0.35 && sim.runTimer > 20) {
         type = 'bat';
         hp *= 0.8;
         speed = 150;
-        damage = 8;
+        damage = 8 * enemyDamageMult;
         size = 20;
         color = '#ec4899';
       } else if (roll < 0.45 && sim.runTimer > 60) {
         type = 'sorcerer';
         hp *= 1.8;
         speed = 70;
-        damage = 18;
+        damage = 18 * enemyDamageMult;
         size = 26;
         color = '#6366f1';
       }
@@ -404,6 +404,17 @@ export function updateEnemies(
   let playerDied = false;
   // Pact of the Swarm: Swarm Frenzy speeds up every enemy
   const pactSpeedMult = sim.pacts?.includes('swarm_frenzy') ? SWARM_FRENZY_SPEED_MULT : 1;
+
+  // Track active boss reference for escort formation leashing
+  let activeBossEntity: EnemyEntity | null = null;
+  if (sim.bossShieldActive) {
+    for (let b = 0; b < sim.enemies.length; b++) {
+      if (sim.enemies[b].isBoss) {
+        activeBossEntity = sim.enemies[b];
+        break;
+      }
+    }
+  }
 
   for (let i = sim.enemies.length - 1; i >= 0; i--) {
     const enemy = sim.enemies[i];
@@ -701,7 +712,10 @@ export function updateEnemies(
         });
       }
 
-      sim.enemies.splice(i, 1);
+      const lastEnemy = sim.enemies.pop()!;
+      if (i < sim.enemies.length) {
+        sim.enemies[i] = lastEnemy;
+      }
       continue;
     }
 
@@ -713,12 +727,16 @@ export function updateEnemies(
     // Escort swarm speed boost while shielding boss
     if (sim.bossShieldActive && !enemy.isBoss) {
       effectiveSpeed *= 1.2;
-      // Leash any stray minion that slipped past 950px away
-      if (dist > 950) {
+      // Leash any stray minion that slipped past 950px away from the boss
+      const anchor = activeBossEntity || sim;
+      const anchorDx = enemy.x - anchor.x;
+      const anchorDy = enemy.y - anchor.y;
+      const anchorDist = Math.hypot(anchorDx, anchorDy);
+      if (anchorDist > 950) {
         const a = Math.random() * Math.PI * 2;
         const d = 480 + Math.random() * 160;
-        enemy.x = sim.x + Math.cos(a) * d;
-        enemy.y = sim.y + Math.sin(a) * d;
+        enemy.x = anchor.x + Math.cos(a) * d;
+        enemy.y = anchor.y + Math.sin(a) * d;
         stageManager.resolveCircleCollision(enemy, enemy.size);
       }
     }
@@ -826,18 +844,24 @@ export function updateEnemies(
   }
 
   // Track active boss shield and check for Aegis Shield Shatter
-  const remainingMinions = sim.enemies.reduce((acc, e) => (!e.isBoss ? acc + 1 : acc), 0);
+  let remainingMinions = 0;
+  let activeBoss: EnemyEntity | null = null;
+  for (let i = 0; i < sim.enemies.length; i++) {
+    const e = sim.enemies[i];
+    if (e.isBoss) {
+      activeBoss = e;
+    } else {
+      remainingMinions++;
+    }
+  }
   sim.bossMinionsRemaining = remainingMinions;
 
-  if (sim.bossShieldActive && remainingMinions === 0 && sim.enemies.some((e) => e.isBoss)) {
+  if (sim.bossShieldActive && remainingMinions === 0 && activeBoss) {
     sim.bossShieldActive = false;
     sim.screenShake = 18;
-    const boss = sim.enemies.find((e) => e.isBoss);
-    if (boss) {
-      spawnParticles(boss.x, boss.y, 45, '#38bdf8', 220);
-      spawnParticles(boss.x, boss.y, 30, '#fbbf24', 160);
-      spawnDamageNumber(boss.x, boss.y - 45, 'AEGIS SHIELD SHATTERED - ATTACK!', '#38bdf8');
-    }
+    spawnParticles(activeBoss.x, activeBoss.y, 45, '#38bdf8', 220);
+    spawnParticles(activeBoss.x, activeBoss.y, 30, '#fbbf24', 160);
+    spawnDamageNumber(activeBoss.x, activeBoss.y - 45, 'AEGIS SHIELD SHATTERED - ATTACK!', '#38bdf8');
     gameAudio.playShieldBreak();
   }
 

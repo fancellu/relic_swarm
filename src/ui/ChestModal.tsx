@@ -28,7 +28,7 @@ export const ChestModal: React.FC<ChestModalProps> = ({chestReward, onClaim}) =>
           </div>
           <h2 className="text-xl md:text-2xl font-black text-amber-300">{chestReward.title}</h2>
           <div className="text-xs font-bold text-amber-400 mt-1">
-            +{chestReward.gold} Sanctum Gold Acquired
+            +{chestReward.gold} Gold Acquired
           </div>
         </div>
 

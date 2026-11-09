@@ -4,7 +4,7 @@ import {spatialGrid} from '../core/spatial';
 import {applyEnemySlow} from './Player';
 import {applyEnemyPoison} from './Weapons';
 import {damageEnemy, isEnemyInvulnerable, handleEnemyInvulnerableDeflect} from './Spawner';
-import {getBoosterTrailColor, hitEnemy} from './Boosters';
+import {getBoosterTrailColor, hitEnemy, triggerThermalShock} from './Boosters';
 import {
   isProtectedSignatureType,
   onSignatureProjectileExpire,
@@ -175,16 +175,7 @@ function updateBeam(
         applyEnemySlow(enemy, 0.45, 1.0);
         // Thermal Shock: the frost sheath ruptures the burn the fire core just applied.
         if (shockTick && enemy.burnTimer > 0) {
-          const shockBonus = proj.damage * 2 + enemy.burnDps;
-          damageEnemy(enemy, shockBonus, 0); // Thermal Shock cracks armour
-          if (proj.sourceWeapon) {
-            sim.weaponDamageDealt[proj.sourceWeapon] = (sim.weaponDamageDealt[proj.sourceWeapon] || 0) + shockBonus;
-          }
-          enemy.burnTimer = 0;
-          spawnDamageNumber(enemy.x, enemy.y, `THERMAL SHOCK ${Math.round(shockBonus)}!`, '#38bdf8');
-          spawnParticles(enemy.x, enemy.y, 6, '#38bdf8', 120);
-          spawnParticles(enemy.x, enemy.y, 4, '#f97316', 100);
-          if (sim.screenShake < 3) sim.screenShake = 3;
+          triggerThermalShock(sim, enemy, proj.damage, proj.sourceWeapon, spawnDamageNumber, spawnParticles);
         }
       }
       if (isPhoenix) healed += PHOENIX_HEAL_PER_HIT;
@@ -408,13 +399,7 @@ export function updateProjectiles(
 
             // Thermal Shock reaction with burning enemies
             if (proj.inflictsSlow && enemy.burnTimer > 0) {
-              const shockBonus = proj.damage * 1.5 + enemy.burnDps * 2;
-              damageEnemy(enemy, shockBonus, 0); // Thermal Shock cracks armour
-              sim.screenShake = 5;
-              spawnDamageNumber(enemy.x, enemy.y, `THERMAL SHOCK ${Math.round(shockBonus)}!`, '#38bdf8');
-              spawnParticles(enemy.x, enemy.y, 10, '#38bdf8', 130);
-              spawnParticles(enemy.x, enemy.y, 8, '#f97316', 100);
-              enemy.burnTimer = 0;
+              triggerThermalShock(sim, enemy, proj.damage, proj.sourceWeapon, spawnDamageNumber, spawnParticles);
             }
           }
         }
@@ -662,20 +647,18 @@ export function updateProjectiles(
 
             // Thermal Shock: Glacial / Ice hits a burning enemy
             if ((proj.type === 'ice' || proj.inflictsSlow) && enemy.burnTimer > 0) {
-              const shockBonus = proj.damage * 1.8 + enemy.burnDps * 2.2;
-              damageEnemy(enemy, shockBonus, 0); // Thermal Shock cracks armour
-              sim.screenShake = 6;
-              gameAudio.playSwordClash();
-              spawnDamageNumber(enemy.x, enemy.y, `THERMAL SHOCK ${Math.round(shockBonus)}!`, '#38bdf8');
-              spawnParticles(enemy.x, enemy.y, 12, '#38bdf8', 140);
-              spawnParticles(enemy.x, enemy.y, 8, '#f97316', 110);
-              enemy.burnTimer = 0;
+              triggerThermalShock(sim, enemy, proj.damage, proj.sourceWeapon, spawnDamageNumber, spawnParticles);
             }
 
             if (proj.type === 'flame') {
               // Apply burn to primary target
               enemy.burnTimer = 3.0;
               enemy.burnDps = Math.max(enemy.burnDps, proj.damage * 0.5);
+
+              // Thermal Shock (Symmetric): Fire projectile striking an enemy who is chilled/frozen
+              if (enemy.slowTimer > 0) {
+                triggerThermalShock(sim, enemy, proj.damage, proj.sourceWeapon, spawnDamageNumber, spawnParticles);
+              }
 
               // Spawn lingering flame pool at impact location
               sim.projectiles.push({
@@ -780,11 +763,7 @@ export function updateProjectiles(
               applyEnemySlow(enemy, 0.8, 3.5);
               // Thermal Shock if burning
               if (enemy.burnTimer > 0) {
-                const shockBonus = burstDmg * 1.6 + enemy.burnDps * 2;
-                damageEnemy(enemy, shockBonus, 0); // Thermal Shock cracks armour
-                spawnDamageNumber(enemy.x, enemy.y, `THERMAL SHOCK ${Math.round(shockBonus)}!`, '#38bdf8');
-                spawnParticles(enemy.x, enemy.y, 10, '#38bdf8', 130);
-                enemy.burnTimer = 0;
+                triggerThermalShock(sim, enemy, burstDmg, proj.sourceWeapon, spawnDamageNumber, spawnParticles);
               }
             }
           }
@@ -911,7 +890,10 @@ export function updateProjectiles(
           }
         }
       }
-      sim.projectiles.splice(i, 1);
+      const lastProj = sim.projectiles.pop()!;
+      if (i < sim.projectiles.length) {
+        sim.projectiles[i] = lastProj;
+      }
     }
   }
 }

@@ -3,6 +3,7 @@ import {EnemyEntity, HeroData, MAX_PARTICLES, SimulationState} from '../types/en
 import {HEROES} from '../types/items';
 import {FRAGILE_GLASS_HP_MULT, META_UPGRADES} from '../types/meta';
 import {stageManager} from '../core/Stage';
+import {spatialGrid} from '../core/spatial';
 import {gameAudio} from '../../utils/helper';
 
 // Phase Dash: a fresh sprint press with enough stamina triggers a short i-frame dodge burst.
@@ -337,14 +338,28 @@ export function updatePlayerMovement(
     onHpChange(Math.round(sim.hp));
   }
 
+// Reused context for Permafrost Sigil aura so zero closures or arrays are allocated per frame.
+const frostCtx = {
+  sim: null as SimulationState | null,
+  radiusSq: 0,
+  slowAmount: 0,
+};
+
+function applyFrostNearby(enemy: EnemyEntity): void {
+  const sim = frostCtx.sim!;
+  const dx = enemy.x - sim.x;
+  const dy = enemy.y - sim.y;
+  if (dx * dx + dy * dy <= frostCtx.radiusSq) {
+    applyEnemySlow(enemy, frostCtx.slowAmount, 0.5);
+  }
+}
+
   // Permafrost Sigil Passive Area Aura (Slows nearby enemies by 35%)
   if (stats.frostAmuletLevel > 0) {
     const frostRadius = 180 + stats.frostAmuletLevel * 25;
-    sim.enemies.forEach((enemy) => {
-      const dist = Math.hypot(enemy.x - sim.x, enemy.y - sim.y);
-      if (dist <= frostRadius) {
-        applyEnemySlow(enemy, 0.35 + stats.frostAmuletLevel * 0.05, 0.5);
-      }
-    });
+    frostCtx.sim = sim;
+    frostCtx.radiusSq = frostRadius * frostRadius;
+    frostCtx.slowAmount = 0.35 + stats.frostAmuletLevel * 0.05;
+    spatialGrid.forEachNearby(sim.x, sim.y, frostRadius, applyFrostNearby);
   }
 }

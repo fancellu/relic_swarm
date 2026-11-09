@@ -2,6 +2,7 @@ import {BOOSTER_IDS, BOOSTERS, BoosterId, BoosterStacks} from '../types/boosters
 import {EquippedItem, MAX_PARTICLES, SimulationState, EnemyEntity} from '../types/entities';
 import {applyEnemySlow} from './Player';
 import {damageEnemy} from './Spawner';
+import {gameAudio} from '../../utils/helper';
 
 // --- Per-stack tuning ---
 const BURN_DPS_FRACTION = 0.3; // of the hit's damage, per stack, as burn DPS
@@ -137,4 +138,36 @@ export function inheritBoosters(before: EquippedItem[], after: EquippedItem[], n
       }
     }
   }
+}
+
+/**
+ * Triggers a Thermal Shock elemental reaction when Fire and Frost collide on an enemy.
+ * Symmetrically triggers when Frost strikes a burning enemy or Fire strikes a frozen/chilled enemy.
+ * Bypasses armour (armorScale = 0), consumes the burn, inflicts screen shake, and emits visual feedback.
+ */
+export function triggerThermalShock(
+  sim: SimulationState,
+  enemy: EnemyEntity,
+  hitDamage: number,
+  sourceWeapon?: string,
+  spawnDamageNumber?: (x: number, y: number, text: string, color: string) => void,
+  spawnParticles?: (x: number, y: number, count: number, color: string, speed?: number) => void,
+): number {
+  const shockBonus = hitDamage * 1.8 + (enemy.burnDps || 0) * 2.0;
+  damageEnemy(enemy, shockBonus, 0); // Thermal Shock cracks armour
+  if (sourceWeapon) {
+    sim.weaponDamageDealt[sourceWeapon] = (sim.weaponDamageDealt[sourceWeapon] || 0) + shockBonus;
+  }
+  enemy.burnTimer = 0;
+  enemy.burnDps = 0;
+  sim.screenShake = Math.max(sim.screenShake, 5);
+  gameAudio.playSwordClash();
+  if (spawnDamageNumber) {
+    spawnDamageNumber(enemy.x, enemy.y, `THERMAL SHOCK ${Math.round(shockBonus)}!`, '#38bdf8');
+  }
+  if (spawnParticles) {
+    spawnParticles(enemy.x, enemy.y, 10, '#38bdf8', 130);
+    spawnParticles(enemy.x, enemy.y, 8, '#f97316', 100);
+  }
+  return shockBonus;
 }

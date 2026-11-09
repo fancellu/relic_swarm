@@ -77,7 +77,10 @@ export function updateDrops(
           spawnParticles(drop.x, drop.y, 25, '#facc15', 180);
 
           onChestRewardReady();
-          sim.drops.splice(i, 1);
+          const lastChest = sim.drops.pop()!;
+          if (i < sim.drops.length) {
+            sim.drops[i] = lastChest;
+          }
         }
       } else {
         drop.isOpening = false;
@@ -168,7 +171,10 @@ export function updateDrops(
         );
       }
 
-      sim.drops.splice(i, 1);
+      const lastDrop = sim.drops.pop()!;
+      if (i < sim.drops.length) {
+        sim.drops[i] = lastDrop;
+      }
     }
   }
 }

@@ -10,6 +10,7 @@ import {
   RotateCcw,
   Settings,
   Shield,
+  ShoppingBag,
   Skull,
   Sparkles,
   Sword,
@@ -111,27 +112,41 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
             className={`p-3 rounded-xl border flex items-center justify-between text-xs font-bold ${
               activeObjective.type === 'BLOOD_TRIAL'
                 ? 'bg-red-950/70 border-red-500/80 text-red-200'
+                : activeObjective.type === 'MERCHANT'
+                ? 'bg-emerald-950/70 border-emerald-500/80 text-emerald-200'
                 : 'bg-pink-950/70 border-pink-500/80 text-pink-200'
             }`}>
             <div className="flex items-center gap-2">
               {activeObjective.type === 'BLOOD_TRIAL' ? (
                 <Skull size={18} className="text-red-400 animate-pulse" />
+              ) : activeObjective.type === 'MERCHANT' ? (
+                <ShoppingBag size={18} className="text-emerald-400 animate-pulse" />
               ) : (
                 <Radio size={18} className="text-pink-400 animate-pulse" />
               )}
               <div>
                 <div className="text-[10px] uppercase tracking-wider text-amber-300 font-black">
-                  {activeObjective.type === 'BLOOD_TRIAL' ? 'Active Arena Trial' : 'Active Spatial Objective'}
+                  {activeObjective.type === 'BLOOD_TRIAL'
+                    ? 'Active Arena Trial'
+                    : activeObjective.type === 'MERCHANT'
+                    ? 'Wandering Merchant'
+                    : 'Active Spatial Objective'}
                 </div>
                 <div className="text-xs font-extrabold text-white">
                   {activeObjective.type === 'BLOOD_TRIAL'
                     ? `Cursed Blood Arena: ${activeObjective.progress}s Remaining`
+                    : activeObjective.type === 'MERCHANT'
+                    ? `Black Market Cart: ${activeObjective.progress}m Away`
                     : `Corrupted Obelisk: ${activeObjective.progress}% Purified`}
                 </div>
               </div>
             </div>
             <div className="text-[10px] px-2 py-0.5 rounded bg-black/50 border border-slate-700 text-slate-300">
-              {activeObjective.type === 'BLOOD_TRIAL' ? 'Confined 600x600 arena' : '150px beacon zone'}
+              {activeObjective.type === 'BLOOD_TRIAL'
+                ? 'Confined 600x600 arena'
+                : activeObjective.type === 'MERCHANT'
+                ? 'Press E / Select near cart'
+                : '150px beacon zone'}
             </div>
           </div>
         )}

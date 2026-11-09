@@ -31,7 +31,7 @@
       "name": "maxEnemies",
       "type": "number",
       "label": "Max Active Enemies",
-      "default": 250,
+      "default": 180,
       "min": 50,
       "max": 500,
       "step": 25

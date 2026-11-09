@@ -1,3 +1,4 @@
+import {getConfig} from '../constants';
 import {DamageNumber, ParticleEntity} from '../types/entities';
 
 export interface CameraState {
@@ -22,7 +23,7 @@ export function updateScreenShake(currentShake: number, dt: number, decayRate = 
 }
 
 export function getScreenShakeOffset(shake: number): {shakeX: number; shakeY: number} {
-  if (shake <= 0) return {shakeX: 0, shakeY: 0};
+  if (shake <= 0 || getConfig('screenShakeEnabled') === false) return {shakeX: 0, shakeY: 0};
   return {
     shakeX: (Math.random() * 2 - 1) * shake,
     shakeY: (Math.random() * 2 - 1) * shake,

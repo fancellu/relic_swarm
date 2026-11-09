@@ -48,6 +48,7 @@ Every modal overlay (Sanctum Shop, Start/Hero Select, Level-Up Draft, Inventory/
 1. **Gamepad**: D-Pad / Left Stick for navigation, Button A (0) to confirm, Button B (1) to cancel/back.
 2. **Keyboard**: WASD or Arrow Keys for navigation, Enter / Space to confirm, Escape / Backspace to cancel.
 3. **Mouse / Pointer**: Hovering (`onPointerEnter`) must synchronize the active focus index; clicking triggers the action.
+4. **Visible Hotkey Parity**: Any keyboard key advertised in UI text (e.g., `"Sell Items [X]"`, WASD in shops) MUST have an active `keydown` listener checking both lowercase and uppercase (`event.key === 'x' || event.key === 'X'`).
 
 ### 2.3 Standalone Runtime Flag
 - `(window as any).__PLAYGROUND_PREVIEW__ = true` is set in `index.tsx` before React mounts.
@@ -78,10 +79,10 @@ LocalStorage keys must maintain backward compatibility:
    - **NEVER use `ctx.filter`** (e.g. `hue-rotate`, `saturate`, `brightness`) for status effects or auras.
    - On Windows ANGLE Direct3D 11 backends in Chromium/Edge, `ctx.filter` forces offscreen GPU render target allocations that trigger severe driver synchronization stalls on modern high-refresh (144Hz+) Nvidia RTX cards.
    - Use custom particle emitters, status rings, or pre-rendered sprite assets instead.
-2. **Zero `ctx.shadowBlur` in Per-Entity Loops**:
-   - **NEVER use `ctx.shadowBlur`** on text (floating combat damage numbers) or rapid projectiles (pellets, discs, missiles, chain lightning).
-   - Chromium's Skia executes expensive multi-pass gaussian blurs per character glyph and per circle.
-   - Use crisp pixel-art stroke outlines (`ctx.lineWidth = 3; ctx.strokeText() + ctx.fillText()`) which render in a single hardware quad.
+2. **Zero `ctx.shadowBlur` Across Entire Canvas Pipeline**:
+   - **NEVER use `ctx.shadowBlur` anywhere in `renderer.ts`**, including text, projectiles, and decoration layers (obelisks, arena walls, merchant carts, off-screen arrows).
+   - Chromium's Skia executes expensive multi-pass gaussian blurs per stroked character glyph, path, and circle.
+   - Use crisp pixel-art stroke outlines (`ctx.lineWidth = 3; ctx.strokeText() + ctx.fillText()`) and layered alpha strokes (`rgba(...)` outer stroke + bright core) which render in hardware quads with zero blur passes.
 3. **Batch Canvas State**:
    - Never call `ctx.save()` / `ctx.restore()` per-particle or per-grid-line in inner loops; batch state changes around outer loops.
 
@@ -120,6 +121,21 @@ LocalStorage keys must maintain backward compatibility:
    - Use `renderer.advanceInPlace(state, dt)` to mutate animation timers without allocating `{...state}` objects (eliminates 15,000+ objects/sec).
 5. **Cache `derivedStats` on `sim.derivedStats`**:
    - Recompute only on equipment/level/buff events, never on every frame or render pass.
+6. **$O(1)$ Swap-Pop Entity Removal (Zero Memory Shifts)**:
+   - Inside backward iteration loops (`for (let i = length - 1; i >= 0; i--)`) over `sim.enemies`, `sim.projectiles`, or `sim.drops`, **NEVER use `array.splice(i, 1)`**.
+   - `splice(i, 1)` shifts all subsequent elements in memory ($O(N)$), resulting in $O(N^2)$ memory copies during horde wipes (holy bombs, kinetic burst, chain lightning).
+   - Always use $O(1)$ swap-and-pop:
+     ```typescript
+     const last = array.pop()!;
+     if (i < array.length) {
+       array[i] = last;
+     }
+     ```
+7. **Camera View Frustum Culling**:
+   - In `renderer.ts`, precompute AABB viewport bounds once per frame with a safety margin (`viewMinX = sim.camera.x - canvasWidth / 2 - 100`, etc.).
+   - Skip rendering drops, non-boss enemies, and non-beam projectiles when their coordinates lie outside bounds, eliminating 70–80% of off-screen canvas draw operations.
+8. **Boss Escort Leashing Anchor**:
+   - Stray escort/shielding minions (>950px away) must leash their boundary around the **boss** (`activeBossEntity || sim`), not the player, to preserve the protective phalanx formation and prevent visual energy tethers from stretching thousands of pixels.
 
 ### 2.9 Audio & Stinger Invariants (Gain Parity, Single Concurrency, Event Scoping)
 1. **Gain Parity with Background Music**:

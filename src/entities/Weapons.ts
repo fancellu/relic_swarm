@@ -763,9 +763,7 @@ export function updateWeaponCasting(
           (1 + (wep.level - 1) * 0.22);
 
         // Find nearest enemies
-        const sorted = [...sim.enemies].sort(
-          (a, b) => Math.hypot(a.x - sim.x, a.y - sim.y) - Math.hypot(b.x - sim.x, b.y - sim.y),
-        );
+        const sorted = getClosestEnemies(sim.x, sim.y, sim.enemies, count);
 
         for (let i = 0; i < count; i++) {
           const target = sorted[i % sorted.length];
