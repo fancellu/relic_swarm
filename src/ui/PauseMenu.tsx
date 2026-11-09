@@ -43,6 +43,7 @@ export interface PauseMenuProps {
   onTriggerMenuAction: (actionIdx: number) => void;
   musicMuted: boolean;
   sfxMuted: boolean;
+  showFps: boolean;
   pauseMenuItemsRef: React.RefObject<(HTMLButtonElement | null)[]>;
   onOpenInventory: () => void;
   activeObjective?: {type: 'OBELISK' | 'BLOOD_TRIAL' | 'MERCHANT'; progress: number} | null;
@@ -68,6 +69,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
   onTriggerMenuAction,
   musicMuted,
   sfxMuted,
+  showFps,
   pauseMenuItemsRef,
   onOpenInventory,
   activeObjective,
@@ -771,8 +773,8 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
               Manage & Sell Arsenal [Tab / Y]
             </button>
 
-            {/* 2 & 3: Music & SFX Audio Toggles */}
-            <div className="w-full grid grid-cols-2 gap-2">
+            {/* 2, 3 & 4: Music, SFX and FPS counter toggles */}
+            <div className="w-full grid grid-cols-3 gap-2">
               <button
                 ref={(el) => {
                   if (pauseMenuItemsRef.current) pauseMenuItemsRef.current[2] = el;
@@ -798,45 +800,58 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                 {sfxMuted ? <VolumeX size={16} className="text-rose-400" /> : <Volume2 size={16} className="text-emerald-400" />}
                 <span>SFX: {sfxMuted ? 'Off' : 'On'}</span>
               </button>
+
+              <button
+                ref={(el) => {
+                  if (pauseMenuItemsRef.current) pauseMenuItemsRef.current[4] = el;
+                }}
+                onPointerEnter={() => onSelectMenuIndex(4)}
+                onClick={() => onTriggerMenuAction(4)}
+                className={`bg-slate-900 hover:bg-slate-800 text-slate-200 py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all border border-slate-700 ${
+                  pauseMenuFocusIndex === 4 ? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-950 scale-[1.02]' : ''
+                }`}>
+                <Activity size={16} className={showFps ? 'text-emerald-400' : 'text-slate-500'} />
+                <span>FPS: {showFps ? 'On' : 'Off'} [F]</span>
+              </button>
             </div>
 
-            {/* 4: How to Play Guide */}
-            <button
-              ref={(el) => {
-                if (pauseMenuItemsRef.current) pauseMenuItemsRef.current[4] = el;
-              }}
-              onPointerEnter={() => onSelectMenuIndex(4)}
-              onClick={() => onTriggerMenuAction(4)}
-              className={`w-full bg-slate-900 hover:bg-slate-800 text-slate-200 py-2.5 rounded-xl text-xs font-bold border border-slate-700 transition-all flex items-center justify-center gap-2 ${
-                pauseMenuFocusIndex === 4 ? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-950 scale-[1.02]' : ''
-              }`}>
-              <HelpCircle size={16} />
-              Controls & Combat Guide
-            </button>
-
-            {/* 5: Restart Level */}
+            {/* 5: How to Play Guide */}
             <button
               ref={(el) => {
                 if (pauseMenuItemsRef.current) pauseMenuItemsRef.current[5] = el;
               }}
               onPointerEnter={() => onSelectMenuIndex(5)}
               onClick={() => onTriggerMenuAction(5)}
-              className={`w-full bg-slate-900 hover:bg-slate-800 text-slate-200 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 border border-slate-700 ${
+              className={`w-full bg-slate-900 hover:bg-slate-800 text-slate-200 py-2.5 rounded-xl text-xs font-bold border border-slate-700 transition-all flex items-center justify-center gap-2 ${
                 pauseMenuFocusIndex === 5 ? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-950 scale-[1.02]' : ''
               }`}>
-              <RotateCcw size={16} />
-              Restart Run
+              <HelpCircle size={16} />
+              Controls & Combat Guide
             </button>
 
-            {/* 6: Quit to Main Menu */}
+            {/* 6: Restart Level */}
             <button
               ref={(el) => {
                 if (pauseMenuItemsRef.current) pauseMenuItemsRef.current[6] = el;
               }}
               onPointerEnter={() => onSelectMenuIndex(6)}
               onClick={() => onTriggerMenuAction(6)}
-              className={`w-full bg-rose-950 hover:bg-rose-900 text-rose-300 py-2.5 rounded-xl text-xs font-semibold transition-all border border-rose-800 ${
+              className={`w-full bg-slate-900 hover:bg-slate-800 text-slate-200 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 border border-slate-700 ${
                 pauseMenuFocusIndex === 6 ? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-950 scale-[1.02]' : ''
+              }`}>
+              <RotateCcw size={16} />
+              Restart Run
+            </button>
+
+            {/* 7: Quit to Main Menu */}
+            <button
+              ref={(el) => {
+                if (pauseMenuItemsRef.current) pauseMenuItemsRef.current[7] = el;
+              }}
+              onPointerEnter={() => onSelectMenuIndex(7)}
+              onClick={() => onTriggerMenuAction(7)}
+              className={`w-full bg-rose-950 hover:bg-rose-900 text-rose-300 py-2.5 rounded-xl text-xs font-semibold transition-all border border-rose-800 ${
+                pauseMenuFocusIndex === 7 ? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-950 scale-[1.02]' : ''
               }`}>
               Quit to Main Menu (Bank Gold)
             </button>
@@ -845,7 +860,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
 
         {/* Modal Footer Controls info */}
         <div className="pt-2 border-t border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
-          <span>[1-3 / Q,E / LB,RB] Tabs • [W,S / Sticks / D-Pad] Navigate & Scroll • [Enter / A] Select • [Tab / Y] Sell Screen</span>
+          <span>[1-3 / Q,E / LB,RB] Tabs • [W,S / Sticks / D-Pad] Navigate & Scroll • [Enter / A] Select • [Tab / Y] Sell Screen • [F] FPS</span>
           <button
             onClick={() => {
               onClose();

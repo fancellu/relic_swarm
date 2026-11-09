@@ -15,6 +15,7 @@ export function renderGame(
   spriteRenderers: Record<string, SpriteRenderer> | null,
   canvasWidth: number,
   canvasHeight: number,
+  fps?: FpsDisplay,
 ): void {
   prepareCanvas(ctx, canvasWidth, canvasHeight);
 
@@ -1330,6 +1331,20 @@ export function renderGame(
     }
   });
 
+  // FPS readout (screen space, top-right): crisp stroke + fill, no shadowBlur
+  if (fps?.visible && fps.text) {
+    ctx.save();
+    ctx.font = 'bold 12px monospace';
+    ctx.textAlign = 'right';
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)';
+    ctx.fillStyle = fps.color;
+    ctx.strokeText(fps.text, canvasWidth - 10, 18);
+    ctx.fillText(fps.text, canvasWidth - 10, 18);
+    ctx.restore();
+  }
+
   // 10. Off-screen Beacon / Directional Arrow for Corrupted Obelisk
   if (sim.obelisk) {
     const screenX = canvasWidth / 2 + (sim.obelisk.x - sim.camera.x);
@@ -1431,6 +1446,13 @@ export function renderGame(
 
 // How long the ENRAGED! label lives in total (must match ENRAGE_LABEL_SECONDS in Spawner.ts); drives its pop-in
 const ENRAGE_LABEL_TOTAL = 6;
+
+/** Reused display state for the FPS readout (mutated in place by the RAF loop; no per-frame allocation). */
+export interface FpsDisplay {
+  visible: boolean;
+  text: string;
+  color: string;
+}
 
 // Asset keys for hero Signature Weapon icons, keyed by weapon id (module constant: no per-frame string building)
 const SIG_ASSET_KEYS: Record<string, string> = {

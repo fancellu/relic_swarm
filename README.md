@@ -53,6 +53,7 @@ Inspired by genre pioneers like *Vampire Survivors*, **Relic Swarm** drops you i
 | Action | Keyboard | Gamepad | Mobile / Touch |
 | :--- | :--- | :--- | :--- |
 | **Move** | `W` `A` `S` `D` or Arrow Keys | Left Analog Stick / D-Pad | Virtual Analog Joystick (Bottom-Left) |
+| **FPS counter** | `F` (or Pause menu) | Pause menu | Pause menu |
 | **Sprint** | `Shift` / `Ctrl` | `Button A` / `Button B` / `RT` / `LT` | Virtual Sprint Button (Bottom-Right) |
 | **Phase Dash** | Tap Sprint (35%+ stamina) | Tap Sprint (35%+ stamina) | Tap Sprint Button (35%+ stamina) |
 | **Kinetic Burst** | Release Sprint at full Momentum | Release Sprint at full Momentum | Release Sprint Button at full Momentum |

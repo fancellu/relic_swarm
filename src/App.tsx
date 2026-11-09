@@ -18,7 +18,7 @@ import {
   BGM_SANCTUM_SHOP_URL,
   ASSETS_MANIFEST,
 } from './core/assets';
-import {renderGame} from './core/renderer';
+import {FpsDisplay, renderGame} from './core/renderer';
 import {updateScreenShake} from './core/engine';
 import {initSpriteRenderers} from './core/sprites';
 import {applyChestReward, generateChestReward} from './entities/Chests';
@@ -174,6 +174,28 @@ export default function App() {
   const metaLevelsRef = useRef(metaLevels);
   metaLevelsRef.current = metaLevels;
   const [musicMuted, setMusicMuted] = useState(false);
+  // FPS counter: persisted preference; the readout itself is drawn on the canvas from a mutable ref
+  const [showFps, setShowFps] = useState(() => {
+    try {
+      return localStorage.getItem('relic_swarm_show_fps') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const fpsDisplayRef = useRef<FpsDisplay>({visible: showFps, text: '', color: '#4ade80'});
+  const fpsStatsRef = useRef({frames: 0, windowStart: 0});
+  const toggleFps = useCallback(() => {
+    const next = !fpsDisplayRef.current.visible;
+    fpsDisplayRef.current.visible = next;
+    fpsStatsRef.current.windowStart = 0; // restart the measuring window
+    setShowFps(next);
+    try {
+      localStorage.setItem('relic_swarm_show_fps', next ? '1' : '0');
+    } catch {
+      // storage unavailable: the toggle still works for this session
+    }
+    gameAudio.playCrispClick();
+  }, []);
   const [sfxMuted, setSfxMuted] = useState(false);
 
   const [selectedHeroIndex, setSelectedHeroIndex] = useState(0);
@@ -814,11 +836,12 @@ export default function App() {
     else if (index === 1) openInventory();
     else if (index === 2) setMusicMuted((value) => !value);
     else if (index === 3) setSfxMuted(gameAudio.toggleMute());
-    else if (index === 4) setIsHowToPlayOpen(true);
-    else if (index === 5) initGame();
-    else if (index === 6) returnToStart();
+    else if (index === 4) toggleFps();
+    else if (index === 5) setIsHowToPlayOpen(true);
+    else if (index === 6) initGame();
+    else if (index === 7) returnToStart();
     gameAudio.playCrispClick();
-  }, [initGame, openInventory, returnToStart]);
+  }, [initGame, openInventory, returnToStart, toggleFps]);
 
   const update = useCallback((dt: number) => {
     // Tracks whether the previous step reached the simulation (false while any modal/pause returns early).
@@ -1101,11 +1124,11 @@ export default function App() {
         openInventory();
       } else if (pauseTabRef.current === 'MENU') {
         if (navCooldownRef.current <= 0 && navUp) {
-          pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 6) % 7;
+          pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 7) % 8;
           setPauseMenuFocusIndex(pauseMenuFocusIndexRef.current);
           navCooldownRef.current = 0.2;
         } else if (navCooldownRef.current <= 0 && navDown) {
-          pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 1) % 7;
+          pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 1) % 8;
           setPauseMenuFocusIndex(pauseMenuFocusIndexRef.current);
           navCooldownRef.current = 0.2;
         } else if (confirmJustPressed) {
@@ -1490,6 +1513,25 @@ export default function App() {
   useEffect(() => {
     let raf = 0;
     const frame = (time: number) => {
+      // FPS: count rendered frames over 500 ms windows
+      const fpsDisplay = fpsDisplayRef.current;
+      if (fpsDisplay.visible) {
+        const st = fpsStatsRef.current;
+        if (st.windowStart === 0) {
+          st.windowStart = time;
+          st.frames = 0;
+        } else {
+          st.frames++;
+          const elapsed = time - st.windowStart;
+          if (elapsed >= 500) {
+            const fps = (st.frames * 1000) / elapsed;
+            fpsDisplay.text = `${Math.round(fps)} FPS`;
+            fpsDisplay.color = fps >= 55 ? '#4ade80' : fps >= 30 ? '#fbbf24' : '#f87171';
+            st.windowStart = time;
+            st.frames = 0;
+          }
+        }
+      }
       stepperRef.current?.(time, (dt) => updateRef.current(dt));
       const context = canvasRef.current?.getContext('2d');
       if (context) {
@@ -1501,6 +1543,7 @@ export default function App() {
           spriteRenderersRef.current,
           canvasWidth,
           canvasHeight,
+          fpsDisplay,
         );
       }
       raf = requestAnimationFrame(frame);
@@ -1512,6 +1555,10 @@ export default function App() {
   useEffect(() => {
     const keyDown = (event: KeyboardEvent) => {
       keyboardSprintRef.current = event.shiftKey || event.ctrlKey;
+      if ((event.key === 'f' || event.key === 'F') && !event.repeat && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        toggleFps();
+        return;
+      }
       if (isHowToPlayOpen) {
         if (event.key === 'Escape' || event.key === 'h' || event.key === 'H' || event.key === 'Enter') {
           event.preventDefault();
@@ -1892,7 +1939,7 @@ export default function App() {
         if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
           event.preventDefault();
           if (pauseTabRef.current === 'MENU') {
-            pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 6) % 7;
+            pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 7) % 8;
             setPauseMenuFocusIndex(pauseMenuFocusIndexRef.current);
           } else if (pauseScrollRef.current) {
             pauseScrollRef.current.scrollBy({top: -100, behavior: 'smooth'});
@@ -1902,7 +1949,7 @@ export default function App() {
         if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') {
           event.preventDefault();
           if (pauseTabRef.current === 'MENU') {
-            pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 1) % 7;
+            pauseMenuFocusIndexRef.current = (pauseMenuFocusIndexRef.current + 1) % 8;
             setPauseMenuFocusIndex(pauseMenuFocusIndexRef.current);
           } else if (pauseScrollRef.current) {
             pauseScrollRef.current.scrollBy({top: 100, behavior: 'smooth'});
@@ -2169,6 +2216,7 @@ export default function App() {
         onTriggerMenuAction={triggerPauseMenuAction}
         musicMuted={musicMuted}
         sfxMuted={sfxMuted}
+        showFps={showFps}
         pauseMenuItemsRef={pauseMenuItemsRef}
         onOpenInventory={openInventory}
         activeObjective={activeObjective}
