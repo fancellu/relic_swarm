@@ -78,8 +78,8 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
   if (!isOpen) return null;
 
   return (
-    <MenuOverlay tone="neutral" zIndex={50}>
-      <div ref={scrollContainerRef} className="w-full max-w-2xl bg-[#0d0a1d] border-2 border-slate-700/80 rounded-2xl p-5 md:p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+    <MenuOverlay tone="neutral" zIndex={50} wide>
+      <div ref={scrollContainerRef} className="w-full max-w-2xl lg:max-w-6xl bg-[#0d0a1d] border-2 border-slate-700/80 rounded-2xl p-5 md:p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
         {/* Header & Status */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div>
@@ -206,7 +206,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                 <span>Hero Attribute Statistics</span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-[11px]">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 text-[11px]">
                 <div className="bg-slate-900/90 p-2 rounded-lg border border-slate-800 flex flex-col">
                   <span className="text-slate-400">Health</span>
                   <span className="font-bold text-rose-400 text-xs">
@@ -284,7 +284,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
               {equippedWeapons.length === 0 ? (
                 <div className="text-slate-500 italic text-xs">No weapons equipped.</div>
               ) : (
-                <div className="flex flex-col gap-2">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                   {equippedWeapons.map((wep) => {
                     const def = ITEM_DEFS[wep.id];
                     const dmg = Math.round(weaponDamageDealt[wep.id] || 0);
@@ -334,7 +334,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
               {equippedPassives.length === 0 ? (
                 <div className="text-slate-500 italic text-xs">No relics equipped.</div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                   {equippedPassives.map((pas) => {
                     const def = ITEM_DEFS[pas.id];
                     return (
@@ -363,7 +363,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                   <Sparkles size={14} className="text-purple-400" />
                   <span>Forged Relic Essences ({extractedEssences.length} Sacrificial Buffs Active)</span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                   {extractedEssences.map((ess, eIdx) => (
                     <div key={`${ess.id}-${eIdx}`} className="bg-slate-900/90 p-2.5 rounded-lg border border-purple-800/60 flex items-center gap-2.5">
                       <img src={ess.icon} alt={ess.name} className="w-6 h-6 object-contain shrink-0" />
@@ -420,7 +420,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                 <span className="text-[10px] text-slate-400 font-normal">Dynamic Field Events</span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                 {/* Corrupted Obelisks */}
                 <div className="bg-slate-900/80 p-3 rounded-xl border border-pink-900/40 flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
@@ -508,7 +508,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                 <span>Supreme Weapon Fusions (Two Level 5 Weapons)</span>
               </div>
 
-              <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                 <div className="bg-slate-900/80 p-2.5 rounded-xl border border-amber-900/40">
                   <div className="font-bold text-amber-300">Arcane Phantom Vortex</div>
                   <div className="text-slate-400 text-[10px]">Magic Missile (Lv 5) + Orbiting Daggers (Lv 5)</div>
@@ -620,7 +620,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
                 <span>Awakened Evolutions (Lv 5 Weapon + Matched Relic via Boss Chest)</span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                 <div className="bg-slate-950/80 p-2.5 rounded-xl border border-purple-800/40">
                   <div className="font-bold text-purple-300">Chrono Missiles</div>
                   <div className="text-slate-400 text-[10px]">Magic Missile (Lv 5) + Swift Boots</div>
@@ -741,7 +741,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
 
         {/* --- TAB 3: GAME MENU & SETTINGS --- */}
         {pauseTab === 'MENU' && (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 w-full lg:max-w-xl lg:mx-auto">
             {/* 0: Resume Button */}
             <button
               ref={(el) => {
